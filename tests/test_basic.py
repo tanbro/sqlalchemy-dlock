@@ -1,4 +1,4 @@
-from contextlib import ExitStack, closing
+from contextlib import closing
 from os import cpu_count
 from threading import Event, Thread
 from time import sleep, time

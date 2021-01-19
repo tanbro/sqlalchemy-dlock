@@ -1,11 +1,8 @@
 from contextlib import closing
-from os import cpu_count
-from threading import Thread, Event
-from time import sleep, time
 from unittest import TestCase
 from uuid import uuid1
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import ResourceClosedError, StatementError
+from sqlalchemy.exc import StatementError
 from sqlalchemy_dlock import make_session_level_lock
 
 from .engines import ENGINES
@@ -97,8 +94,8 @@ class SessionTestCase(TestCase):
                 with session.get_bind().connect() as conn:
                     session.commit()
                     lock = make_session_level_lock(conn, key)
-                    session.commit()
+                    session.rollback()
                     self.assertTrue(lock.acquire())
-                    session.commit()
+                    session.close()
                     lock.release()
                     self.assertFalse(lock.acquired)
