@@ -54,9 +54,11 @@ def ensure_int8(i: int) -> int:
 
 
 class SessionLevelLock(AbstractSessionLevelLock):
-    """
+    """PostgreSQL advisory lock
 
-    A lock can be acquired multiple times by its owning process
+    .. attention:: A lock can be acquired multiple times by its owning process
+
+    :ref: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
     """
     def __init__(self,
                  connection: Connection,
@@ -66,10 +68,18 @@ class SessionLevelLock(AbstractSessionLevelLock):
                  interval: Union[float, int, None] = None
                  ):
         """
-        see:
-        - https://www.postgresql.org/docs/current/functions-admin.html#FUNCTIONS-ADVISORY-LOCKS
-        - https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
-        - https://www.postgresql.org/docs/current/datatype-numeric.html
+        PostgreSQL advisory lock requires the key given by ``INT8``
+
+        - When ``key`` is :class:`int`, the constructor ensures it to be ``INT8``
+        - When ``key`` is :class:`str` or :class:`bytes`,
+          the constructor calculates its 8-bytes hash code with :func:`hashlib.blake2b`,
+          and takes the code as actual key.
+        - Or you can specify a custom function in ``convert`` argument
+
+        PostgreSQL's advisory lock has no timeout.
+        We simulate it in a loop with sleep delay.
+        The ``interval`` parameter specifies the sleep interval in second.
+        It's default value is ``1``
         """
         if convert:
             key = convert(key)
@@ -96,8 +106,6 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 self.connection.execute(stmt).fetchall()
                 self._acquired = True
             else:
-                # PostgreSQL's advisory lock has no timeout parameter
-                # We simulate it in a loop with sleep delay
                 if interval is None:
                     interval = self._interval
                 begin_ts = time()

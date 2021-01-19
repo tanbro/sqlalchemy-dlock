@@ -21,11 +21,11 @@ TConvertFunction = Callable[[Any], str]
 
 
 class SessionLevelLock(AbstractSessionLevelLock):
-    """
+    """MySQL named-lock
     
-    Multiple simultaneous locks can be acquired and GET_LOCK() does not release any existing locks
+    :ref: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
 
-    ref: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
+    .. attention:: Multiple simultaneous locks can be acquired and GET_LOCK() does not release any existing locks
     """
 
     def __init__(self,
@@ -34,6 +34,10 @@ class SessionLevelLock(AbstractSessionLevelLock):
                  *,
                  convert: Optional[TConvertFunction] = None
                  ):
+        """
+        MySQL named lock requires the key given by string.
+        You can specify a custom function in ``convert`` argument, if your key is not :class:`str`
+        """
         if convert:
             key = convert(key)
         if not isinstance(key, str):

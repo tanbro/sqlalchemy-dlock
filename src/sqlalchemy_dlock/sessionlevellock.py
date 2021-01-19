@@ -4,11 +4,20 @@ from sqlalchemy.engine import Connection
 
 
 class AbstractSessionLevelLock(local):
-    """Base class of a distributed lock implementation based on SQLAlchemy
+    """Base class of database session level lock implementation
 
-    Database's session usually act as connection in SQLAlchemy
+    .. note::
 
-    It's Thread-Local!
+        - It's Thread-Local (:class:`threading.local`)
+        - Do not manual instantiate
+
+    .. attention::
+
+        The **session** here means session of Database, **NOT** SQLAlchemy's.
+
+        :class:`sqlalchemy.orm.session.Session` is more like transaction.
+
+        Database's sessions are usually managed as connections in SQLAlchemy
     """
 
     def __init__(self,
@@ -16,6 +25,17 @@ class AbstractSessionLevelLock(local):
                  key,
                  *args, **kwargs
                  ):
+        """
+        Parameters
+        ----------
+
+        connection: sqlalchemy.engine.Connection
+            Database Connection on which the SQL locking functions will be invoked
+
+        key:
+            Key/name or sth like that used as SQL locking function's ID
+
+        """
         self._acquired = False
         self._connection = connection
         self._key = key
@@ -43,7 +63,7 @@ class AbstractSessionLevelLock(local):
         """
         Acquire a lock, blocking or non-blocking.
 
-        - When invoked with the blocking argument set to True (the default), 
+        - When invoked with the blocking argument set to True (the default),
           block until the lock is unlocked, then set it to locked and return True.
 
         - When invoked with the blocking argument set to False, do not block.
@@ -59,10 +79,18 @@ class AbstractSessionLevelLock(local):
         raise NotImplementedError()
 
     def release(self, *args, **kwargs):
+        """Release a lock. This can be called from any thread, not only the thread which has acquired the lock.
+
+        When the lock is locked, reset it to unlocked, and return. If any other threads are blocked waiting for the lock to become unlocked, allow exactly one of them to proceed.
+
+        When invoked on an unlocked lock, a RuntimeError is raised.
+
+        There is no return value.
+        """
         raise NotImplementedError()
 
     def close(self, *args, **kwargs):
-        """Same as :method:`release`, but won't raise a :class:`RuntimeError` when the object is not acquired yet.
+        """Same like :meth:`release`, but won't raise a :class:`RuntimeError` when the object is not acquired yet.
         """
         if self._acquired:
             self.release()
