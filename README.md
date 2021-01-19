@@ -27,45 +27,30 @@ with engine.connect() as conn:
 Made from SQLAlchemy's Session:
 
 ```python
+# ...
 
 lock_key = 'user/001'
 
+with Session.get_bind().connect() as conn:
+    with make_session_level_lock(conn, lock_key):
+        # ...
+        user = Session.query(User).filter(id='001').one()
+        user.password = new_pass
+        Session.commit()
 
-session = Session()
-try:
-    with session.get_bind().connect() as conn:
-        with make_session_level_lock(conn, lock_key):
-            # ...
-            user = Session.query(User).filter(id='001')
-            user.password = new_pass
-            Session.commit()
-            # ...
-except:
-    session.rollback()
-    raise
-finally:
-    session.close()
+# ...
 ```
 
-Or, if ``session`` has no ``commit``, ``rollback``, ``close``:
+Or, if the `session` has no `commit`, `rollback`, `close`:
 
 ```python
+# ...
 
 lock_key = 'user/001'
 
+with make_session_level_lock(Session.connection(), lock_key):
+    user = Session.query(User).filter(id='001').one()
+    password = user.password
 
-session = Session()
-try:
-    with make_session_level_lock(session.connection(), lock_key):
-        user = Session.query(User).filter(id='001')
-        res = requests.get(user.avatar_url)
-        with open('001.png', 'wb') as fp:
-            for chunk in res.iter_content(1024): 
-                if chunk:
-                    fp.write(chunk)
-except:
-    session.rollback()
-    raise
-finally:
-    session.close()
+# ...
 ```
