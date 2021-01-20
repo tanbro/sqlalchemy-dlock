@@ -21,23 +21,23 @@ class MutliThreadTestCase(TestCase):
         for engine in ENGINES:
             bar = Barrier(2, timeout=delay*3)
 
-            def fn1():
+            def fn1(b):
                 with engine.connect() as conn:
                     with make_session_level_lock(conn, key) as lock:
-                        bar.wait()
+                        b.wait()
                         self.assertTrue(lock.acquired)
                         sleep(delay)
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
-            def fn2():
+            def fn2(b):
                 with engine.connect() as conn:
                     with closing(make_session_level_lock(conn, key)) as lock:
-                        bar.wait()
+                        b.wait()
                         self.assertFalse(lock.acquire(False))
 
-            trd1 = Thread(target=fn1)
-            trd2 = Thread(target=fn2)
+            trd1 = Thread(target=fn1, args=(bar,))
+            trd2 = Thread(target=fn2, args=(bar,))
 
             trd1.start()
             trd2.start()
@@ -52,26 +52,26 @@ class MutliThreadTestCase(TestCase):
         for engine in ENGINES:
             bar = Barrier(2, timeout=delay*3)
 
-            def fn1():
+            def fn1(b):
                 with engine.connect() as conn:
                     with make_session_level_lock(conn, key) as lock:
-                        bar.wait()
+                        b.wait()
                         self.assertTrue(lock.acquired)
                         sleep(delay)
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
-            def fn2():
+            def fn2(b):
                 with engine.connect() as conn:
                     with closing(make_session_level_lock(conn, key)) as lock:
-                        bar.wait()
+                        b.wait()
                         ts = time()
                         self.assertFalse(lock.acquire(timeout=timeout))
                         self.assertGreaterEqual(time()-ts, timeout)
                         self.assertFalse(lock.acquired)
 
-            trd1 = Thread(target=fn1)
-            trd2 = Thread(target=fn2)
+            trd1 = Thread(target=fn1, args=(bar,))
+            trd2 = Thread(target=fn2, args=(bar,))
 
             trd1.start()
             trd2.start()
@@ -86,29 +86,29 @@ class MutliThreadTestCase(TestCase):
 
         for engine in ENGINES:
 
-            bar = Barrier(2, timeout=delay*3)
+            bar = Barrier(2)
 
-            def fn1():
+            def fn1(b):
                 with engine.connect() as conn:
                     with make_session_level_lock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
-                        bar.wait()
+                        b.wait()
                         sleep(delay)
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
-            def fn2():
+            def fn2(b):
                 with engine.connect() as conn:
                     with closing(make_session_level_lock(conn, key)) as lock:
-                        bar.wait()
+                        b.wait()
                         ts = time()
                         self.assertTrue(lock.acquire(timeout=timeout))
                         self.assertGreaterEqual(time()-ts, delay)
                         self.assertGreaterEqual(timeout, time()-ts)
                         self.assertTrue(lock.acquired)
 
-            trd1 = Thread(target=fn1)
-            trd2 = Thread(target=fn2)
+            trd1 = Thread(target=fn1, args=(bar,))
+            trd2 = Thread(target=fn2, args=(bar,))
 
             trd1.start()
             trd2.start()
@@ -122,25 +122,25 @@ class MutliThreadTestCase(TestCase):
 
         for engine in ENGINES:
 
-            bar = Barrier(2, timeout=delay*3)
+            bar = Barrier(2)
 
-            def fn1():
+            def fn1(b):
                 with engine.connect() as conn:
                     with make_session_level_lock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
-                        bar.wait()
+                        b.wait()
                         sleep(delay)
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
-            def fn2():
+            def fn2(b):
                 with engine.connect() as conn:
                     with closing(make_session_level_lock(conn, key)) as lock:
-                        bar.wait()
+                        b.wait()
                         self.assertFalse(lock.acquire(False))
 
-            trd1 = Thread(target=fn1)
-            trd2 = Thread(target=fn2)
+            trd1 = Thread(target=fn1, args=(bar,))
+            trd2 = Thread(target=fn2, args=(bar,))
 
             trd1.start()
             trd2.start()

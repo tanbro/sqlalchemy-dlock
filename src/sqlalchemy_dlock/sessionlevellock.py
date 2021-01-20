@@ -30,11 +30,10 @@ class AbstractSessionLevelLock(local):
         ----------
 
         connection: sqlalchemy.engine.Connection
-            Database Connection on which the SQL locking functions will be invoked
+            Database Connection on which the SQL locking functions will be invoked.
 
-        key:
+        key
             Key/name or sth like that used as SQL locking function's ID
-
         """
         self._acquired = False
         self._connection = connection
@@ -48,12 +47,12 @@ class AbstractSessionLevelLock(local):
         self.close()
 
     @property
-    def key(self):
-        return self._key
-
-    @property
     def connection(self) -> Connection:
         return self._connection
+
+    @property
+    def key(self):
+        return self._key
 
     @property
     def acquired(self) -> bool:
