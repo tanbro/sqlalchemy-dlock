@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
@@ -19,6 +19,14 @@ SELECT RELEASE_LOCK(:str)
 
 TConvertFunction = Callable[[Any], str]
 
+def default_convert(key: Union[bytes, int, float]) -> str:
+    if isinstance(key, bytes):
+        result = key.decode()
+    elif isinstance(key, (int, float)):
+        result = str(key)
+    else:
+        raise TypeError('%s'.format(type(key)))
+    return result
 
 class SessionLevelLock(AbstractSessionLevelLock):
     """MySQL named-lock
@@ -40,6 +48,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
         """
         if convert:
             key = convert(key)
+        elif not isinstance(key, str):
+            key = default_convert(key)
         if not isinstance(key, str):
             raise TypeError(
                 'MySQL named lock requires the key given by string')

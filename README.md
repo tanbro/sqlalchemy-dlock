@@ -7,6 +7,8 @@ It currently supports locks of:
 - MySQL: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
 - PostgreSQL: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
 
+It's not stable and **DO NOT** use it in production.
+
 ## Usages
 
 Basic:

@@ -1,5 +1,6 @@
 from contextlib import ExitStack, closing
 from os import cpu_count
+from random import randint
 from unittest import TestCase
 from uuid import uuid1
 
@@ -32,6 +33,15 @@ class BasicTestCase(TestCase):
                 with make_session_level_lock(conn, key) as lock:
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
+
+    def test_int_key(self):
+        for engine in ENGINES:
+            for _ in range(10):
+                with engine.connect() as conn:
+                    key = randint(-0x8000_0000_0000_0000, 0x7fff_ffff_ffff_ffff)
+                    with make_session_level_lock(conn, key) as lock:
+                        self.assertTrue(lock.acquired)
+                    self.assertFalse(lock.acquired)
 
     def test_closing(self):
         key = uuid1().hex
