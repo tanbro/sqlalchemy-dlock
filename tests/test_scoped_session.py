@@ -27,6 +27,10 @@ class ScopedSessionTestCase(TestCase):
         for Session in cls.Sessions:
             Session.remove()
 
+    def tearDown(self):
+        for engine in ENGINES:
+            engine.dispose()
+
     def test_once(self):
         key = uuid1().hex
         for Session in self.Sessions:
@@ -41,15 +45,6 @@ class ScopedSessionTestCase(TestCase):
                 with make_session_level_lock(Session.connection(), key) as lock:
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
-
-    def test_error_connection_state(self):
-        key = uuid1().hex
-        for Session in self.Sessions:
-            lock = make_session_level_lock(Session.connection(), key)
-            self.assertTrue(lock.acquire())
-            Session.rollback()
-            with self.assertRaisesRegex(StatementError, "ResourceClosedError"):
-                lock.release()
 
     def test_seprated_connection(self):
         key = uuid1().hex

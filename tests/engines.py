@@ -8,7 +8,7 @@ load_dotenv()
 __all__ = ['ENGINES']
 
 ENGINES = [
-    create_engine(v, echo=True)
+    create_engine(v)
     for k, v in environ.items()
     if k.startswith('SQLALCHEMY_DLOCK_')
 ]
