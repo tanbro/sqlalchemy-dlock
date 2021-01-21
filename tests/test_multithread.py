@@ -4,7 +4,7 @@ from time import sleep, time
 from unittest import TestCase
 from uuid import uuid1
 
-from sqlalchemy_dlock import make_session_level_lock
+from sqlalchemy_dlock import make_sa_dlock
 
 from .engines import ENGINES
 
@@ -23,7 +23,7 @@ class MutliThreadTestCase(TestCase):
 
             def fn1(b):
                 with engine.connect() as conn:
-                    with make_session_level_lock(conn, key) as lock:
+                    with make_sa_dlock(conn, key) as lock:
                         b.wait()
                         self.assertTrue(lock.acquired)
                         sleep(delay)
@@ -32,7 +32,7 @@ class MutliThreadTestCase(TestCase):
 
             def fn2(b):
                 with engine.connect() as conn:
-                    with closing(make_session_level_lock(conn, key)) as lock:
+                    with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
                         self.assertFalse(lock.acquire(False))
 
@@ -54,7 +54,7 @@ class MutliThreadTestCase(TestCase):
 
             def fn1(b):
                 with engine.connect() as conn:
-                    with make_session_level_lock(conn, key) as lock:
+                    with make_sa_dlock(conn, key) as lock:
                         b.wait()
                         self.assertTrue(lock.acquired)
                         sleep(delay)
@@ -63,7 +63,7 @@ class MutliThreadTestCase(TestCase):
 
             def fn2(b):
                 with engine.connect() as conn:
-                    with closing(make_session_level_lock(conn, key)) as lock:
+                    with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
                         ts = time()
                         self.assertFalse(lock.acquire(timeout=timeout))
@@ -90,7 +90,7 @@ class MutliThreadTestCase(TestCase):
 
             def fn1(b):
                 with engine.connect() as conn:
-                    with make_session_level_lock(conn, key) as lock:
+                    with make_sa_dlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                         b.wait()
                         sleep(delay)
@@ -99,7 +99,7 @@ class MutliThreadTestCase(TestCase):
 
             def fn2(b):
                 with engine.connect() as conn:
-                    with closing(make_session_level_lock(conn, key)) as lock:
+                    with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
                         ts = time()
                         self.assertTrue(lock.acquire(timeout=timeout))
@@ -126,7 +126,7 @@ class MutliThreadTestCase(TestCase):
 
             def fn1(b):
                 with engine.connect() as conn:
-                    with make_session_level_lock(conn, key) as lock:
+                    with make_sa_dlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                         b.wait()
                         sleep(delay)
@@ -135,7 +135,7 @@ class MutliThreadTestCase(TestCase):
 
             def fn2(b):
                 with engine.connect() as conn:
-                    with closing(make_session_level_lock(conn, key)) as lock:
+                    with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
                         self.assertFalse(lock.acquire(False))
 

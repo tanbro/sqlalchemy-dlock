@@ -4,7 +4,7 @@ from unittest import TestCase
 from uuid import uuid1
 from multiprocessing import Barrier, Process
 
-from sqlalchemy_dlock import make_session_level_lock
+from sqlalchemy_dlock import make_sa_dlock
 
 from .engines import ENGINES
 
@@ -20,7 +20,7 @@ class MutliProcessTestCase(TestCase):
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with make_session_level_lock(conn, key) as lock:
+                    with make_sa_dlock(conn, key) as lock:
                         b.wait()
                         self.assertTrue(lock.acquired)
                         sleep(delay)
@@ -30,7 +30,7 @@ class MutliProcessTestCase(TestCase):
             def fn2(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with closing(make_session_level_lock(conn, key)) as lock:
+                    with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
                         self.assertFalse(lock.acquire(False))
 
@@ -53,7 +53,7 @@ class MutliProcessTestCase(TestCase):
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with make_session_level_lock(conn, key) as lock:
+                    with make_sa_dlock(conn, key) as lock:
                         b.wait()
                         self.assertTrue(lock.acquired)
                         sleep(delay)
@@ -63,7 +63,7 @@ class MutliProcessTestCase(TestCase):
             def fn2(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with closing(make_session_level_lock(conn, key)) as lock:
+                    with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
                         ts = time()
                         self.assertFalse(lock.acquire(timeout=timeout))
@@ -91,7 +91,7 @@ class MutliProcessTestCase(TestCase):
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with make_session_level_lock(conn, key) as lock:
+                    with make_sa_dlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                         b.wait()
                         sleep(delay)
@@ -101,7 +101,7 @@ class MutliProcessTestCase(TestCase):
             def fn2(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with closing(make_session_level_lock(conn, key)) as lock:
+                    with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
                         ts = time()
                         self.assertTrue(lock.acquire(timeout=timeout))
@@ -129,7 +129,7 @@ class MutliProcessTestCase(TestCase):
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with make_session_level_lock(conn, key) as lock:
+                    with make_sa_dlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                         b.wait()
                         sleep(delay)
@@ -139,9 +139,85 @@ class MutliProcessTestCase(TestCase):
             def fn2(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with closing(make_session_level_lock(conn, key)) as lock:
+                    with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
                         self.assertFalse(lock.acquire(False))
+
+            p1 = Process(target=fn1, args=(i, bar))
+            p2 = Process(target=fn2, args=(i, bar))
+
+            p1.start()
+            p2.start()
+
+            p1.join()
+            p2.join()
+
+    def test_auto_release_on_connection_close(self):
+        key = uuid1().hex
+        delay = 1
+        timeout = 3
+
+        for i in range(len(ENGINES)):
+
+            bar = Barrier(2, timeout=delay*3)
+
+            def fn1(engine_index, b):
+                engine = ENGINES[engine_index]
+                with engine.connect() as conn:
+                    lock = make_sa_dlock(conn, key)
+                    self.assertTrue(lock.acquire(False))
+                    b.wait()
+                    sleep(delay)
+                    self.assertTrue(lock.acquired)
+
+            def fn2(engine_index, b):
+                engine = ENGINES[engine_index]
+                with engine.connect() as conn:
+                    with closing(make_sa_dlock(conn, key)) as lock:
+                        b.wait()
+                        ts = time()
+                        self.assertTrue(lock.acquire(timeout=timeout))
+                        self.assertGreaterEqual(time()-ts, delay)
+                        self.assertGreaterEqual(timeout, time()-ts)
+                        self.assertTrue(lock.acquired)
+
+            p1 = Process(target=fn1, args=(i, bar))
+            p2 = Process(target=fn2, args=(i, bar))
+
+            p1.start()
+            p2.start()
+
+            p1.join()
+            p2.join()
+
+    def test_auto_release_on_process_exit(self):
+        key = uuid1().hex
+        delay = 1
+        timeout = 3
+
+        for i in range(len(ENGINES)):
+
+            bar = Barrier(2, timeout=delay*3)
+
+            def fn1(engine_index, b):
+                engine = ENGINES[engine_index]
+                conn = engine.connect()
+                lock = make_sa_dlock(conn, key)
+                self.assertTrue(lock.acquire(False))
+                b.wait()
+                sleep(delay)
+                self.assertTrue(lock.acquired)
+
+            def fn2(engine_index, b):
+                engine = ENGINES[engine_index]
+                with engine.connect() as conn:
+                    with closing(make_sa_dlock(conn, key)) as lock:
+                        b.wait()
+                        ts = time()
+                        self.assertTrue(lock.acquire(timeout=timeout))
+                        self.assertGreaterEqual(time()-ts, delay)
+                        self.assertGreaterEqual(timeout, time()-ts)
+                        self.assertTrue(lock.acquired)
 
             p1 = Process(target=fn1, args=(i, bar))
             p2 = Process(target=fn2, args=(i, bar))

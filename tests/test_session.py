@@ -1,9 +1,7 @@
-from contextlib import closing
 from unittest import TestCase
 from uuid import uuid1
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import StatementError
-from sqlalchemy_dlock import make_session_level_lock
+from sqlalchemy_dlock import make_sa_dlock
 
 from .engines import ENGINES
 from .utils import session_scope
@@ -27,7 +25,7 @@ class SessionTestCase(TestCase):
         key = uuid1().hex
         for Session in self.Sessions:
             with session_scope(Session) as session:
-                with make_session_level_lock(session.connection(), key) as lock:
+                with make_sa_dlock(session.connection(), key) as lock:
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
 
@@ -37,7 +35,7 @@ class SessionTestCase(TestCase):
             with session_scope(Session) as session:
                 with session.get_bind().connect() as conn:
                     session.commit()
-                    lock = make_session_level_lock(conn, key)
+                    lock = make_sa_dlock(conn, key)
                     session.rollback()
                     self.assertTrue(lock.acquire())
                     session.close()

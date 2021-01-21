@@ -4,7 +4,7 @@ from random import randint
 from unittest import TestCase
 from uuid import uuid1
 
-from sqlalchemy_dlock import make_session_level_lock
+from sqlalchemy_dlock import make_sa_dlock
 
 from .engines import ENGINES
 
@@ -19,7 +19,7 @@ class BasicTestCase(TestCase):
         key = uuid1().hex
         for engine in ENGINES:
             with engine.connect() as conn:
-                lock = make_session_level_lock(conn, key)
+                lock = make_sa_dlock(conn, key)
                 self.assertFalse(lock.acquired)
                 lock.acquire()
                 self.assertTrue(lock.acquired)
@@ -30,7 +30,7 @@ class BasicTestCase(TestCase):
         key = uuid1().hex
         for engine in ENGINES:
             with engine.connect() as conn:
-                with make_session_level_lock(conn, key) as lock:
+                with make_sa_dlock(conn, key) as lock:
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
 
@@ -39,7 +39,7 @@ class BasicTestCase(TestCase):
             for _ in range(10):
                 with engine.connect() as conn:
                     key = randint(-0x8000_0000_0000_0000, 0x7fff_ffff_ffff_ffff)
-                    with make_session_level_lock(conn, key) as lock:
+                    with make_sa_dlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
@@ -47,7 +47,7 @@ class BasicTestCase(TestCase):
         key = uuid1().hex
         for engine in ENGINES:
             with engine.connect() as conn:
-                with closing(make_session_level_lock(conn, key)) as lock:
+                with closing(make_sa_dlock(conn, key)) as lock:
                     self.assertFalse(lock.acquired)
                     lock.acquire()
                     self.assertTrue(lock.acquired)
@@ -58,7 +58,7 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             for _ in range(cpu_count()+1):
                 with engine.connect() as conn:
-                    with make_session_level_lock(conn, key) as lock:
+                    with make_sa_dlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
@@ -66,7 +66,7 @@ class BasicTestCase(TestCase):
         key = uuid1().hex
         for engine in ENGINES:
             with engine.connect() as conn:
-                with closing(make_session_level_lock(conn, key)) as lock:
+                with closing(make_sa_dlock(conn, key)) as lock:
                     self.assertFalse(lock.acquired)
                     acquired = lock.acquire(False)
                     self.assertTrue(acquired)
@@ -78,7 +78,7 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             for _ in range(cpu_count()+1):
                 with engine.connect() as conn:
-                    with closing(make_session_level_lock(conn, key)) as lock:
+                    with closing(make_sa_dlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(timeout=0))
                     self.assertFalse(lock.acquired)
 
@@ -87,7 +87,7 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             for i in range(cpu_count()+1):
                 with engine.connect() as conn:
-                    with closing(make_session_level_lock(conn, key)) as lock:
+                    with closing(make_sa_dlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(timeout=-1*(i+1)))
                     self.assertFalse(lock.acquired)
 
@@ -99,9 +99,9 @@ class BasicTestCase(TestCase):
                     stack.enter_context(engine.connect())
                     for _ in range(2)
                 ]
-                lock0 = make_session_level_lock(conn0, key)
+                lock0 = make_sa_dlock(conn0, key)
                 self.assertTrue(lock0.acquire(timeout=0))
-                lock1 = make_session_level_lock(conn1, key)
+                lock1 = make_sa_dlock(conn1, key)
                 self.assertFalse(lock1.acquire(timeout=0))
                 lock0.release()
                 self.assertFalse(lock0.acquired)
@@ -117,8 +117,8 @@ class BasicTestCase(TestCase):
                     stack.enter_context(engine.connect())
                     for _ in range(2)
                 ]
-                lock0 = make_session_level_lock(conn0, key)
+                lock0 = make_sa_dlock(conn0, key)
                 self.assertTrue(lock0.acquire())
-                lock1 = make_session_level_lock(conn1, key)
+                lock1 = make_sa_dlock(conn1, key)
                 with self.assertRaisesRegex(RuntimeError, 'invoked on an unlocked lock'):
                     lock1.release()

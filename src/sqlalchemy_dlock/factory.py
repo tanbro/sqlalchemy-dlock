@@ -4,10 +4,10 @@ from sqlalchemy.engine import Connection
 from .sessionlevellock import AbstractSessionLevelLock
 from .utils import safe_name
 
-__all__ = ['make_session_level_lock']
+__all__ = ['make_sa_dlock']
 
 
-def make_session_level_lock(
+def make_sa_dlock(
     connection: Connection,
     key,
     *args, **kwargs
