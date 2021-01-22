@@ -1,14 +1,14 @@
 from unittest import TestCase
 from uuid import uuid1
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy_dlock import make_sa_dlock
 
+from sqlalchemy.orm import sessionmaker
+
+from sqlalchemy_dlock import make_sa_dlock
 from .engines import ENGINES
 from .utils import session_scope
 
 
 class SessionTestCase(TestCase):
-
     Sessions = []
 
     @classmethod

@@ -2,10 +2,9 @@ from contextlib import ExitStack, closing
 from os import cpu_count
 from random import randint
 from unittest import TestCase
-from uuid import uuid1
+from uuid import uuid4
 
 from sqlalchemy_dlock import make_sa_dlock
-
 from .engines import ENGINES
 
 
@@ -16,8 +15,8 @@ class BasicTestCase(TestCase):
             engine.dispose()
 
     def test_enter_exit(self):
-        key = uuid1().hex
         for engine in ENGINES:
+            key = uuid4().hex
             with engine.connect() as conn:
                 lock = make_sa_dlock(conn, key)
                 self.assertFalse(lock.acquired)
@@ -27,8 +26,8 @@ class BasicTestCase(TestCase):
                 self.assertFalse(lock.acquired)
 
     def test_with_statement(self):
-        key = uuid1().hex
         for engine in ENGINES:
+            key = uuid4().hex
             with engine.connect() as conn:
                 with make_sa_dlock(conn, key) as lock:
                     self.assertTrue(lock.acquired)
@@ -44,8 +43,8 @@ class BasicTestCase(TestCase):
                     self.assertFalse(lock.acquired)
 
     def test_closing(self):
-        key = uuid1().hex
         for engine in ENGINES:
+            key = uuid4().hex
             with engine.connect() as conn:
                 with closing(make_sa_dlock(conn, key)) as lock:
                     self.assertFalse(lock.acquired)
@@ -54,17 +53,17 @@ class BasicTestCase(TestCase):
                 self.assertFalse(lock.acquired)
 
     def test_enter_exit_may_times(self):
-        key = uuid1().hex
         for engine in ENGINES:
-            for _ in range(cpu_count()+1):
+            key = uuid4().hex
+            for _ in range(cpu_count() + 1):
                 with engine.connect() as conn:
                     with make_sa_dlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
     def test_no_blocking(self):
-        key = uuid1().hex
         for engine in ENGINES:
+            key = uuid4().hex
             with engine.connect() as conn:
                 with closing(make_sa_dlock(conn, key)) as lock:
                     self.assertFalse(lock.acquired)
@@ -74,26 +73,26 @@ class BasicTestCase(TestCase):
                 self.assertFalse(lock.acquired)
 
     def test_timeout_zero(self):
-        key = uuid1().hex
         for engine in ENGINES:
-            for _ in range(cpu_count()+1):
+            key = uuid4().hex
+            for _ in range(cpu_count() + 1):
                 with engine.connect() as conn:
                     with closing(make_sa_dlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(timeout=0))
                     self.assertFalse(lock.acquired)
 
     def test_timeout_negative(self):
-        key = uuid1().hex
         for engine in ENGINES:
-            for i in range(cpu_count()+1):
+            key = uuid4().hex
+            for i in range(cpu_count() + 1):
                 with engine.connect() as conn:
                     with closing(make_sa_dlock(conn, key)) as lock:
-                        self.assertTrue(lock.acquire(timeout=-1*(i+1)))
+                        self.assertTrue(lock.acquire(timeout=-1 * (i + 1)))
                     self.assertFalse(lock.acquired)
 
     def test_acquire_locked(self):
-        key = uuid1().hex
         for engine in ENGINES:
+            key = uuid4().hex
             with ExitStack() as stack:
                 conn0, conn1 = [
                     stack.enter_context(engine.connect())
@@ -110,8 +109,8 @@ class BasicTestCase(TestCase):
                 self.assertFalse(lock1.acquired)
 
     def test_release_unlocked(self):
-        key = uuid1().hex
         for engine in ENGINES:
+            key = uuid4().hex
             with ExitStack() as stack:
                 conn0, conn1 = [
                     stack.enter_context(engine.connect())

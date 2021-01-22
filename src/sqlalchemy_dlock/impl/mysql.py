@@ -2,12 +2,12 @@ from textwrap import dedent
 from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Connection  # noqa
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..sessionlevellock import AbstractSessionLevelLock
 
-MYSQL_LOCK_NAME_MAX_LEGNTH = 64
+MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
 GET_LOCK = text(dedent('''
 SELECT GET_LOCK(:str, :timeout)
@@ -19,14 +19,16 @@ SELECT RELEASE_LOCK(:str)
 
 TConvertFunction = Callable[[Any], str]
 
-def default_convert(key: Union[bytes, int, float]) -> str:
-    if isinstance(key, bytes):
+
+def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
+    if isinstance(key, (bytearray, bytes)):
         result = key.decode()
     elif isinstance(key, (int, float)):
         result = str(key)
     else:
         raise TypeError('%s'.format(type(key)))
     return result
+
 
 class SessionLevelLock(AbstractSessionLevelLock):
     """MySQL named-lock
@@ -53,15 +55,14 @@ class SessionLevelLock(AbstractSessionLevelLock):
         if not isinstance(key, str):
             raise TypeError(
                 'MySQL named lock requires the key given by string')
-        if len(key) > MYSQL_LOCK_NAME_MAX_LEGNTH:
+        if len(key) > MYSQL_LOCK_NAME_MAX_LENGTH:
             raise ValueError(
-                'MySQL enforces a maximum length on lock names of {} characters.'
-                .format(MYSQL_LOCK_NAME_MAX_LEGNTH)
-            )
+                'MySQL enforces a maximum length on lock names of {} characters.'.format(
+                    MYSQL_LOCK_NAME_MAX_LENGTH))
         #
         super().__init__(connection, key)
 
-    def acquire(self, blocking: bool = True, timeout: int = -1) -> bool:
+    def acquire(self, blocking: bool = True, timeout: int = -1, **kwargs) -> bool:
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
         timeout = int(timeout) if blocking else 0
@@ -88,13 +89,13 @@ class SessionLevelLock(AbstractSessionLevelLock):
             self._acquired = False
         elif ret_val == 0:
             raise SqlAlchemyDLockDatabaseError(
-                'The named lock "{}" was not established by this thread, and the lock is not released.'.
-                format(self._key))
+                'The named lock "{}" was not established by this thread, '
+                'and the lock is not released.'.format(self._key))
         elif ret_val is None:
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                'The named lock "{}" did not exist， was never obtained by a call to GET_LOCK()， or has previously been released.'.
-                format(self._key)
+                'The named lock "{}" did not exist， was never obtained by a call to GET_LOCK()， '
+                'or has previously been released.'.format(self._key)
             )
         else:
             raise SqlAlchemyDLockDatabaseError(

@@ -1,6 +1,6 @@
 from threading import local
 
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Connection  # noqa
 
 
 class AbstractSessionLevelLock(local):
@@ -47,10 +47,11 @@ class AbstractSessionLevelLock(local):
         self.close()
 
     def __str__(self):
-        name = '{} {} d-lock[{}]'.format(
-            self.__class__.__name__, self._connection.engine.name, self._key)
-        return '<{} {} at 0x{:x}>'.format(
-            'locked' if self._acquired else 'unlocked', name, id(self))
+        return '<{} {} key={} at 0x{:x}>'.format(
+            'locked' if self._acquired else 'unlocked',
+            self.__class__.__name__,
+            self._key, id(self)
+        )
 
     @property
     def connection(self) -> Connection:
@@ -72,21 +73,24 @@ class AbstractSessionLevelLock(local):
           block until the lock is unlocked, then set it to locked and return True.
 
         - When invoked with the blocking argument set to False, do not block.
-          If a call with blocking set to True would block, return False immediately; otherwise, set the lock to locked and return True.
+          If a call with blocking set to True would block, return False immediately;
+          otherwise, set the lock to locked and return True.
 
         - When invoked with the floating-point timeout argument set to a positive value,
           block for at most the number of seconds specified by timeout and as long as the lock cannot be acquired.
           A negative timeout argument specifies an unbounded wait.
           It has no effect to specify a timeout when blocking is false.
 
-        The return value is True if the lock is acquired successfully, False if not (for example if the timeout expired).
+        The return value is True if the lock is acquired successfully,
+        False if not (for example if the timeout expired).
         """
         raise NotImplementedError()
 
     def release(self, *args, **kwargs):
         """Release a lock. This can be called from any thread, not only the thread which has acquired the lock.
 
-        When the lock is locked, reset it to unlocked, and return. If any other threads are blocked waiting for the lock to become unlocked, allow exactly one of them to proceed.
+        When the lock is locked, reset it to unlocked, and return.
+        If any other threads are blocked waiting for the lock to become unlocked, allow exactly one of them to proceed.
 
         When invoked on an unlocked lock, a RuntimeError is raised.
 
@@ -94,7 +98,7 @@ class AbstractSessionLevelLock(local):
         """
         raise NotImplementedError()
 
-    def close(self, *args, **kwargs):
+    def close(self, *args, **kwargs):  # noqa
         """Same like :meth:`release`, but won't raise a :class:`RuntimeError` when the object is not acquired yet.
         """
         if self._acquired:

@@ -1,11 +1,11 @@
-from hashlib import blake2b
 from sys import byteorder
 from textwrap import dedent
 from time import sleep, time
 from typing import Any, Callable, Optional, Union
 
+import libscrc
 from sqlalchemy import text
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Connection  # noqa
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..sessionlevellock import AbstractSessionLevelLock
@@ -24,19 +24,17 @@ SELECT pg_try_advisory_lock(:key)
 ''').strip())
 
 UNLOCK = text(dedent('''
-SELECT  pg_advisory_unlock(:key)
+SELECT pg_advisory_unlock(:key)
 ''').strip())
-
 
 TConvertFunction = Callable[[Any], int]
 
 
-def default_convert(key: Union[bytes, str]) -> int:
+def default_convert(key: Union[bytearray, bytes, str]) -> int:
     if isinstance(key, str):
         key = key.encode()
-    if isinstance(key, bytes):
-        digest = blake2b(key, digest_size=8).digest()
-        result = int.from_bytes(digest, byteorder, signed=True)
+    if isinstance(key, (bytearray, bytes)):
+        result = libscrc.iso(key)
     else:
         raise TypeError('%s'.format(type(key)))
     return ensure_int8(result)
@@ -73,7 +71,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
 
         - When ``key`` is :class:`int`, the constructor ensures it to be ``INT8``
         - When ``key`` is :class:`str` or :class:`bytes`,
-          the constructor calculates its 8-bytes hash code with :func:`hashlib.blake2b`,
+          the constructor calculates its 8-bytes hash code with CRC-64-ISO,
           and takes the code as actual key.
         - Or you can specify a custom function in ``convert`` argument
 
@@ -83,14 +81,13 @@ class SessionLevelLock(AbstractSessionLevelLock):
         It's default value is ``1``
         """
         if convert:
-            key = convert(key)
+            key = ensure_int8(convert(key))
         else:
-            if isinstance(key, (bytes, str)):
+            if isinstance(key, (bytearray, bytes, str)):
                 key = default_convert(key)
         if not isinstance(key, int):
             raise TypeError(
                 'PostgreSQL advisory lock requires the key given by integer')
-        key = ensure_int8(key)
         #
         if interval is None:
             interval = SLEEP_INTERVAL_DEFAULT
@@ -98,7 +95,11 @@ class SessionLevelLock(AbstractSessionLevelLock):
         #
         super().__init__(connection, key)
 
-    def acquire(self, blocking: bool = True, timeout: int = -1, interval: Union[float, int, None] = None) -> bool:
+    def acquire(self,
+                blocking: bool = True, timeout: int = -1,
+                interval: Union[float, int, None] = None,
+                **kwargs
+                ) -> bool:
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
         if blocking:
@@ -109,6 +110,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
             else:
                 if interval is None:
                     interval = self._interval
+                assert not self._interval < 0, 'interval must not be smaller than 0'
                 begin_ts = time()
                 while True:
                     stmt = TRY_LOCK.params(key=self.key)

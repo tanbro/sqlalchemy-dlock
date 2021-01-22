@@ -1,18 +1,17 @@
 from contextlib import closing
+from multiprocessing import Barrier, Process
 from time import sleep, time
 from unittest import TestCase
-from uuid import uuid1
-from multiprocessing import Barrier, Process
+from uuid import uuid4
 
 from sqlalchemy_dlock import make_sa_dlock
-
 from .engines import ENGINES
 
 
 class MutliProcessTestCase(TestCase):
 
     def test_non_blocking(self):
-        key = uuid1().hex
+        key = uuid4().hex
         delay = 1
         for i in range(len(ENGINES)):
             bar = Barrier(2)
@@ -47,7 +46,7 @@ class MutliProcessTestCase(TestCase):
             self.assertEqual(p2.exitcode, 0)
 
     def test_timeout_fail(self):
-        key = uuid1().hex
+        key = uuid4().hex
         delay = 3
         timeout = 1
         for i in range(len(ENGINES)):
@@ -70,7 +69,7 @@ class MutliProcessTestCase(TestCase):
                         b.wait()
                         ts = time()
                         self.assertFalse(lock.acquire(timeout=timeout))
-                        self.assertGreaterEqual(time()-ts, timeout)
+                        self.assertGreaterEqual(time() - ts, timeout)
                         self.assertFalse(lock.acquired)
 
             p1 = Process(target=fn1, args=(i, bar))
@@ -86,12 +85,11 @@ class MutliProcessTestCase(TestCase):
             self.assertEqual(p2.exitcode, 0)
 
     def test_timeout_success(self):
-        key = uuid1().hex
+        key = uuid4().hex
         delay = 1
         timeout = 3
 
         for i in range(len(ENGINES)):
-
             bar = Barrier(2)
 
             def fn1(engine_index, b):
@@ -111,8 +109,8 @@ class MutliProcessTestCase(TestCase):
                         b.wait()
                         ts = time()
                         self.assertTrue(lock.acquire(timeout=timeout))
-                        self.assertGreaterEqual(time()-ts, delay)
-                        self.assertGreaterEqual(timeout, time()-ts)
+                        self.assertGreaterEqual(time() - ts, delay)
+                        self.assertGreaterEqual(timeout, time() - ts)
                         self.assertTrue(lock.acquired)
 
             p1 = Process(target=fn1, args=(i, bar))
@@ -128,11 +126,10 @@ class MutliProcessTestCase(TestCase):
             self.assertEqual(p2.exitcode, 0)
 
     def test_Process_no_blocking_fail(self):
-        key = uuid1().hex
+        key = uuid4().hex
         delay = 1
 
         for i in range(len(ENGINES)):
-
             bar = Barrier(2)
 
             def fn1(engine_index, b):
@@ -165,10 +162,9 @@ class MutliProcessTestCase(TestCase):
             self.assertEqual(p2.exitcode, 0)
 
     def test_release_omitted(self):
-        key = uuid1().hex
+        key = uuid4().hex
 
         for i in range(len(ENGINES)):
-
             def fn1(engine_index):
                 engine = ENGINES[engine_index]
                 lock = make_sa_dlock(engine.connect(), key)

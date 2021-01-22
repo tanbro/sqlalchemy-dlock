@@ -2,10 +2,9 @@ from contextlib import closing
 from threading import Barrier, Thread
 from time import sleep, time
 from unittest import TestCase
-from uuid import uuid1
+from uuid import uuid4
 
 from sqlalchemy_dlock import make_sa_dlock
-
 from .engines import ENGINES
 
 
@@ -16,7 +15,7 @@ class MutliThreadTestCase(TestCase):
             engine.dispose()
 
     def test_non_blocking(self):
-        key = uuid1().hex
+        key = uuid4().hex
         delay = 1
         for engine in ENGINES:
             bar = Barrier(2)
@@ -46,7 +45,7 @@ class MutliThreadTestCase(TestCase):
             trd2.join()
 
     def test_timeout_fail(self):
-        key = uuid1().hex
+        key = uuid4().hex
         delay = 3
         timeout = 1
         for engine in ENGINES:
@@ -67,7 +66,7 @@ class MutliThreadTestCase(TestCase):
                         b.wait()
                         ts = time()
                         self.assertFalse(lock.acquire(timeout=timeout))
-                        self.assertGreaterEqual(time()-ts, timeout)
+                        self.assertGreaterEqual(time() - ts, timeout)
                         self.assertFalse(lock.acquired)
 
             trd1 = Thread(target=fn1, args=(bar,))
@@ -80,12 +79,11 @@ class MutliThreadTestCase(TestCase):
             trd2.join()
 
     def test_timeout_success(self):
-        key = uuid1().hex
+        key = uuid4().hex
         delay = 1
         timeout = 3
 
         for engine in ENGINES:
-
             bar = Barrier(2)
 
             def fn1(b):
@@ -103,8 +101,8 @@ class MutliThreadTestCase(TestCase):
                         b.wait()
                         ts = time()
                         self.assertTrue(lock.acquire(timeout=timeout))
-                        self.assertGreaterEqual(time()-ts, delay)
-                        self.assertGreaterEqual(timeout, time()-ts)
+                        self.assertGreaterEqual(time() - ts, delay)
+                        self.assertGreaterEqual(timeout, time() - ts)
                         self.assertTrue(lock.acquired)
 
             trd1 = Thread(target=fn1, args=(bar,))
@@ -117,11 +115,10 @@ class MutliThreadTestCase(TestCase):
             trd2.join()
 
     def test_no_blocking_fail(self):
-        key = uuid1().hex
+        key = uuid4().hex
         delay = 1
 
         for engine in ENGINES:
-
             bar = Barrier(2)
 
             def fn1(b):
@@ -149,10 +146,9 @@ class MutliThreadTestCase(TestCase):
             trd2.join()
 
     def test_release_omitted(self):
-        key = uuid1().hex
+        key = uuid4().hex
 
         for engine in ENGINES:
-
             def fn1():
                 conn = engine.connect()
                 lock = make_sa_dlock(conn, key)
