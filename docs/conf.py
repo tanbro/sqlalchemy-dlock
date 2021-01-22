@@ -13,13 +13,13 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-import sys
+
 from pkg_resources import get_distribution
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'sqlalchemy-dlock'
+project = 'SQLAlchemy-DLock'
 copyright = '2021, liu xue yan'
 author = 'liu xue yan'
 
