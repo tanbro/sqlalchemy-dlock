@@ -1,9 +1,9 @@
-from hashlib import blake2b
 from sys import byteorder
 from textwrap import dedent
 from time import sleep, time
 from typing import Any, Callable, Optional, Union
 
+import libscrc
 from sqlalchemy import text
 from sqlalchemy.engine import Connection  # noqa
 
@@ -30,12 +30,11 @@ SELECT pg_advisory_unlock(:key)
 TConvertFunction = Callable[[Any], int]
 
 
-def default_convert(key: Union[(bytearray, bytes), str]) -> int:
+def default_convert(key: Union[bytearray, bytes, str]) -> int:
     if isinstance(key, str):
         key = key.encode()
     if isinstance(key, (bytearray, bytes)):
-        digest = blake2b(key, digest_size=8).digest()
-        result = int.from_bytes(digest, byteorder, signed=True)
+        result = libscrc.iso(key)
     else:
         raise TypeError('%s'.format(type(key)))
     return ensure_int8(result)
@@ -72,7 +71,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
 
         - When ``key`` is :class:`int`, the constructor ensures it to be ``INT8``
         - When ``key`` is :class:`str` or :class:`bytes`,
-          the constructor calculates its 8-bytes hash code with :func:`hashlib.blake2b`,
+          the constructor calculates its 8-bytes hash code with CRC-64-ISO,
           and takes the code as actual key.
         - Or you can specify a custom function in ``convert`` argument
 
@@ -84,7 +83,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         if convert:
             key = ensure_int8(convert(key))
         else:
-            if isinstance(key, (bytes, str)):
+            if isinstance(key, (bytearray, bytes, str)):
                 key = default_convert(key)
         if not isinstance(key, int):
             raise TypeError(

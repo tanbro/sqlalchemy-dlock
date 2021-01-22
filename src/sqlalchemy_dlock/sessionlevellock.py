@@ -47,10 +47,11 @@ class AbstractSessionLevelLock(local):
         self.close()
 
     def __str__(self):
-        name = '{} {} d-lock[{}]'.format(
-            self.__class__.__name__, self._connection.engine.name, self._key)
-        return '<{} {} at 0x{:x}>'.format(
-            'locked' if self._acquired else 'unlocked', name, id(self))
+        return '<{} {} key={} at 0x{:x}>'.format(
+            'locked' if self._acquired else 'unlocked',
+            self.__class__.__name__,
+            self._key, id(self)
+        )
 
     @property
     def connection(self) -> Connection:

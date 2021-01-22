@@ -1,12 +1,13 @@
 from contextlib import contextmanager
 
+
 @contextmanager
-def session_scope(Session):
+def session_scope(Session):  # noqa
     """Provide a transactional scope around a series of operations."""
     session = Session()
     try:
         yield session
-    except:
+    except:  # noqa
         session.rollback()
         raise
     finally:
