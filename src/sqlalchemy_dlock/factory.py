@@ -1,16 +1,17 @@
 from importlib import import_module
-from sqlalchemy.engine import Connection
+
+from sqlalchemy.engine import Connection  # noqa
 
 from .sessionlevellock import AbstractSessionLevelLock
 from .utils import safe_name
 
-__all__ = ['make_sa_dlock']
+__all__ = ['make_sa_dlock']  # noqa
 
 
-def make_sa_dlock(
-    connection: Connection,
-    key,
-    *args, **kwargs
+def make_sa_dlock(  # noqa
+        connection: Connection,
+        key,
+        *args, **kwargs
 ) -> AbstractSessionLevelLock:
     """Create a session level distributed lock object
 
