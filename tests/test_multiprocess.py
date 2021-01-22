@@ -15,7 +15,7 @@ class MutliProcessTestCase(TestCase):
         key = uuid1().hex
         delay = 1
         for i in range(len(ENGINES)):
-            bar = Barrier(2, timeout=delay*3)
+            bar = Barrier(2)
 
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
@@ -43,12 +43,15 @@ class MutliProcessTestCase(TestCase):
             p1.join()
             p2.join()
 
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)
+
     def test_timeout_fail(self):
         key = uuid1().hex
         delay = 3
         timeout = 1
         for i in range(len(ENGINES)):
-            bar = Barrier(2, timeout=delay*3)
+            bar = Barrier(2)
 
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
@@ -79,6 +82,9 @@ class MutliProcessTestCase(TestCase):
             p1.join()
             p2.join()
 
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)
+
     def test_timeout_success(self):
         key = uuid1().hex
         delay = 1
@@ -86,7 +92,7 @@ class MutliProcessTestCase(TestCase):
 
         for i in range(len(ENGINES)):
 
-            bar = Barrier(2, timeout=delay*3)
+            bar = Barrier(2)
 
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
@@ -118,13 +124,16 @@ class MutliProcessTestCase(TestCase):
             p1.join()
             p2.join()
 
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)
+
     def test_Process_no_blocking_fail(self):
         key = uuid1().hex
         delay = 1
 
         for i in range(len(ENGINES)):
 
-            bar = Barrier(2, timeout=delay*3)
+            bar = Barrier(2)
 
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
@@ -152,78 +161,33 @@ class MutliProcessTestCase(TestCase):
             p1.join()
             p2.join()
 
-    def test_auto_release_on_connection_close(self):
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)
+
+    def test_release_omitted(self):
         key = uuid1().hex
-        delay = 1
-        timeout = 3
 
         for i in range(len(ENGINES)):
 
-            bar = Barrier(2, timeout=delay*3)
-
-            def fn1(engine_index, b):
+            def fn1(engine_index):
                 engine = ENGINES[engine_index]
-                with engine.connect() as conn:
-                    lock = make_sa_dlock(conn, key)
-                    self.assertTrue(lock.acquire(False))
-                    b.wait()
-                    sleep(delay)
-                    self.assertTrue(lock.acquired)
-
-            def fn2(engine_index, b):
-                engine = ENGINES[engine_index]
-                with engine.connect() as conn:
-                    with closing(make_sa_dlock(conn, key)) as lock:
-                        b.wait()
-                        ts = time()
-                        self.assertTrue(lock.acquire(timeout=timeout))
-                        self.assertGreaterEqual(time()-ts, delay)
-                        self.assertGreaterEqual(timeout, time()-ts)
-                        self.assertTrue(lock.acquired)
-
-            p1 = Process(target=fn1, args=(i, bar))
-            p2 = Process(target=fn2, args=(i, bar))
-
-            p1.start()
-            p2.start()
-
-            p1.join()
-            p2.join()
-
-    def test_auto_release_on_process_exit(self):
-        key = uuid1().hex
-        delay = 1
-        timeout = 3
-
-        for i in range(len(ENGINES)):
-
-            bar = Barrier(2, timeout=delay*3)
-
-            def fn1(engine_index, b):
-                engine = ENGINES[engine_index]
-                conn = engine.connect()
-                lock = make_sa_dlock(conn, key)
+                lock = make_sa_dlock(engine.connect(), key)
                 self.assertTrue(lock.acquire(False))
-                b.wait()
-                sleep(delay)
-                self.assertTrue(lock.acquired)
 
-            def fn2(engine_index, b):
+            def fn2(engine_index):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
                     with closing(make_sa_dlock(conn, key)) as lock:
-                        b.wait()
-                        ts = time()
-                        self.assertTrue(lock.acquire(timeout=timeout))
-                        self.assertGreaterEqual(time()-ts, delay)
-                        self.assertGreaterEqual(timeout, time()-ts)
-                        self.assertTrue(lock.acquired)
+                        self.assertTrue(lock.acquire(False))
 
-            p1 = Process(target=fn1, args=(i, bar))
-            p2 = Process(target=fn2, args=(i, bar))
+            p1 = Process(target=fn1, args=(i,))
+            p2 = Process(target=fn2, args=(i,))
 
             p1.start()
-            p2.start()
-
             p1.join()
+
+            p2.start()
             p2.join()
+
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)

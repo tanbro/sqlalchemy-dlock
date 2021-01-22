@@ -19,7 +19,7 @@ class MutliThreadTestCase(TestCase):
         key = uuid1().hex
         delay = 1
         for engine in ENGINES:
-            bar = Barrier(2, timeout=delay*3)
+            bar = Barrier(2)
 
             def fn1(b):
                 with engine.connect() as conn:
@@ -50,7 +50,7 @@ class MutliThreadTestCase(TestCase):
         delay = 3
         timeout = 1
         for engine in ENGINES:
-            bar = Barrier(2, timeout=delay*3)
+            bar = Barrier(2)
 
             def fn1(b):
                 with engine.connect() as conn:
@@ -116,7 +116,7 @@ class MutliThreadTestCase(TestCase):
             trd1.join()
             trd2.join()
 
-    def test_thread_no_blocking_fail(self):
+    def test_no_blocking_fail(self):
         key = uuid1().hex
         delay = 1
 
@@ -146,4 +146,28 @@ class MutliThreadTestCase(TestCase):
             trd2.start()
 
             trd1.join()
+            trd2.join()
+
+    def test_release_omitted(self):
+        key = uuid1().hex
+
+        for engine in ENGINES:
+
+            def fn1():
+                conn = engine.connect()
+                lock = make_sa_dlock(conn, key)
+                self.assertTrue(lock.acquire(False))
+
+            def fn2():
+                with engine.connect() as conn:
+                    with closing(make_sa_dlock(conn, key)) as lock:
+                        self.assertTrue(lock.acquire(False))
+
+            trd1 = Thread(target=fn1)
+            trd2 = Thread(target=fn2)
+
+            trd1.start()
+            trd1.join()
+
+            trd2.start()
             trd2.join()

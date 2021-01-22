@@ -46,6 +46,12 @@ class AbstractSessionLevelLock(local):
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
 
+    def __str__(self):
+        name = '{} {} d-lock[{}]'.format(
+            self.__class__.__name__, self._connection.engine.name, self._key)
+        return '<{} {} at 0x{:x}>'.format(
+            'locked' if self._acquired else 'unlocked', name, id(self))
+
     @property
     def connection(self) -> Connection:
         return self._connection
