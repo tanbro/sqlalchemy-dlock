@@ -33,7 +33,7 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
 class SessionLevelLock(AbstractSessionLevelLock):
     """MySQL named-lock
 
-    :ref: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
+    .. seealso:: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
 
     .. attention:: Multiple simultaneous locks can be acquired and GET_LOCK() does not release any existing locks
     """
@@ -42,7 +42,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
                  connection: Connection,
                  key,
                  *,
-                 convert: Optional[TConvertFunction] = None
+                 convert: Optional[TConvertFunction] = None,
+                 **_
                  ):
         """
         MySQL named lock requires the key given by string.
@@ -62,10 +63,13 @@ class SessionLevelLock(AbstractSessionLevelLock):
         #
         super().__init__(connection, key)
 
-    def acquire(self, blocking: bool = True, timeout: int = -1, **kwargs) -> bool:
+    def acquire(self,
+                blocking: bool = True, timeout: Union[float, int] = -1,
+                **_
+                ) -> bool:
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
-        timeout = int(timeout) if blocking else 0
+        timeout = round(timeout) if blocking else 0
         stmt = GET_LOCK.params(str=self.key, timeout=timeout)
         ret_val = self.connection.execute(stmt).scalar()
         if ret_val == 1:
@@ -80,7 +84,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 'GET_LOCK("{}", {}) returns {}'.format(self._key, timeout, ret_val))
         return self._acquired
 
-    def release(self):
+    def release(self, **_):
         if not self._acquired:
             raise RuntimeError('invoked on an unlocked lock')
         stmt = RELEASE_LOCK.params(str=self.key)

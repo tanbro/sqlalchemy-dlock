@@ -1,4 +1,5 @@
 from threading import local
+from typing import Union
 
 from sqlalchemy.engine import Connection  # noqa
 
@@ -14,16 +15,14 @@ class AbstractSessionLevelLock(local):
     .. attention::
 
         The **session** here means session of Database, **NOT** SQLAlchemy's.
-
         :class:`sqlalchemy.orm.session.Session` is more like transaction.
-
-        Database's sessions are usually managed as connections in SQLAlchemy
+        Here we roughly take :class:`sqlalchemy.engine.Connection`  as database's session.
     """
 
     def __init__(self,
                  connection: Connection,
                  key,
-                 *args, **kwargs
+                 **_
                  ):
         """
         Parameters
@@ -65,7 +64,7 @@ class AbstractSessionLevelLock(local):
     def acquired(self) -> bool:
         return self._acquired
 
-    def acquire(self, blocking: bool = True, timeout: int = -1, *args, **kwargs) -> bool:
+    def acquire(self, blocking: bool = True, timeout: Union[float, int] = -1, **_) -> bool:
         """
         Acquire a lock, blocking or non-blocking.
 
@@ -86,7 +85,7 @@ class AbstractSessionLevelLock(local):
         """
         raise NotImplementedError()
 
-    def release(self, *args, **kwargs):
+    def release(self, **kwargs):
         """Release a lock. This can be called from any thread, not only the thread which has acquired the lock.
 
         When the lock is locked, reset it to unlocked, and return.
@@ -98,8 +97,25 @@ class AbstractSessionLevelLock(local):
         """
         raise NotImplementedError()
 
-    def close(self, *args, **kwargs):  # noqa
-        """Same like :meth:`release`, but won't raise a :class:`RuntimeError` when the object is not acquired yet.
+    def close(self, **kwargs):
+        """Same like :meth:`release`, but shall not raise a :class:`RuntimeError` when the object is not acquired yet.
+
+        The method maybe useful with :func:`contextlib.closing`,
+        when we want to use the lock in `with` statement, but don't want it to be acquired at the begin.
+
+        eg::
+
+            with engin.connect() as conn:
+                with closing(make_sa_dlock(conn, k)) as lock:
+                    # not acquired at the begin of `with`
+                    assert not lock.acquired
+                    # ...
+                    # lock when need
+                    lock.acquire()
+                    assert lock.acquired
+                    # ...
+                  # auto `close()` at the end of `with`
+                assert not lock.acquired
         """
         if self._acquired:
-            self.release()
+            self.release(**kwargs)

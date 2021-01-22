@@ -34,7 +34,7 @@ def default_convert(key: Union[bytearray, bytes, str]) -> int:
     if isinstance(key, str):
         key = key.encode()
     if isinstance(key, (bytearray, bytes)):
-        result = libscrc.iso(key)
+        result = libscrc.iso(key)  # type: ignore
     else:
         raise TypeError('%s'.format(type(key)))
     return ensure_int8(result)
@@ -56,7 +56,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
 
     .. attention:: A lock can be acquired multiple times by its owning process
 
-    :ref: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
+    .. seealso:: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
     """
 
     def __init__(self,
@@ -64,7 +64,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
                  key,
                  *,
                  convert: Optional[TConvertFunction] = None,
-                 interval: Union[float, int, None] = None
+                 interval: Union[float, int, None] = None,
+                 **_
                  ):
         """
         PostgreSQL advisory lock requires the key given by ``INT8``
@@ -96,9 +97,10 @@ class SessionLevelLock(AbstractSessionLevelLock):
         super().__init__(connection, key)
 
     def acquire(self,
-                blocking: bool = True, timeout: int = -1,
+                blocking: bool = True, timeout: Union[float, int] = -1,
+                *,
                 interval: Union[float, int, None] = None,
-                **kwargs
+                **_
                 ) -> bool:
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
@@ -130,7 +132,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         #
         return self._acquired
 
-    def release(self):
+    def release(self, **_):
         if not self._acquired:
             raise RuntimeError('invoked on an unlocked lock')
         stmt = UNLOCK.params(key=self.key)
