@@ -1,5 +1,5 @@
 from textwrap import dedent
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
@@ -9,20 +9,28 @@ from ..sessionlevellock import AbstractSessionLevelLock
 
 MYSQL_LOCK_NAME_MAX_LEGNTH = 64
 
-STMT_ACQUIRE = text(dedent('''
+GET_LOCK = text(dedent('''
 SELECT GET_LOCK(:str, :timeout)
 ''').strip())
 
-STMT_RELEASE = text(dedent('''
+RELEASE_LOCK = text(dedent('''
 SELECT RELEASE_LOCK(:str)
 ''').strip())
 
 TConvertFunction = Callable[[Any], str]
 
+def default_convert(key: Union[bytes, int, float]) -> str:
+    if isinstance(key, bytes):
+        result = key.decode()
+    elif isinstance(key, (int, float)):
+        result = str(key)
+    else:
+        raise TypeError('%s'.format(type(key)))
+    return result
 
 class SessionLevelLock(AbstractSessionLevelLock):
     """MySQL named-lock
-    
+
     :ref: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
 
     .. attention:: Multiple simultaneous locks can be acquired and GET_LOCK() does not release any existing locks
@@ -40,6 +48,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
         """
         if convert:
             key = convert(key)
+        elif not isinstance(key, str):
+            key = default_convert(key)
         if not isinstance(key, str):
             raise TypeError(
                 'MySQL named lock requires the key given by string')
@@ -55,7 +65,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
         timeout = int(timeout) if blocking else 0
-        stmt = STMT_ACQUIRE.params(str=self.key, timeout=timeout)
+        stmt = GET_LOCK.params(str=self.key, timeout=timeout)
         ret_val = self.connection.execute(stmt).scalar()
         if ret_val == 1:
             self._acquired = True
@@ -72,7 +82,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
     def release(self):
         if not self._acquired:
             raise RuntimeError('invoked on an unlocked lock')
-        stmt = STMT_RELEASE.params(str=self.key)
+        stmt = RELEASE_LOCK.params(str=self.key)
         ret_val = self.connection.execute(stmt).scalar()
         if ret_val == 1:
             self._acquired = False

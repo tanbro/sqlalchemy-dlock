@@ -15,15 +15,15 @@ INT8_MIN = -0x8000_0000_0000_0000  # min of signed int64: -2**63
 
 SLEEP_INTERVAL_DEFAULT = 1
 
-STMT_LOCK = text(dedent('''
+LOCK = text(dedent('''
 SELECT pg_advisory_lock(:key)
 ''').strip())
 
-STMT_TRY_LOCK = text(dedent('''
+TRY_LOCK = text(dedent('''
 SELECT pg_try_advisory_lock(:key)
 ''').strip())
 
-STMT_UNLOCK = text(dedent('''
+UNLOCK = text(dedent('''
 SELECT  pg_advisory_unlock(:key)
 ''').strip())
 
@@ -60,6 +60,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
 
     :ref: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
     """
+
     def __init__(self,
                  connection: Connection,
                  key,
@@ -102,7 +103,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
             raise RuntimeError('invoked on a locked lock')
         if blocking:
             if timeout < 0:
-                stmt = STMT_LOCK.params(key=self.key)
+                stmt = LOCK.params(key=self.key)
                 self.connection.execute(stmt).fetchall()
                 self._acquired = True
             else:
@@ -110,7 +111,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                     interval = self._interval
                 begin_ts = time()
                 while True:
-                    stmt = STMT_TRY_LOCK.params(key=self.key)
+                    stmt = TRY_LOCK.params(key=self.key)
                     ret_val = self.connection.execute(stmt).scalar()
                     if ret_val:  # succeed
                         self._acquired = True
@@ -121,7 +122,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         else:
             # This will either obtain the lock immediately and return true,
             # or return false without waiting if the lock cannot be acquired immediately.
-            stmt = STMT_TRY_LOCK.params(key=self.key)
+            stmt = TRY_LOCK.params(key=self.key)
             ret_val = self.connection.execute(stmt).scalar()
             self._acquired = bool(ret_val)
         #
@@ -130,7 +131,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
     def release(self):
         if not self._acquired:
             raise RuntimeError('invoked on an unlocked lock')
-        stmt = STMT_UNLOCK.params(key=self.key)
+        stmt = UNLOCK.params(key=self.key)
         ret_val = self.connection.execute(stmt).scalar()
         if ret_val:
             self._acquired = False
