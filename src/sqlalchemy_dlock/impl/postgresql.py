@@ -34,7 +34,7 @@ def default_convert(key: Union[bytearray, bytes, str]) -> int:
     if isinstance(key, str):
         key = key.encode()
     if isinstance(key, (bytearray, bytes)):
-        result = libscrc.iso(key)
+        result = libscrc.iso(key)  # type: ignore
     else:
         raise TypeError('%s'.format(type(key)))
     return ensure_int8(result)
