@@ -11,7 +11,7 @@ __all__ = ['make_sa_dlock']  # noqa
 def make_sa_dlock(  # noqa
         connection: Connection,
         key,
-        *args, **kwargs
+        **kwargs
 ) -> AbstractSessionLevelLock:
     """Create a session level distributed lock object
 
@@ -36,4 +36,4 @@ def make_sa_dlock(  # noqa
     name = safe_name(connection.engine.name)
     mod = import_module('..impl.{}'.format(name), __name__)
     lock_cls = getattr(mod, 'SessionLevelLock')
-    return lock_cls(connection, key, *args, **kwargs)
+    return lock_cls(connection, key, **kwargs)
