@@ -11,11 +11,12 @@ It's not stable and **DO NOT** use it in production.
 
 ## Usages
 
-Basic:
+Basic usage:
 
 ```python
+# ...
 from sqlalchemy import create_engine
-from sqlalchemy_dlock import make_session_level_lock as sd_lock
+from sqlalchemy_dlock import make_sa_dlock
 
 # ...
 
@@ -23,49 +24,45 @@ lock_key = 'user/001'
 
 # ...
 
-engine = create_engine()
+engine = create_engine('postgresql://scott:tiger@localhost/')
 
 # ...
 
 with engine.connect() as conn:
-    with sd_lock(conn, lock_key):
+    with make_sa_dlock(conn, lock_key):
         # do sth...
         pass
 # ...
 ```
 
-Made from SQLAlchemy's Session:
+Work with SQLAlchemy's Session:
 
 ```python
+# ...
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy_dlock import make_sa_dlock
 # ...
 
 lock_key = 'user/001'
 
 # ...
 
-with Session.bind.connect() as conn:
-    with sd_lock(conn, lock_key):
+engine = create_engine('postgresql://scott:tiger@localhost/')
+Session = sessionmaker(bind=engine)
+
+# ...
+
+session = Session()
+
+# ...
+
+with session.bind.connect() as conn:
+    with make_sa_dlock(conn, lock_key):
         # ...
-        user = Session.query(User).filter(id='001').one()
-        user.password = new_pass
-        Session.commit()
+        user = session.query('User').filter(id='001').one()
+        user.password = 'new password'
+        session.commit()
         # ...
-# ...
-```
-
-Or, if the `session` has no `commit`, `rollback`, `close`:
-
-```python
-# ...
-
-lock_key = 'user/001'
-
-# ...
-
-with sd_lock(Session.connection(), lock_key):
-    # ...
-    user = Session.query(User).filter(id='001').one()
-    password = user.password
-    # ...
 # ...
 ```
