@@ -36,7 +36,7 @@ def default_convert(key: Union[bytearray, bytes, str]) -> int:
     if isinstance(key, (bytearray, bytes)):
         result = libscrc.iso(key)  # type: ignore
     else:
-        raise TypeError('%s'.format(type(key)))
+        raise TypeError('{}'.format(type(key)))
     return ensure_int8(result)
 
 
@@ -95,7 +95,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         super().__init__(connection, key)
 
     def acquire(self,
-                blocking: bool = True, timeout: Union[float, int] = -1,
+                blocking: bool = True, timeout: Union[float, int, None] = None,
                 *,
                 interval: Union[float, int, None] = None,
                 **_
@@ -103,6 +103,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
         if blocking:
+            if timeout is None:
+                timeout = -1
             if timeout < 0:
                 stmt = LOCK.params(key=self.key)
                 self.connection.execute(stmt).fetchall()

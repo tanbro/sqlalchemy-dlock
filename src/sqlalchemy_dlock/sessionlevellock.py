@@ -64,7 +64,7 @@ class AbstractSessionLevelLock(local):
     def acquired(self) -> bool:
         return self._acquired
 
-    def acquire(self, blocking: bool = True, timeout: Union[float, int] = -1, **_) -> bool:
+    def acquire(self, blocking: bool = True, timeout: Union[float, int, None] = None, **_) -> bool:
         """
         Acquire a lock, blocking or non-blocking.
 
@@ -75,7 +75,7 @@ class AbstractSessionLevelLock(local):
           If a call with blocking set to True would block, return False immediately;
           otherwise, set the lock to locked and return True.
 
-        - When invoked with the floating-point timeout argument set to a positive value,
+        - When invoked with the floating-point timeout argument set to ``None`` or a positive value,
           block for at most the number of seconds specified by timeout and as long as the lock cannot be acquired.
           A negative timeout argument specifies an unbounded wait.
           It has no effect to specify a timeout when blocking is false.
