@@ -105,7 +105,7 @@ class AbstractSessionLevelLock(local):
 
         eg::
 
-            with engin.connect() as conn:
+            with engine.connect() as conn:
                 with closing(make_sa_dlock(conn, k)) as lock:
                     # not acquired at the begin of `with`
                     assert not lock.acquired
