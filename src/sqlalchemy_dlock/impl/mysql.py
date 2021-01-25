@@ -26,7 +26,7 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
     elif isinstance(key, (int, float)):
         result = str(key)
     else:
-        raise TypeError('%s'.format(type(key)))
+        raise TypeError('{}'.format(type(key)))
     return result
 
 
@@ -64,12 +64,21 @@ class SessionLevelLock(AbstractSessionLevelLock):
         super().__init__(connection, key)
 
     def acquire(self,
-                blocking: bool = True, timeout: Union[float, int] = -1,
+                blocking: Optional[bool] = None,
+                timeout: Union[float, int, None] = None,
                 **_
                 ) -> bool:
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
-        timeout = round(timeout) if blocking else 0
+        if blocking is None:
+            blocking = True
+        if blocking:
+            if timeout is None:
+                timeout = -1
+            else:
+                timeout = round(timeout)
+        else:
+            timeout = 0
         stmt = GET_LOCK.params(str=self.key, timeout=timeout)
         ret_val = self.connection.execute(stmt).scalar()
         if ret_val == 1:

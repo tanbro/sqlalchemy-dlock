@@ -1,5 +1,5 @@
 from threading import local
-from typing import Union
+from typing import Optional, Union
 
 from sqlalchemy.engine import Connection  # noqa
 
@@ -64,9 +64,9 @@ class AbstractSessionLevelLock(local):
     def acquired(self) -> bool:
         return self._acquired
 
-    def acquire(self, blocking: bool = True, timeout: Union[float, int] = -1, **_) -> bool:
+    def acquire(self, blocking: Optional[bool] = None, timeout: Union[float, int, None] = None, **_) -> bool:
         """
-        Acquire a lock, blocking or non-blocking.
+        Acquire a lock, blocking(default) or non-blocking.
 
         - When invoked with the blocking argument set to True (the default),
           block until the lock is unlocked, then set it to locked and return True.
@@ -75,7 +75,7 @@ class AbstractSessionLevelLock(local):
           If a call with blocking set to True would block, return False immediately;
           otherwise, set the lock to locked and return True.
 
-        - When invoked with the floating-point timeout argument set to a positive value,
+        - When invoked with the floating-point timeout argument set to ``None`` or a positive value,
           block for at most the number of seconds specified by timeout and as long as the lock cannot be acquired.
           A negative timeout argument specifies an unbounded wait.
           It has no effect to specify a timeout when blocking is false.
@@ -105,7 +105,7 @@ class AbstractSessionLevelLock(local):
 
         eg::
 
-            with engin.connect() as conn:
+            with engine.connect() as conn:
                 with closing(make_sa_dlock(conn, k)) as lock:
                     # not acquired at the begin of `with`
                     assert not lock.acquired

@@ -36,7 +36,7 @@ def default_convert(key: Union[bytearray, bytes, str]) -> int:
     if isinstance(key, (bytearray, bytes)):
         result = libscrc.iso(key)  # type: ignore
     else:
-        raise TypeError('%s'.format(type(key)))
+        raise TypeError('{}'.format(type(key)))
     return ensure_int8(result)
 
 
@@ -77,18 +77,16 @@ class SessionLevelLock(AbstractSessionLevelLock):
         - Or you can specify a custom function in ``convert`` argument
 
         PostgreSQL's advisory lock has no timeout.
-        We simulate it in a loop with sleep delay.
-        The ``interval`` parameter specifies the sleep interval in second.
+        When a timeout was a positive value, we simulate it in a loop with sleep delay.
+        The ``interval`` parameter specifies the sleep seconds.
         It's default value is ``1``
         """
         if convert:
             key = ensure_int8(convert(key))
+        elif isinstance(key, int):
+            key = ensure_int8(key)
         else:
-            if isinstance(key, (bytearray, bytes, str)):
-                key = default_convert(key)
-        if not isinstance(key, int):
-            raise TypeError(
-                'PostgreSQL advisory lock requires the key given by integer')
+            key = default_convert(key)
         #
         if interval is None:
             interval = SLEEP_INTERVAL_DEFAULT
@@ -97,13 +95,18 @@ class SessionLevelLock(AbstractSessionLevelLock):
         super().__init__(connection, key)
 
     def acquire(self,
-                blocking: bool = True, timeout: Union[float, int] = -1,
+                blocking: Optional[bool] = None,
+                timeout: Union[float, int, None] = None,
                 *,
                 interval: Union[float, int, None] = None,
                 **_
                 ) -> bool:
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
+        if blocking is None:
+            blocking = True
+        if timeout is None:
+            timeout = -1
         if blocking:
             if timeout < 0:
                 stmt = LOCK.params(key=self.key)
