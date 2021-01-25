@@ -77,18 +77,16 @@ class SessionLevelLock(AbstractSessionLevelLock):
         - Or you can specify a custom function in ``convert`` argument
 
         PostgreSQL's advisory lock has no timeout.
-        We simulate it in a loop with sleep delay.
-        The ``interval`` parameter specifies the sleep interval in second.
+        When a timeout was a positive value, we simulate it in a loop with sleep delay.
+        The ``interval`` parameter specifies the sleep seconds.
         It's default value is ``1``
         """
         if convert:
             key = ensure_int8(convert(key))
+        elif isinstance(key, int):
+            key = ensure_int8(key)
         else:
-            if isinstance(key, (bytearray, bytes, str)):
-                key = default_convert(key)
-        if not isinstance(key, int):
-            raise TypeError(
-                'PostgreSQL advisory lock requires the key given by integer')
+            key = default_convert(key)
         #
         if interval is None:
             interval = SLEEP_INTERVAL_DEFAULT
