@@ -14,17 +14,45 @@ class MutliThreadTestCase(TestCase):
         for engine in ENGINES:
             engine.dispose()
 
-    def test_non_blocking(self):
+    def test_non_blocking_success(self):
         key = uuid4().hex
-        delay = 1
         for engine in ENGINES:
             bar = Barrier(2)
 
             def fn1(b):
                 with engine.connect() as conn:
                     with make_sa_dlock(conn, key) as lock:
-                        b.wait()
                         self.assertTrue(lock.acquired)
+                    self.assertFalse(lock.acquired)
+                    b.wait()
+
+            def fn2(b):
+                with engine.connect() as conn:
+                    with closing(make_sa_dlock(conn, key)) as lock:
+                        b.wait()
+                        self.assertTrue(lock.acquire(False))
+
+            trd1 = Thread(target=fn1, args=(bar,))
+            trd2 = Thread(target=fn2, args=(bar,))
+
+            trd1.start()
+            trd2.start()
+
+            trd1.join()
+            trd2.join()
+
+    def test_non_blocking_fail(self):
+        key = uuid4().hex
+        delay = 1
+
+        for engine in ENGINES:
+            bar = Barrier(2)
+
+            def fn1(b):
+                with engine.connect() as conn:
+                    with make_sa_dlock(conn, key) as lock:
+                        self.assertTrue(lock.acquired)
+                        b.wait()
                         sleep(delay)
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
@@ -104,37 +132,6 @@ class MutliThreadTestCase(TestCase):
                         self.assertGreaterEqual(time() - ts, delay)
                         self.assertGreaterEqual(timeout, time() - ts)
                         self.assertTrue(lock.acquired)
-
-            trd1 = Thread(target=fn1, args=(bar,))
-            trd2 = Thread(target=fn2, args=(bar,))
-
-            trd1.start()
-            trd2.start()
-
-            trd1.join()
-            trd2.join()
-
-    def test_no_blocking_fail(self):
-        key = uuid4().hex
-        delay = 1
-
-        for engine in ENGINES:
-            bar = Barrier(2)
-
-            def fn1(b):
-                with engine.connect() as conn:
-                    with make_sa_dlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
-                        b.wait()
-                        sleep(delay)
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
-
-            def fn2(b):
-                with engine.connect() as conn:
-                    with closing(make_sa_dlock(conn, key)) as lock:
-                        b.wait()
-                        self.assertFalse(lock.acquire(False))
 
             trd1 = Thread(target=fn1, args=(bar,))
             trd2 = Thread(target=fn2, args=(bar,))

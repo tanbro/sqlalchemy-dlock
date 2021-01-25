@@ -14,15 +14,32 @@ class AbstractSessionLevelLock(local):
 
     .. attention::
 
-        The **session** here means session of Database, **NOT** SQLAlchemy's.
-        :class:`sqlalchemy.orm.session.Session` is more like transaction.
-        Here we roughly take :class:`sqlalchemy.engine.Connection`  as database's session.
+        The *session* here means that of Database,
+        **NOT** SQLAlchemy's :class:`sqlalchemy.orm.session.Session`,
+        which is more like a transaction.
+        Here we roughly take :class:`sqlalchemy.engine.Connection` as database's session.
+
+    The lock's :meth:`acquire` and :meth:`release` methods can be used as context managers for a with statement.
+    The :meth:`acquire` method will be called when the block is entered,
+    and :meth:`release` will be called when the block is exited.
+    Hence, the following snippet::
+
+        with some_lock:
+            # do something...
+
+    is equivalent to::
+
+        some_lock.acquire()
+        try:
+            # do something...
+        finally:
+            some_lock.release()
     """
 
     def __init__(self,
                  connection: Connection,
                  key,
-                 **_
+                 **kwargs  # noqa
                  ):
         """
         Parameters
@@ -64,7 +81,11 @@ class AbstractSessionLevelLock(local):
     def acquired(self) -> bool:
         return self._acquired
 
-    def acquire(self, blocking: Optional[bool] = None, timeout: Union[float, int, None] = None, **_) -> bool:
+    def acquire(self,
+                blocking: Optional[bool] = None,
+                timeout: Union[float, int, None] = None,
+                **kwargs  # noqa
+                ) -> bool:
         """
         Acquire a lock, blocking(default) or non-blocking.
 
@@ -80,8 +101,8 @@ class AbstractSessionLevelLock(local):
           A negative timeout argument specifies an unbounded wait.
           It has no effect to specify a timeout when blocking is false.
 
-        The return value is True if the lock is acquired successfully,
-        False if not (for example if the timeout expired).
+        The return value is ``True`` if the lock is acquired successfully,
+        ``False`` if not (for example if the timeout expired).
         """
         raise NotImplementedError()
 
@@ -91,30 +112,44 @@ class AbstractSessionLevelLock(local):
         When the lock is locked, reset it to unlocked, and return.
         If any other threads are blocked waiting for the lock to become unlocked, allow exactly one of them to proceed.
 
-        When invoked on an unlocked lock, a RuntimeError is raised.
+        When invoked on an unlocked lock, a :class:`RuntimeError` is raised.
 
         There is no return value.
         """
         raise NotImplementedError()
 
     def close(self, **kwargs):
-        """Same like :meth:`release`, but shall not raise a :class:`RuntimeError` when the object is not acquired yet.
+        """Same as :meth:`release`
 
-        The method maybe useful with :func:`contextlib.closing`,
-        when we want to use the lock in `with` statement, but don't want it to be acquired at the begin.
+        Except that a :class:`RuntimeError` is **NOT** raised when invoked on an unlocked lock.
+
+        This method is equivalent to::
+
+            if not lock.acquired:
+                lock.release()
+
+        The method maybe useful together with :func:`contextlib.closing`,
+        when we need with statement, but don't want it acquire at the begin of the block.
 
         eg::
 
+            # ...
+
+            from contextlib import closing
+            from sqlalchemy_dlock import make_sa_dlock
+
+            # ...
+
             with engine.connect() as conn:
                 with closing(make_sa_dlock(conn, k)) as lock:
-                    # not acquired at the begin of `with`
+                    # not acquired at the begin of with block
                     assert not lock.acquired
                     # ...
                     # lock when need
                     lock.acquire()
                     assert lock.acquired
                     # ...
-                  # auto `close()` at the end of `with`
+                  # auto invoke `close()` at the end with block
                 assert not lock.acquired
         """
         if self._acquired:

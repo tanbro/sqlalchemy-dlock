@@ -66,7 +66,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
     def acquire(self,
                 blocking: Optional[bool] = None,
                 timeout: Union[float, int, None] = None,
-                **_
+                **kwargs  # noqa
                 ) -> bool:
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
@@ -93,7 +93,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 'GET_LOCK("{}", {}) returns {}'.format(self._key, timeout, ret_val))
         return self._acquired
 
-    def release(self, **_):
+    def release(self, **kwargs):  # noqa
         if not self._acquired:
             raise RuntimeError('invoked on an unlocked lock')
         stmt = RELEASE_LOCK.params(str=self.key)

@@ -5,14 +5,14 @@ from unittest import TestCase
 from uuid import uuid4
 
 from sqlalchemy_dlock import make_sa_dlock
+
 from .engines import ENGINES
 
 
 class MutliProcessTestCase(TestCase):
 
-    def test_non_blocking(self):
+    def test_non_blocking_success(self):
         key = uuid4().hex
-        delay = 1
         for i in range(len(ENGINES)):
             bar = Barrier(2)
 
@@ -20,18 +20,16 @@ class MutliProcessTestCase(TestCase):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
                     with make_sa_dlock(conn, key) as lock:
-                        b.wait()
-                        self.assertTrue(lock.acquired)
-                        sleep(delay)
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
+                    b.wait()
 
             def fn2(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
                     with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
-                        self.assertFalse(lock.acquire(False))
+                        self.assertTrue(lock.acquire(False))
 
             p1 = Process(target=fn1, args=(i, bar))
             p2 = Process(target=fn2, args=(i, bar))
@@ -45,10 +43,9 @@ class MutliProcessTestCase(TestCase):
             self.assertEqual(p1.exitcode, 0)
             self.assertEqual(p2.exitcode, 0)
 
-    def test_timeout_fail(self):
+    def test_non_blocking_fail(self):
         key = uuid4().hex
-        delay = 3
-        timeout = 1
+        delay = 1
         for i in range(len(ENGINES)):
             bar = Barrier(2)
 
@@ -56,8 +53,8 @@ class MutliProcessTestCase(TestCase):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
                     with make_sa_dlock(conn, key) as lock:
-                        b.wait()
                         self.assertTrue(lock.acquired)
+                        b.wait()
                         sleep(delay)
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
@@ -67,10 +64,7 @@ class MutliProcessTestCase(TestCase):
                 with engine.connect() as conn:
                     with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
-                        ts = time()
-                        self.assertFalse(lock.acquire(timeout=timeout))
-                        self.assertGreaterEqual(time() - ts, timeout)
-                        self.assertFalse(lock.acquired)
+                        self.assertFalse(lock.acquire(False))
 
             p1 = Process(target=fn1, args=(i, bar))
             p2 = Process(target=fn2, args=(i, bar))
@@ -125,10 +119,10 @@ class MutliProcessTestCase(TestCase):
             self.assertEqual(p1.exitcode, 0)
             self.assertEqual(p2.exitcode, 0)
 
-    def test_Process_no_blocking_fail(self):
+    def test_timeout_fail(self):
         key = uuid4().hex
-        delay = 1
-
+        delay = 3
+        timeout = 1
         for i in range(len(ENGINES)):
             bar = Barrier(2)
 
@@ -147,7 +141,10 @@ class MutliProcessTestCase(TestCase):
                 with engine.connect() as conn:
                     with closing(make_sa_dlock(conn, key)) as lock:
                         b.wait()
-                        self.assertFalse(lock.acquire(False))
+                        ts = time()
+                        self.assertFalse(lock.acquire(timeout=timeout))
+                        self.assertGreaterEqual(time() - ts, timeout)
+                        self.assertFalse(lock.acquired)
 
             p1 = Process(target=fn1, args=(i, bar))
             p2 = Process(target=fn2, args=(i, bar))
