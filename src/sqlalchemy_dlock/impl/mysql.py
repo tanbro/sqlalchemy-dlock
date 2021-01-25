@@ -64,15 +64,21 @@ class SessionLevelLock(AbstractSessionLevelLock):
         super().__init__(connection, key)
 
     def acquire(self,
-                blocking: bool = True, timeout: Union[float, int, None] = None,
+                blocking: Optional[bool] = None,
+                timeout: Union[float, int, None] = None,
                 **_
                 ) -> bool:
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
-        if timeout is None:
-            timeout = -1
+        if blocking is None:
+            blocking = True
+        if blocking:
+            if timeout is None:
+                timeout = -1
+            else:
+                timeout = round(timeout)
         else:
-            timeout = round(timeout) if blocking else 0
+            timeout = 0
         stmt = GET_LOCK.params(str=self.key, timeout=timeout)
         ret_val = self.connection.execute(stmt).scalar()
         if ret_val == 1:
