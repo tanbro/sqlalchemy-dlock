@@ -85,18 +85,18 @@ class AbstractSessionLevelLock(local):
         return self._acquired
 
     def acquire(self,
-                blocking: bool = True,
+                block: bool = True,
                 timeout: Optional[Union[float, int]] = None,
                 **kwargs  # noqa
                 ) -> bool:
         """
         Acquire a lock, blocking or non-blocking.
 
-        - With the `blocking` argument set to ``True`` (the default),
+        - With the `block` argument set to ``True`` (the default),
           the method call will block until the lock is in an unlocked state,
           then set it to locked and return ``True``.
 
-        - With the `blocking` argument set to ``False``,
+        - With the `block` argument set to ``False``,
           the method call does not block.
           If the lock is currently in a locked state, return ``False``;
           otherwise set the lock to a locked state and return ``True``.
@@ -106,7 +106,7 @@ class AbstractSessionLevelLock(local):
           Invocations with a negative value for `timeout` are equivalent to a `timeout` of zero.
           Invocations with a `timeout` value of ``None`` (the default) set the timeout period to infinite.
           The `timeout` argument has no practical implications
-          if the `blocking` argument is set to ``False`` and is thus ignored.
+          if the `block` argument is set to ``False`` and is thus ignored.
           Returns ``True`` if the lock has been acquired or ``False`` if the timeout period has elapsed.
         """
         raise NotImplementedError()
