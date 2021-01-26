@@ -1,5 +1,7 @@
 # SQLAlchemy-DLock
 
+[![Documentation Status](https://readthedocs.org/projects/sqlalchemy-dlock/badge/?version=latest)](https://sqlalchemy-dlock.readthedocs.io/en/latest/?badge=latest)
+
 Distributed lock based on Database and SQLAlchemy.
 
 It currently supports locks of:
