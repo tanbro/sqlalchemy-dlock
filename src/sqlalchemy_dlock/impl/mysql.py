@@ -84,7 +84,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 **kwargs  # noqa
                 ) -> bool:
         if self._acquired:
-            raise RuntimeError('invoked on a locked lock')
+            raise ValueError('invoked on a locked lock')
         if block:
             if timeout is None:
                 # None: set the timeout period to infinite.
@@ -110,7 +110,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
 
     def release(self, **kwargs):  # noqa
         if not self._acquired:
-            raise RuntimeError('invoked on an unlocked lock')
+            raise ValueError('invoked on an unlocked lock')
         stmt = RELEASE_LOCK.params(str=self.key)
         ret_val = self.connection.execute(stmt).scalar()
         if ret_val == 1:

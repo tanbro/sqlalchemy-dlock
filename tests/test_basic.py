@@ -110,6 +110,21 @@ class BasicTestCase(TestCase):
                         self.assertTrue(lock.acquire(timeout=None))
                     self.assertFalse(lock.acquired)
 
+    def test_acquired_property(self):
+        for engine in ENGINES:
+            key = uuid4().hex
+            for i in range(cpu_count() + 1):
+                with engine.connect() as conn:
+                    with closing(make_sa_dlock(conn, key)) as lock:
+                        self.assertFalse(lock.acquired)
+                        lock.acquired = True
+                        self.assertTrue(lock.acquired)
+                        lock.acquired = False
+                        self.assertFalse(lock.acquired)
+                        lock.acquired = True
+                        self.assertTrue(lock.acquired)
+                    self.assertFalse(lock.acquired)
+
     def test_enter_locked(self):
         for engine in ENGINES:
             key = uuid4().hex
@@ -128,7 +143,7 @@ class BasicTestCase(TestCase):
                 lock1.release()
                 self.assertFalse(lock1.acquired)
 
-    def test_release_unlocked(self):
+    def test_release_unlocked_error(self):
         for engine in ENGINES:
             key = uuid4().hex
             with ExitStack() as stack:
@@ -139,5 +154,5 @@ class BasicTestCase(TestCase):
                 lock0 = make_sa_dlock(conn0, key)
                 self.assertTrue(lock0.acquire(False))
                 lock1 = make_sa_dlock(conn1, key)
-                with self.assertRaisesRegex(RuntimeError, 'invoked on an unlocked lock'):
+                with self.assertRaisesRegex(ValueError, 'invoked on an unlocked lock'):
                     lock1.release()

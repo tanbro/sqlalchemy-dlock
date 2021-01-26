@@ -10,8 +10,8 @@ from sqlalchemy.engine import Connection  # noqa
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..sessionlevellock import AbstractSessionLevelLock
 
-INT8_MAX = +0x7fff_ffff_ffff_ffff  # max of signed int64: 2**63-1
-INT8_MIN = -0x8000_0000_0000_0000  # min of signed int64: -2**63
+INT64_MAX = +0x7fff_ffff_ffff_ffff  # max of signed int64: 2**63-1
+INT64_MIN = -0x8000_0000_0000_0000  # min of signed int64: -2**63
 
 SLEEP_INTERVAL_DEFAULT = 1
 
@@ -37,16 +37,16 @@ def default_convert(key: Union[bytearray, bytes, str]) -> int:
         result = libscrc.iso(key)  # type: ignore
     else:
         raise TypeError('{}'.format(type(key)))
-    return ensure_int8(result)
+    return ensure_int64(result)
 
 
-def ensure_int8(i: int) -> int:
-    if i > INT8_MAX:
+def ensure_int64(i: int) -> int:
+    if i > INT64_MAX:
         i = int.from_bytes(
             i.to_bytes(8, byteorder, signed=False),
             byteorder, signed=True
         )
-    elif i < INT8_MIN:
+    elif i < INT64_MIN:
         raise OverflowError('int too small to convert')
     return i
 
@@ -66,13 +66,13 @@ class SessionLevelLock(AbstractSessionLevelLock):
                  **kwargs  # noqa
                  ):
         """
-        PostgreSQL advisory lock requires the key given by ``INT8``.
+        PostgreSQL advisory lock requires the key given by ``INT64``.
 
-        - When `key` is :class:`int`, the constructor ensures it to be ``INT8``.
-          :class:`OverflowError` is raised if too big or too small for an ``INT8``.
+        - When `key` is :class:`int`, the constructor ensures it to be ``INT64``.
+          :class:`OverflowError` is raised if too big or too small for an ``INT64``.
         - When `key` is :class:`str` or :class:`bytes`,
-          the constructor calculates its 8-bytes hash code with CRC 64 ISO,
-          and takes the code as actual key.
+          the constructor calculates its hash value using CRC 64 ISO,
+          and takes the value as actual key.
 
         - Or you can specify a `convert` function to that argument.
           The function is like::
@@ -88,9 +88,9 @@ class SessionLevelLock(AbstractSessionLevelLock):
             The `interval` argument specifies the sleep seconds, whose default is ``1``.
         """
         if convert:
-            key = ensure_int8(convert(key))
+            key = ensure_int64(convert(key))
         elif isinstance(key, int):
-            key = ensure_int8(key)
+            key = ensure_int64(key)
         else:
             key = default_convert(key)
         #
@@ -106,7 +106,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 **kwargs  # noqa
                 ) -> bool:
         if self._acquired:
-            raise RuntimeError('invoked on a locked lock')
+            raise ValueError('invoked on a locked lock')
         if block:
             if timeout is None:
                 # None: set the timeout period to infinite.
@@ -142,7 +142,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
 
     def release(self, **kwargs):  # noqa
         if not self._acquired:
-            raise RuntimeError('invoked on an unlocked lock')
+            raise ValueError('invoked on an unlocked lock')
         stmt = UNLOCK.params(key=self.key)
         ret_val = self.connection.execute(stmt).scalar()
         if ret_val:

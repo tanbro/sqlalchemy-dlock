@@ -82,7 +82,34 @@ class AbstractSessionLevelLock(local):
 
     @property
     def acquired(self) -> bool:
+        """locked/unlocked state property
+
+        As a `Getter`:
+        it returns ``True`` if the lock has been acquired, ``False`` otherwise.
+
+        As a `Setter`:
+
+        - Set to ``True`` is equivalent to call :meth:`acquire`
+        - Set to ``False`` is equivalent to call :meth:`release`
+        """
         return self._acquired
+
+    @acquired.setter
+    def acquired(self, value: bool):
+        if value:
+            self.acquire()
+        else:
+            self.release()
+
+    @property
+    def locked(self) -> bool:
+        """Alias of :data:`acquired`
+        """
+        return self.acquired
+
+    @locked.setter
+    def locked(self, value: bool):
+        self.acquired = value
 
     def acquire(self,
                 block: bool = True,
@@ -112,12 +139,16 @@ class AbstractSessionLevelLock(local):
         raise NotImplementedError()
 
     def release(self, **kwargs):
-        """Release a lock. This can be called from any thread, not only the thread which has acquired the lock.
+        """Release a lock.
+
+        Since the class is thread-local, this cannot be called from other thread or process,
+        and also can not be called from other connection
+        (PostgreSQL's shared advisory lock supports so, but we haven't).
 
         When the lock is locked, reset it to unlocked, and return.
         If any other threads are blocked waiting for the lock to become unlocked, allow exactly one of them to proceed.
 
-        When invoked on an unlocked lock, a :class:`RuntimeError` is raised.
+        When invoked on an unlocked lock, a :class:`ValueError` is raised.
 
         There is no return value.
         """
@@ -126,15 +157,15 @@ class AbstractSessionLevelLock(local):
     def close(self, **kwargs):
         """Same as :meth:`release`
 
-        Except that a :class:`RuntimeError` is **NOT** raised when invoked on an unlocked lock.
+        Except that a :class:`ValueError` is **NOT** raised when invoked on an unlocked lock.
 
-        This method is equivalent to::
+        An invocation of this method is equivalent to::
 
-            if not lock.acquired:
-                lock.release()
+            if not some_lock.acquired:
+                some_lock.release()
 
-        The method maybe useful together with :func:`contextlib.closing`,
-        when we need with statement, but don't want it acquire at the begin of the block.
+        This method maybe useful together with :func:`contextlib.closing`,
+        when we need a with-statement, but don't want it acquire at the begining of the block.
 
         eg::
 
@@ -145,17 +176,16 @@ class AbstractSessionLevelLock(local):
 
             # ...
 
-            with engine.connect() as conn:
-                with closing(make_sa_dlock(conn, k)) as lock:
-                    # not acquired at the begin of with block
-                    assert not lock.acquired
-                    # ...
-                    # lock when need
-                    lock.acquire()
-                    assert lock.acquired
-                    # ...
-                  # auto invoke `close()` at the end with block
+            with closing(make_sa_dlock(some_connection, some_key)) as lock:
+                # will not acquire at the begin of with-block
                 assert not lock.acquired
+                # ...
+                # lock when need
+                lock.acquire()
+                assert lock.acquired
+                # ...
+            # `close` will be called at the end with-block
+            assert not lock.acquired
         """
         if self._acquired:
             self.release(**kwargs)
