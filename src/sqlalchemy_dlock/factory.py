@@ -19,6 +19,7 @@ def make_sa_dlock(  # noqa
     ----------
     connection : sqlalchemy.engine.Connection
         Database Connection on which the SQL locking functions will be invoked
+
     key:
         Key/name or sth like that used as SQL locking function's ID
 

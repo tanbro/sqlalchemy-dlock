@@ -46,6 +46,7 @@ class AbstractSessionLevelLock(local):
         ----------
         connection : sqlalchemy.engine.Connection
             SQL locking functions will be invoked on it
+
         key
             ID or name used as SQL locking function's key
         """
