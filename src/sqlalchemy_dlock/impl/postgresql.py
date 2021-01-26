@@ -94,7 +94,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         else:
             key = default_convert(key)
         #
-        self._interval = interval if interval is not None else SLEEP_INTERVAL_DEFAULT
+        self._interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
         #
         super().__init__(connection, key)
 

@@ -87,10 +87,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         if blocking is None:
             blocking = True
         if blocking:
-            if timeout is None:
-                timeout = -1
-            else:
-                timeout = round(timeout)
+            timeout = -1 if timeout is None else timeout
         else:
             timeout = 0
         stmt = GET_LOCK.params(str=self.key, timeout=timeout)
