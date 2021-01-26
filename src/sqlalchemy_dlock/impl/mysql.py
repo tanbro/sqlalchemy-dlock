@@ -34,8 +34,6 @@ class SessionLevelLock(AbstractSessionLevelLock):
     """MySQL named-lock
 
     .. seealso:: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
-
-    .. attention:: Multiple simultaneous locks can be acquired and GET_LOCK() does not release any existing locks
     """
 
     def __init__(self,
@@ -43,11 +41,27 @@ class SessionLevelLock(AbstractSessionLevelLock):
                  key,
                  *,
                  convert: Optional[TConvertFunction] = None,
-                 **_
+                 **kwargs  # noqa
                  ):
         """
         MySQL named lock requires the key given by string.
-        You can specify a custom function in ``convert`` argument, if your key is not :class:`str`
+
+        If `key` is not a :class:`str`:
+
+        - When :class:`int` or :class:`float`,
+          the constructor converts it to :class:`str` directly::
+
+            key = str(key)
+
+        - When :class:`bytes`,
+          the constructor tries to decode it with default encoding.
+
+        - Or you can specify a `convert` function to that argument.
+          The function is like::
+
+            def convert(val: Any) -> str:
+                # do something ...
+                return string
         """
         if convert:
             key = convert(key)

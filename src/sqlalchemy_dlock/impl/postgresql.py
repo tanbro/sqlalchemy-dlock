@@ -54,8 +54,6 @@ def ensure_int8(i: int) -> int:
 class SessionLevelLock(AbstractSessionLevelLock):
     """PostgreSQL advisory lock
 
-    .. attention:: A lock can be acquired multiple times by its owning process
-
     .. seealso:: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
     """
 
@@ -65,21 +63,29 @@ class SessionLevelLock(AbstractSessionLevelLock):
                  *,
                  convert: Optional[TConvertFunction] = None,
                  interval: Union[float, int, None] = None,
-                 **_
+                 **kwargs  # noqa
                  ):
         """
-        PostgreSQL advisory lock requires the key given by ``INT8``
+        PostgreSQL advisory lock requires the key given by ``INT8``.
 
-        - When ``key`` is :class:`int`, the constructor ensures it to be ``INT8``
-        - When ``key`` is :class:`str` or :class:`bytes`,
-          the constructor calculates its 8-bytes hash code with CRC-64-ISO,
+        - When `key` is :class:`int`, the constructor ensures it to be ``INT8``.
+          :class:`OverflowError` is raised if too big or too small for an ``INT8``.
+        - When `key` is :class:`str` or :class:`bytes`,
+          the constructor calculates its 8-bytes hash code with CRC 64 ISO,
           and takes the code as actual key.
-        - Or you can specify a custom function in ``convert`` argument
 
-        PostgreSQL's advisory lock has no timeout.
-        When a timeout was a positive value, we simulate it in a loop with sleep delay.
-        The ``interval`` parameter specifies the sleep seconds.
-        It's default value is ``1``
+        - Or you can specify a `convert` function to that argument.
+          The function is like::
+
+            def convert(val: Any) -> int:
+                # do something ...
+                return integer
+
+        .. tip::
+
+            PostgreSQL's advisory lock has no timeout mechanism in itself.
+            When `timeout` is a non-negative number, we simulate it by looping and sleeping.
+            The `interval` argument specifies the sleep seconds, whose default is ``1``.
         """
         if convert:
             key = ensure_int8(convert(key))
@@ -88,9 +94,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         else:
             key = default_convert(key)
         #
-        if interval is None:
-            interval = SLEEP_INTERVAL_DEFAULT
-        self._interval = interval
+        self._interval = interval if interval is not None else SLEEP_INTERVAL_DEFAULT
         #
         super().__init__(connection, key)
 
@@ -115,15 +119,16 @@ class SessionLevelLock(AbstractSessionLevelLock):
             else:
                 if interval is None:
                     interval = self._interval
-                assert not self._interval < 0, 'interval must not be smaller than 0'
-                begin_ts = time()
+                if interval < 0:
+                    raise ValueError('interval must not be smaller than 0')
+                stmt = TRY_LOCK.params(key=self.key)
+                ts_begin = time()
                 while True:
-                    stmt = TRY_LOCK.params(key=self.key)
                     ret_val = self.connection.execute(stmt).scalar()
                     if ret_val:  # succeed
                         self._acquired = True
                         break
-                    if time() - begin_ts > timeout:  # expired
+                    if time() - ts_begin > timeout:  # expired
                         break
                     sleep(interval)
         else:

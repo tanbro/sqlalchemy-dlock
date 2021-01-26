@@ -10,7 +10,7 @@ class AbstractSessionLevelLock(local):
     .. note::
 
         - It's Thread-Local (:class:`threading.local`)
-        - Do not manual instantiate
+        - It's an abstract class, do not manual instantiate
 
     .. attention::
 
@@ -44,12 +44,10 @@ class AbstractSessionLevelLock(local):
         """
         Parameters
         ----------
-
-        connection: sqlalchemy.engine.Connection
-            Database Connection on which the SQL locking functions will be invoked.
-
+        connection : sqlalchemy.engine.Connection
+            SQL locking functions will be invoked on it
         key
-            Key/name or sth like that used as SQL locking function's ID
+            ID or name used as SQL locking function's key
         """
         self._acquired = False
         self._connection = connection
@@ -71,10 +69,14 @@ class AbstractSessionLevelLock(local):
 
     @property
     def connection(self) -> Connection:
+        """Returns `connection` parameter of the constructor
+        """
         return self._connection
 
     @property
     def key(self):
+        """Returns `key` parameter of the constructor
+        """
         return self._key
 
     @property
@@ -87,19 +89,19 @@ class AbstractSessionLevelLock(local):
                 **kwargs  # noqa
                 ) -> bool:
         """
-        Acquire a lock, blocking(default) or non-blocking.
+        Acquire a lock, blocking or non-blocking.
 
-        - When invoked with the blocking argument set to True (the default),
-          block until the lock is unlocked, then set it to locked and return True.
+        - When invoked with the `blocking` argument set to ``True`` (the default),
+          block until the lock is unlocked, then set it to locked and return ``True``.
 
-        - When invoked with the blocking argument set to False, do not block.
-          If a call with blocking set to True would block, return False immediately;
-          otherwise, set the lock to locked and return True.
+        - When invoked with the `blocking` argument set to ``False``, do not block.
+          If a call with blocking set to ``True`` would block, return ``False`` immediately;
+          otherwise, set the lock to locked and return ``True``.
 
-        - When invoked with the floating-point timeout argument set to ``None`` or a positive value,
-          block for at most the number of seconds specified by timeout and as long as the lock cannot be acquired.
-          A negative timeout argument specifies an unbounded wait.
-          It has no effect to specify a timeout when blocking is false.
+        - When invoked with the floating-point `timeout` argument set to ``None`` or a positive value,
+          block for at most the number of seconds specified by `timeout` and as long as the lock cannot be acquired.
+          A negative or ``None`` `timeout` argument specifies an unbounded wait.
+          It has no effect to specify a `timeout` when `blocking` is ``False``.
 
         The return value is ``True`` if the lock is acquired successfully,
         ``False`` if not (for example if the timeout expired).
