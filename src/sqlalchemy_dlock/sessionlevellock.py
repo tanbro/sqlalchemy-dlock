@@ -85,27 +85,29 @@ class AbstractSessionLevelLock(local):
         return self._acquired
 
     def acquire(self,
-                blocking: Optional[bool] = None,
-                timeout: Union[float, int, None] = None,
+                blocking: bool = True,
+                timeout: Optional[Union[float, int]] = None,
                 **kwargs  # noqa
                 ) -> bool:
         """
         Acquire a lock, blocking or non-blocking.
 
-        - When invoked with the `blocking` argument set to ``True`` (the default),
-          block until the lock is unlocked, then set it to locked and return ``True``.
+        - With the `blocking` argument set to ``True`` (the default),
+          the method call will block until the lock is in an unlocked state,
+          then set it to locked and return ``True``.
 
-        - When invoked with the `blocking` argument set to ``False``, do not block.
-          If a call with blocking set to ``True`` would block, return ``False`` immediately;
-          otherwise, set the lock to locked and return ``True``.
+        - With the `blocking` argument set to ``False``,
+          the method call does not block.
+          If the lock is currently in a locked state, return ``False``;
+          otherwise set the lock to a locked state and return ``True``.
 
-        - When invoked with the floating-point `timeout` argument set to a positive value,
-          block for at most the number of seconds specified by `timeout` and as long as the lock cannot be acquired.
-          A negative or ``None`` (the default) `timeout` argument specifies an unbounded wait.
-          It has no effect to specify a `timeout` when `blocking` is ``False``.
-
-        The return value is ``True`` if the lock is acquired successfully,
-        ``False`` if not (for example if the timeout expired).
+        - When invoked with a positive, floating-point value for `timeout`,
+          block for at most the number of seconds specified by timeout as long as the lock can not be acquired.
+          Invocations with a negative value for `timeout` are equivalent to a `timeout` of zero.
+          Invocations with a `timeout` value of ``None`` (the default) set the timeout period to infinite.
+          The `timeout` argument has no practical implications
+          if the `blocking` argument is set to ``False`` and is thus ignored.
+          Returns ``True`` if the lock has been acquired or ``False`` if the timeout period has elapsed.
         """
         raise NotImplementedError()
 

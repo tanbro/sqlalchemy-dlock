@@ -1,4 +1,5 @@
 from textwrap import dedent
+from time import time
 from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
@@ -78,16 +79,19 @@ class SessionLevelLock(AbstractSessionLevelLock):
         super().__init__(connection, key)
 
     def acquire(self,
-                blocking: Optional[bool] = None,
+                blocking: bool = True,
                 timeout: Union[float, int, None] = None,
                 **kwargs  # noqa
                 ) -> bool:
         if self._acquired:
             raise RuntimeError('invoked on a locked lock')
-        if blocking is None:
-            blocking = True
         if blocking:
-            timeout = -1 if timeout is None else timeout
+            if timeout is None:
+                # None: set the timeout period to infinite.
+                timeout = -1
+            elif timeout < 0:
+                # negative value for `timeout` are equivalent to a `timeout` of zero
+                timeout = 0
         else:
             timeout = 0
         stmt = GET_LOCK.params(str=self.key, timeout=timeout)

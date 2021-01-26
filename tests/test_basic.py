@@ -91,6 +91,16 @@ class BasicTestCase(TestCase):
                     self.assertTrue(lock.acquire(timeout=0))
                 self.assertFalse(lock.acquired)
 
+    def test_timeout_negative(self):
+        for engine in ENGINES:
+            key = uuid4().hex
+            for _ in range(cpu_count() + 1):
+                with engine.connect() as conn:
+                    with closing(make_sa_dlock(conn, key)) as lock:
+                        self.assertTrue(lock.acquire(
+                            timeout=-1*randint(1, 1024)))
+                    self.assertFalse(lock.acquired)
+
     def test_timeout_none(self):
         for engine in ENGINES:
             key = uuid4().hex
