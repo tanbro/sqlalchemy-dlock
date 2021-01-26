@@ -70,9 +70,12 @@ class SessionLevelLock(AbstractSessionLevelLock):
 
         - When `key` is :class:`int`, the constructor ensures it to be ``INT64``.
           :class:`OverflowError` is raised if too big or too small for an ``INT64``.
+
         - When `key` is :class:`str` or :class:`bytes`,
-          the constructor calculates its hash value using CRC 64 ISO,
-          and takes the value as actual key.
+          the constructor calculates its checksum using *CRC-64(ISO)*,
+          and takes the checksum as actual key.
+          
+          .. seealso:: https://en.wikipedia.org/wiki/Cyclic_redundancy_check
 
         - Or you can specify a `convert` function to that argument.
           The function is like::
