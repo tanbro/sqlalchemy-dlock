@@ -99,9 +99,9 @@ class AbstractSessionLevelLock(local):
           If a call with blocking set to ``True`` would block, return ``False`` immediately;
           otherwise, set the lock to locked and return ``True``.
 
-        - When invoked with the floating-point `timeout` argument set to ``None`` or a positive value,
+        - When invoked with the floating-point `timeout` argument set to a positive value,
           block for at most the number of seconds specified by `timeout` and as long as the lock cannot be acquired.
-          A negative or ``None`` `timeout` argument specifies an unbounded wait.
+          A negative or ``None`` (the default) `timeout` argument specifies an unbounded wait.
           It has no effect to specify a `timeout` when `blocking` is ``False``.
 
         The return value is ``True`` if the lock is acquired successfully,

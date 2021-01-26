@@ -109,14 +109,14 @@ class SessionLevelLock(AbstractSessionLevelLock):
             raise RuntimeError('invoked on a locked lock')
         if blocking is None:
             blocking = True
-        if timeout is None:
-            timeout = -1
         if blocking:
-            if timeout < 0:
+            if timeout is None:
                 stmt = LOCK.params(key=self.key)
                 self.connection.execute(stmt).fetchall()
                 self._acquired = True
             else:
+                if timeout < 0:
+                    raise ValueError('timeout must not be smaller than 0')
                 if interval is None:
                     interval = self._interval
                 if interval < 0:

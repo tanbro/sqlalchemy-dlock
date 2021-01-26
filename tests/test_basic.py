@@ -5,6 +5,7 @@ from unittest import TestCase
 from uuid import uuid4
 
 from sqlalchemy_dlock import make_sa_dlock
+
 from .engines import ENGINES
 
 
@@ -73,22 +74,30 @@ class BasicTestCase(TestCase):
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
 
-    def test_timeout_zero(self):
+    def test_timeout_positive(self):
         for engine in ENGINES:
             key = uuid4().hex
             for _ in range(cpu_count() + 1):
                 with engine.connect() as conn:
                     with closing(make_sa_dlock(conn, key)) as lock:
-                        self.assertTrue(lock.acquire(timeout=0))
+                        self.assertTrue(lock.acquire(timeout=randint(1, 1024)))
                     self.assertFalse(lock.acquired)
 
-    def test_timeout_negative(self):
+    def test_timeout_zero(self):
+        for engine in ENGINES:
+            key = uuid4().hex
+            with engine.connect() as conn:
+                with closing(make_sa_dlock(conn, key)) as lock:
+                    self.assertTrue(lock.acquire(timeout=0))
+                self.assertFalse(lock.acquired)
+
+    def test_timeout_none(self):
         for engine in ENGINES:
             key = uuid4().hex
             for i in range(cpu_count() + 1):
                 with engine.connect() as conn:
                     with closing(make_sa_dlock(conn, key)) as lock:
-                        self.assertTrue(lock.acquire(timeout=-1 * (i + 1)))
+                        self.assertTrue(lock.acquire(timeout=None))
                     self.assertFalse(lock.acquired)
 
     def test_enter_locked(self):
