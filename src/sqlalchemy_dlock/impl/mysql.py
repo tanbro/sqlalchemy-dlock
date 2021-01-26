@@ -1,4 +1,5 @@
 from textwrap import dedent
+from time import time
 from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
@@ -34,8 +35,6 @@ class SessionLevelLock(AbstractSessionLevelLock):
     """MySQL named-lock
 
     .. seealso:: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
-
-    .. attention:: Multiple simultaneous locks can be acquired and GET_LOCK() does not release any existing locks
     """
 
     def __init__(self,
@@ -43,11 +42,27 @@ class SessionLevelLock(AbstractSessionLevelLock):
                  key,
                  *,
                  convert: Optional[TConvertFunction] = None,
-                 **_
+                 **kwargs  # noqa
                  ):
         """
         MySQL named lock requires the key given by string.
-        You can specify a custom function in ``convert`` argument, if your key is not :class:`str`
+
+        If `key` is not a :class:`str`:
+
+        - When :class:`int` or :class:`float`,
+          the constructor converts it to :class:`str` directly::
+
+            key = str(key)
+
+        - When :class:`bytes`,
+          the constructor tries to decode it with default encoding.
+
+        - Or you can specify a `convert` function to that argument.
+          The function is like::
+
+            def convert(val: Any) -> str:
+                # do something ...
+                return string
         """
         if convert:
             key = convert(key)
@@ -64,19 +79,19 @@ class SessionLevelLock(AbstractSessionLevelLock):
         super().__init__(connection, key)
 
     def acquire(self,
-                blocking: Optional[bool] = None,
+                block: bool = True,
                 timeout: Union[float, int, None] = None,
-                **_
+                **kwargs  # noqa
                 ) -> bool:
         if self._acquired:
-            raise RuntimeError('invoked on a locked lock')
-        if blocking is None:
-            blocking = True
-        if blocking:
+            raise ValueError('invoked on a locked lock')
+        if block:
             if timeout is None:
+                # None: set the timeout period to infinite.
                 timeout = -1
-            else:
-                timeout = round(timeout)
+            elif timeout < 0:
+                # negative value for `timeout` are equivalent to a `timeout` of zero
+                timeout = 0
         else:
             timeout = 0
         stmt = GET_LOCK.params(str=self.key, timeout=timeout)
@@ -93,9 +108,9 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 'GET_LOCK("{}", {}) returns {}'.format(self._key, timeout, ret_val))
         return self._acquired
 
-    def release(self, **_):
+    def release(self, **kwargs):  # noqa
         if not self._acquired:
-            raise RuntimeError('invoked on an unlocked lock')
+            raise ValueError('invoked on an unlocked lock')
         stmt = RELEASE_LOCK.params(str=self.key)
         ret_val = self.connection.execute(stmt).scalar()
         if ret_val == 1:
