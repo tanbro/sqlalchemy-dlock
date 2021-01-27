@@ -1,5 +1,5 @@
 from threading import local
-from typing import Optional, Union
+from typing import Union
 
 from sqlalchemy.engine import Connection  # noqa
 
@@ -113,7 +113,7 @@ class AbstractSessionLevelLock(local):
 
     def acquire(self,
                 block: bool = True,
-                timeout: Optional[Union[float, int]] = None,
+                timeout: Union[float, int, None] = None,
                 **kwargs  # noqa
                 ) -> bool:
         """

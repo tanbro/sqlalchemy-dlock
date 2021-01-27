@@ -1,5 +1,4 @@
 from textwrap import dedent
-from time import time
 from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
@@ -50,12 +49,14 @@ class SessionLevelLock(AbstractSessionLevelLock):
         If `key` is not a :class:`str`:
 
         - When :class:`int` or :class:`float`,
-          the constructor converts it to :class:`str` directly::
+          the constructor will force convert it to :class:`str`::
 
             key = str(key)
 
         - When :class:`bytes`,
-          the constructor tries to decode it with default encoding.
+          the constructor tries to decode it with default encoding::
+
+            key = key.decode()
 
         - Or you can specify a `convert` function to that argument.
           The function is like::
@@ -86,16 +87,17 @@ class SessionLevelLock(AbstractSessionLevelLock):
         if self._acquired:
             raise ValueError('invoked on a locked lock')
         if block:
+            # None: set the timeout period to infinite.
             if timeout is None:
-                # None: set the timeout period to infinite.
                 timeout = -1
+            # negative value for `timeout` are equivalent to a `timeout` of zero
             elif timeout < 0:
-                # negative value for `timeout` are equivalent to a `timeout` of zero
                 timeout = 0
         else:
             timeout = 0
-        stmt = GET_LOCK.params(str=self.key, timeout=timeout)
-        ret_val = self.connection.execute(stmt).scalar()
+        conn = self._connection
+        stmt = GET_LOCK.params(str=self._key, timeout=timeout)
+        ret_val = conn.execute(stmt).scalar()
         if ret_val == 1:
             self._acquired = True
         elif ret_val == 0:
@@ -111,18 +113,21 @@ class SessionLevelLock(AbstractSessionLevelLock):
     def release(self, **kwargs):  # noqa
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
-        stmt = RELEASE_LOCK.params(str=self.key)
-        ret_val = self.connection.execute(stmt).scalar()
+        conn = self._connection
+        stmt = RELEASE_LOCK.params(str=self._key)
+        ret_val = conn.execute(stmt).scalar()
         if ret_val == 1:
             self._acquired = False
         elif ret_val == 0:
+            self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 'The named lock "{}" was not established by this thread, '
                 'and the lock is not released.'.format(self._key))
         elif ret_val is None:
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                'The named lock "{}" did not exist， was never obtained by a call to GET_LOCK()， '
+                'The named lock "{}" did not exist， '
+                'was never obtained by a call to GET_LOCK()， '
                 'or has previously been released.'.format(self._key)
             )
         else:

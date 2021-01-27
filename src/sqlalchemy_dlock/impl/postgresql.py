@@ -72,9 +72,9 @@ class SessionLevelLock(AbstractSessionLevelLock):
           :class:`OverflowError` is raised if too big or too small for an ``INT64``.
 
         - When `key` is :class:`str` or :class:`bytes`,
-          the constructor calculates its checksum using *CRC-64(ISO)*,
-          and takes the checksum as actual key.
-          
+          the constructor calculates its checksum using CRC-64(ISO),
+          and takes the checksum integer value as actual key.
+
           .. seealso:: https://en.wikipedia.org/wiki/Cyclic_redundancy_check
 
         - Or you can specify a `convert` function to that argument.
@@ -110,24 +110,24 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 ) -> bool:
         if self._acquired:
             raise ValueError('invoked on a locked lock')
+        conn = self._connection
         if block:
             if timeout is None:
                 # None: set the timeout period to infinite.
-                stmt = LOCK.params(key=self.key)
-                self.connection.execute(stmt).fetchall()
+                stmt = LOCK.params(key=self._key)
+                conn.execute(stmt).fetchall()
                 self._acquired = True
             else:
+                # negative value for `timeout` are equivalent to a `timeout` of zero.
                 if timeout < 0:
-                    # negative value for `timeout` are equivalent to a `timeout` of zero.
                     timeout = 0
-                if interval is None:
-                    interval = self._interval
+                interval = self._interval if interval is None else interval
                 if interval < 0:
                     raise ValueError('interval must not be smaller than 0')
-                stmt = TRY_LOCK.params(key=self.key)
+                stmt = TRY_LOCK.params(key=self._key)
                 ts_begin = time()
                 while True:
-                    ret_val = self.connection.execute(stmt).scalar()
+                    ret_val = conn.execute(stmt).scalar()
                     if ret_val:  # succeed
                         self._acquired = True
                         break
@@ -137,8 +137,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
         else:
             # This will either obtain the lock immediately and return true,
             # or return false without waiting if the lock cannot be acquired immediately.
-            stmt = TRY_LOCK.params(key=self.key)
-            ret_val = self.connection.execute(stmt).scalar()
+            stmt = TRY_LOCK.params(key=self._key)
+            ret_val = conn.execute(stmt).scalar()
             self._acquired = bool(ret_val)
         #
         return self._acquired
@@ -146,11 +146,12 @@ class SessionLevelLock(AbstractSessionLevelLock):
     def release(self, **kwargs):  # noqa
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
-        stmt = UNLOCK.params(key=self.key)
-        ret_val = self.connection.execute(stmt).scalar()
+        conn = self._connection
+        stmt = UNLOCK.params(key=self._key)
+        ret_val = conn.execute(stmt).scalar()
         if ret_val:
             self._acquired = False
         else:
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                'PostgreSQL advisory lock "{}" was not held.'.format(self._key))
+                'The advisory lock "{}" was not held.'.format(self._key))
