@@ -34,6 +34,18 @@ class AbstractSessionLevelLock(local):
             # do something...
         finally:
             some_lock.release()
+
+    If do not want it to be locked automatically in `with` statement, :func:`contextlib.closing` maybe useful::
+
+        from contextlib import closing
+
+        with closing(some_lock):
+            # not locked
+            some_lock.acquire()
+            # locked
+        pass
+        # un-locked automatically
+
     """
 
     def __init__(self,
@@ -172,11 +184,11 @@ class AbstractSessionLevelLock(local):
             # ...
 
             from contextlib import closing
-            from sqlalchemy_dlock import make_sa_dlock
+            from sqlalchemy_dlock import sadlock
 
             # ...
 
-            with closing(make_sa_dlock(some_connection, some_key)) as lock:
+            with closing(sadlock(some_connection, some_key)) as lock:
                 # will not acquire at the begin of with-block
                 assert not lock.acquired
                 # ...

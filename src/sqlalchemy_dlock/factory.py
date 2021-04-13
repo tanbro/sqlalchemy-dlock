@@ -5,10 +5,10 @@ from sqlalchemy.engine import Connection  # noqa
 from .sessionlevellock import AbstractSessionLevelLock
 from .utils import safe_name
 
-__all__ = ['make_sa_dlock']  # noqa
+__all__ = ['sadlock']  # noqa
 
 
-def make_sa_dlock(  # noqa
+def sadlock(  # noqa
         connection: Connection,
         key,
         **kwargs
