@@ -1,14 +1,14 @@
 from importlib import import_module
 
-from sqlalchemy.engine import Connection  # noqa
+from sqlalchemy.engine import Connection
 
 from .sessionlevellock import AbstractSessionLevelLock
 from .utils import safe_name
 
-__all__ = ['sadlock']  # noqa
+__all__ = ['sadlock']
 
 
-def sadlock(  # noqa
+def sadlock(
         connection: Connection,
         key,
         **kwargs

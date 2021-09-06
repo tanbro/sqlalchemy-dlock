@@ -5,7 +5,7 @@ from typing import Any, Callable, Optional, Union
 
 import libscrc
 from sqlalchemy import text
-from sqlalchemy.engine import Connection  # noqa
+from sqlalchemy.engine import Connection
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..sessionlevellock import AbstractSessionLevelLock
@@ -63,7 +63,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                  *,
                  convert: Optional[TConvertFunction] = None,
                  interval: Union[float, int, None] = None,
-                 **kwargs  # noqa
+                 **kwargs
                  ):
         """
         PostgreSQL advisory lock requires the key given by ``INT64``.
@@ -106,7 +106,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 timeout: Union[float, int, None] = None,
                 *,
                 interval: Union[float, int, None] = None,
-                **kwargs  # noqa
+                **kwargs
                 ) -> bool:
         if self._acquired:
             raise ValueError('invoked on a locked lock')
@@ -143,7 +143,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         #
         return self._acquired
 
-    def release(self, **kwargs):  # noqa
+    def release(self, **kwargs):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
         conn = self._connection

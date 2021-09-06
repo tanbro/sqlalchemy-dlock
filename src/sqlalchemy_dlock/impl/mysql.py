@@ -2,7 +2,7 @@ from textwrap import dedent
 from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
-from sqlalchemy.engine import Connection  # noqa
+from sqlalchemy.engine import Connection
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..sessionlevellock import AbstractSessionLevelLock
@@ -41,7 +41,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                  key,
                  *,
                  convert: Optional[TConvertFunction] = None,
-                 **kwargs  # noqa
+                 **kwargs
                  ):
         """
         MySQL named lock requires the key given by string.
@@ -82,7 +82,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
     def acquire(self,
                 block: bool = True,
                 timeout: Union[float, int, None] = None,
-                **kwargs  # noqa
+                **kwargs
                 ) -> bool:
         if self._acquired:
             raise ValueError('invoked on a locked lock')
@@ -110,7 +110,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 'GET_LOCK("{}", {}) returns {}'.format(self._key, timeout, ret_val))
         return self._acquired
 
-    def release(self, **kwargs):  # noqa
+    def release(self, **kwargs):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
         conn = self._connection

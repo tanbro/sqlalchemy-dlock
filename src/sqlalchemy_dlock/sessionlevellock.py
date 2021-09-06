@@ -1,7 +1,7 @@
 from threading import local
 from typing import Union
 
-from sqlalchemy.engine import Connection  # noqa
+from sqlalchemy.engine import Connection
 
 
 class AbstractSessionLevelLock(local):
@@ -51,7 +51,7 @@ class AbstractSessionLevelLock(local):
     def __init__(self,
                  connection: Connection,
                  key,
-                 **kwargs  # noqa
+                 **kwargs
                  ):
         """
         Parameters
@@ -126,7 +126,7 @@ class AbstractSessionLevelLock(local):
     def acquire(self,
                 block: bool = True,
                 timeout: Union[float, int, None] = None,
-                **kwargs  # noqa
+                **kwargs
                 ) -> bool:
         """
         Acquire a lock, blocking or non-blocking.
