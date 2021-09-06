@@ -10,8 +10,8 @@ from sqlalchemy.engine import Connection
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..sessionlevellock import AbstractSessionLevelLock
 
-INT64_MAX = +0x7fff_ffff_ffff_ffff  # max of signed int64: 2**63-1
-INT64_MIN = -0x8000_0000_0000_0000  # min of signed int64: -2**63
+INT64_MAX = 2**63-1  # max of signed int64: 2**63-1(+0x7fff_ffff_ffff_ffff)
+INT64_MIN = -2**63  # min of signed int64: -2**63(-0x8000_0000_0000_0000)
 
 SLEEP_INTERVAL_DEFAULT = 1
 
