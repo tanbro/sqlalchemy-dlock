@@ -1,16 +1,10 @@
-from threading import local
-from typing import Any, Union
+from typing import Union
 
-from .types import TConnectionOrSession
+from sqlalchemy.engine import Connection
 
 
-class AbstractSessionLevelLock(local):
-    """Base class of database session level lock implementation
-
-    .. note::
-
-        - It's Thread-Local (:class:`threading.local`)
-        - It's an abstract class, do not manual instantiate
+class AbstractSessionLevelLock:
+    """Base class of database session level lock implementation, for asyncio tasks.
 
     .. attention::
 
@@ -22,47 +16,42 @@ class AbstractSessionLevelLock(local):
     The lock's :meth:`acquire` and :meth:`release` methods can be used as context managers for a with statement.
     The :meth:`acquire` method will be called when the block is entered,
     and :meth:`release` will be called when the block is exited.
-    Hence, the following snippet::
+    The preferred way to use a Lock is an async with statement::
 
-        with some_lock:
-            # do something...
+        lock = AsyncSessionLevelLockImplementation()
+
+        # ... later
+        async with lock:
+            # access shared state
 
     is equivalent to::
 
-        some_lock.acquire()
+        lock = AsyncSessionLevelLockImplementation()
+
+        # ... later
+        await lock.acquire()
         try:
             # do something...
         finally:
-            some_lock.release()
-
-    If do not want it to be locked automatically in `with` statement, :func:`contextlib.closing` maybe useful::
-
-        from contextlib import closing
-
-        with closing(some_lock):
-            # not locked
-            some_lock.acquire()
-            # locked
-        pass
-        # un-locked automatically
+            lock.release()
     """
 
     def __init__(self,
-                 connection_or_session: TConnectionOrSession,
-                 key: Any,
-                 **_
+                 connection: Connection,
+                 key,
+                 **kwargs
                  ):
         """
         Parameters
         ----------
-        connection : sqlalchemy Connection or orm Session object.
+        connection : sqlalchemy.engine.Connection
             SQL locking functions will be invoked on it
 
         key
             ID or name used as SQL locking function's key
         """
         self._acquired = False
-        self._connection_or_session = connection_or_session
+        self._connection = connection
         self._key = key
 
     def __enter__(self):
@@ -80,10 +69,10 @@ class AbstractSessionLevelLock(local):
         )
 
     @property
-    def connection_or_session(self) -> TConnectionOrSession:
-        """Returns `connection_or_session` parameter of the constructor
+    def connection(self) -> Connection:
+        """Returns `connection` parameter of the constructor
         """
-        return self._connection_or_session
+        return self._connection
 
     @property
     def key(self):

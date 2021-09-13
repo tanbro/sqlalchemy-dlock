@@ -5,10 +5,10 @@ from typing import Any, Callable, Optional, Union
 
 import libscrc
 from sqlalchemy import text
-from sqlalchemy.engine import Connection
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..sessionlevellock import AbstractSessionLevelLock
+from ..types import TConnectionOrSession
 
 INT64_MAX = 2**63-1  # max of signed int64: 2**63-1(+0x7fff_ffff_ffff_ffff)
 INT64_MIN = -2**63  # min of signed int64: -2**63(-0x8000_0000_0000_0000)
@@ -58,12 +58,12 @@ class SessionLevelLock(AbstractSessionLevelLock):
     """
 
     def __init__(self,
-                 connection: Connection,
+                 connection_or_session: TConnectionOrSession,
                  key,
                  *,
                  convert: Optional[TConvertFunction] = None,
                  interval: Union[float, int, None] = None,
-                 **kwargs
+                 **_
                  ):
         """
         PostgreSQL advisory lock requires the key given by ``INT64``.
@@ -99,23 +99,22 @@ class SessionLevelLock(AbstractSessionLevelLock):
         #
         self._interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
         #
-        super().__init__(connection, key)
+        super().__init__(connection_or_session, key)
 
     def acquire(self,
                 block: bool = True,
                 timeout: Union[float, int, None] = None,
                 *,
                 interval: Union[float, int, None] = None,
-                **kwargs
+                **_
                 ) -> bool:
         if self._acquired:
             raise ValueError('invoked on a locked lock')
-        conn = self._connection
         if block:
             if timeout is None:
                 # None: set the timeout period to infinite.
                 stmt = LOCK.params(key=self._key)
-                conn.execute(stmt).fetchall()
+                self.connection_or_session.execute(stmt).fetchall()
                 self._acquired = True
             else:
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
@@ -127,7 +126,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 stmt = TRY_LOCK.params(key=self._key)
                 ts_begin = time()
                 while True:
-                    ret_val = conn.execute(stmt).scalar()
+                    ret_val = self.connection_or_session.execute(stmt).scalar()
                     if ret_val:  # succeed
                         self._acquired = True
                         break
@@ -138,17 +137,16 @@ class SessionLevelLock(AbstractSessionLevelLock):
             # This will either obtain the lock immediately and return true,
             # or return false without waiting if the lock cannot be acquired immediately.
             stmt = TRY_LOCK.params(key=self._key)
-            ret_val = conn.execute(stmt).scalar()
+            ret_val = self.connection_or_session.execute(stmt).scalar()
             self._acquired = bool(ret_val)
         #
         return self._acquired
 
-    def release(self, **kwargs):
+    def release(self, **_):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
-        conn = self._connection
         stmt = UNLOCK.params(key=self._key)
-        ret_val = conn.execute(stmt).scalar()
+        ret_val = self.connection_or_session.execute(stmt).scalar()
         if ret_val:
             self._acquired = False
         else:

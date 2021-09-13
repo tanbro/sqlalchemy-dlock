@@ -2,10 +2,10 @@ from textwrap import dedent
 from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
-from sqlalchemy.engine import Connection
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..sessionlevellock import AbstractSessionLevelLock
+from ..types import TConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
@@ -37,11 +37,11 @@ class SessionLevelLock(AbstractSessionLevelLock):
     """
 
     def __init__(self,
-                 connection: Connection,
+                 connection_or_session: TConnectionOrSession,
                  key,
                  *,
                  convert: Optional[TConvertFunction] = None,
-                 **kwargs
+                 **_
                  ):
         """
         MySQL named lock requires the key given by string.
@@ -77,12 +77,12 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 'MySQL enforces a maximum length on lock names of {} characters.'.format(
                     MYSQL_LOCK_NAME_MAX_LENGTH))
         #
-        super().__init__(connection, key)
+        super().__init__(connection_or_session, key)
 
     def acquire(self,
                 block: bool = True,
                 timeout: Union[float, int, None] = None,
-                **kwargs
+                **_
                 ) -> bool:
         if self._acquired:
             raise ValueError('invoked on a locked lock')
@@ -95,9 +95,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 timeout = 0
         else:
             timeout = 0
-        conn = self._connection
         stmt = GET_LOCK.params(str=self._key, timeout=timeout)
-        ret_val = conn.execute(stmt).scalar()
+        ret_val = self.connection_or_session.execute(stmt).scalar()
         if ret_val == 1:
             self._acquired = True
         elif ret_val == 0:
@@ -110,12 +109,11 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 'GET_LOCK("{}", {}) returns {}'.format(self._key, timeout, ret_val))
         return self._acquired
 
-    def release(self, **kwargs):
+    def release(self, **_):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
-        conn = self._connection
         stmt = RELEASE_LOCK.params(str=self._key)
-        ret_val = conn.execute(stmt).scalar()
+        ret_val = self.connection_or_session.execute(stmt).scalar()
         if ret_val == 1:
             self._acquired = False
         elif ret_val == 0:

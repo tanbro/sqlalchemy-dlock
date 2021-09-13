@@ -4,12 +4,13 @@ from sqlalchemy.engine import Connection
 
 from .sessionlevellock import AbstractSessionLevelLock
 from .utils import safe_name
+from .types import TConnectionOrSession
 
 __all__ = ['sadlock']
 
 
 def sadlock(
-        connection: Connection,
+        connection_or_engine: TConnectionOrSession,
         key,
         **kwargs
 ) -> AbstractSessionLevelLock:
@@ -17,7 +18,7 @@ def sadlock(
 
     Parameters
     ----------
-    connection : sqlalchemy.engine.Connection
+    connection_or_engine : sqlalchemy Connection or orm Session/ScoptedSession object.
         Database Connection on which the SQL locking functions will be invoked
 
     key:
@@ -32,10 +33,13 @@ def sadlock(
 
         MySQL and PostgreSQL are supported til now.
     """
-    name = safe_name(connection.engine.name)
+    if isinstance(connection_or_engine, Connection):
+        name = safe_name(connection_or_engine.engine.name)
+    else:
+        name = safe_name(connection_or_engine.get_bind().name)
     try:
         mod = import_module('..impl.{}'.format(name), __name__)
     except ImportError as exception:
-        raise NotImplementedError('{}: {}'.format(connection.engine.name, exception))
+        raise NotImplementedError('{}: {}'.format(name, exception))
     lock_cls = getattr(mod, 'SessionLevelLock')
-    return lock_cls(connection, key, **kwargs)
+    return lock_cls(connection_or_engine, key, **kwargs)

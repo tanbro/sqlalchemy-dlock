@@ -8,19 +8,18 @@ from .engines import ENGINES
 
 
 class ScopedSessionTestCase(TestCase):
-    Sessions = []
 
-    @classmethod
-    def setUpClass(cls):
+    def setUpClass(self):
+        self.Sessions = []
+        self.sessions = []
         for engine in ENGINES:
             factory = sessionmaker(bind=engine)
             Session = scoped_session(factory)
-            Session()
-            cls.Sessions.append(Session)
+            self.Sessions.append(Session)
+            self.sessions.append(Session())
 
-    @classmethod
-    def tearDownClass(cls):
-        for Session in cls.Sessions:
+    def tearDownClass(self):
+        for Session in self.Sessions:
             Session.remove()
 
     def tearDown(self):
@@ -29,27 +28,26 @@ class ScopedSessionTestCase(TestCase):
 
     def test_once(self):
         key = uuid4().hex
-        for Session in self.Sessions:
-            with sadlock(Session.connection(), key) as lock:
+        for session in self.sessions:
+            with sadlock(session, key) as lock:
                 self.assertTrue(lock.acquired)
             self.assertFalse(lock.acquired)
 
     def test_twice(self):
         key = uuid4().hex
-        for Session in self.Sessions:
+        for session in self.sessions:
             for _ in range(2):
-                with sadlock(Session.connection(), key) as lock:
+                with sadlock(session, key) as lock:
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
 
     def test_separated_connection(self):
         key = uuid4().hex
-        for Session in self.Sessions:
-            with Session.get_bind().connect() as conn:
-                Session.commit()
-                lock = sadlock(conn, key)
-                Session.rollback()
-                self.assertTrue(lock.acquire())
-                Session.close()
-                lock.release()
-                self.assertFalse(lock.acquired)
+        for session in self.sessions:
+            session.commit()
+            lock = sadlock(session, key)
+            session.rollback()
+            self.assertTrue(lock.acquire())
+            session.close()
+            lock.release()
+            self.assertFalse(lock.acquired)

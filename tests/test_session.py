@@ -24,20 +24,19 @@ class SessionTestCase(TestCase):
     def test_once(self):
         key = uuid1().hex
         for Session in self.Sessions:
-            with session_scope(Session) as session:
-                with sadlock(session.connection(), key) as lock:
+            with Session() as session:
+                with sadlock(session, key) as lock:
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
 
     def test_seprated_connection(self):
         key = uuid1().hex
         for Session in self.Sessions:
-            with session_scope(Session) as session:
-                with session.get_bind().connect() as conn:
-                    session.commit()
-                    lock = sadlock(conn, key)
-                    session.rollback()
-                    self.assertTrue(lock.acquire())
-                    session.close()
-                    lock.release()
-                    self.assertFalse(lock.acquired)
+            with Session() as session:
+                session.commit()
+                lock = sadlock(session, key)
+                session.rollback()
+                self.assertTrue(lock.acquire())
+                session.close()
+                lock.release()
+                self.assertFalse(lock.acquired)

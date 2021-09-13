@@ -8,6 +8,8 @@ from sqlalchemy_dlock import sadlock
 
 from .engines import ENGINES
 
+CPU_COUNT = cpu_count() or 1
+
 
 class BasicTestCase(TestCase):
 
@@ -77,7 +79,7 @@ class BasicTestCase(TestCase):
     def test_timeout_positive(self):
         for engine in ENGINES:
             key = uuid4().hex
-            for _ in range(cpu_count() + 1):
+            for _ in range(CPU_COUNT + 1):
                 with engine.connect() as conn:
                     with closing(sadlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(timeout=randint(1, 1024)))
@@ -94,7 +96,7 @@ class BasicTestCase(TestCase):
     def test_timeout_negative(self):
         for engine in ENGINES:
             key = uuid4().hex
-            for _ in range(cpu_count() + 1):
+            for _ in range(CPU_COUNT + 1):
                 with engine.connect() as conn:
                     with closing(sadlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(
@@ -104,7 +106,7 @@ class BasicTestCase(TestCase):
     def test_timeout_none(self):
         for engine in ENGINES:
             key = uuid4().hex
-            for i in range(cpu_count() + 1):
+            for i in range(CPU_COUNT + 1):
                 with engine.connect() as conn:
                     with closing(sadlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(timeout=None))
@@ -113,7 +115,7 @@ class BasicTestCase(TestCase):
     def test_acquired_property(self):
         for engine in ENGINES:
             key = uuid4().hex
-            for i in range(cpu_count() + 1):
+            for i in range(CPU_COUNT + 1):
                 with engine.connect() as conn:
                     with closing(sadlock(conn, key)) as lock:
                         self.assertFalse(lock.acquired)
