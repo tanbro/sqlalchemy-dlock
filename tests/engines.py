@@ -10,5 +10,5 @@ __all__ = ['ENGINES']
 ENGINES = [
     create_engine(v)
     for k, v in environ.items()
-    if k.startswith('SQLALCHEMY_DLOCK_')
+    if k.startswith('SQLALCHEMY_DLOCK_') and not k.startswith('SQLALCHEMY_DLOCK_ASYNCIO_')
 ]

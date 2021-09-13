@@ -1,3 +1,4 @@
+import asyncio
 from collections import deque
 from sys import byteorder
 from textwrap import dedent
@@ -7,7 +8,7 @@ from typing import Any, Callable, Optional, Union
 import libscrc
 from sqlalchemy import text
 
-from ..exceptions import SqlAlchemyDLockDatabaseError
+from ...exceptions import SqlAlchemyDLockDatabaseError
 from ..sessionlevellock import AbstractSessionLevelLock
 from ..types import TConnectionOrSession
 
@@ -102,20 +103,20 @@ class SessionLevelLock(AbstractSessionLevelLock):
         #
         super().__init__(connection_or_session, key)
 
-    def acquire(self,
-                block: bool = True,
-                timeout: Union[float, int, None] = None,
-                *,
-                interval: Union[float, int, None] = None,
-                **_
-                ) -> bool:
+    async def acquire(self,
+                      block: bool = True,
+                      timeout: Union[float, int, None] = None,
+                      *,
+                      interval: Union[float, int, None] = None,
+                      **_
+                      ) -> bool:
         if self._acquired:
             raise ValueError('invoked on a locked lock')
         if block:
             if timeout is None:
                 # None: set the timeout period to infinite.
                 stmt = LOCK.params(key=self._key)
-                r = self.connection_or_session.execute(stmt)
+                r = await self.connection_or_session.execute(stmt)
                 deque(r.all(), maxlen=0)
                 self._acquired = True
             else:
@@ -128,27 +129,30 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 stmt = TRY_LOCK.params(key=self._key)
                 ts_begin = time()
                 while True:
-                    ret_val = self.connection_or_session.execute(stmt).scalar()
+                    r = await self.connection_or_session.execute(stmt)
+                    ret_val = r.scalar_one()
                     if ret_val:  # succeed
                         self._acquired = True
                         break
                     if time() - ts_begin > timeout:  # expired
                         break
-                    sleep(interval)
+                    await asyncio.sleep(interval)
         else:
             # This will either obtain the lock immediately and return true,
             # or return false without waiting if the lock cannot be acquired immediately.
             stmt = TRY_LOCK.params(key=self._key)
-            ret_val = self.connection_or_session.execute(stmt).scalar()
+            r = await self.connection_or_session.execute(stmt)
+            ret_val = r.scalar_one()
             self._acquired = bool(ret_val)
         #
         return self._acquired
 
-    def release(self, **_):
+    async def release(self, **_):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
         stmt = UNLOCK.params(key=self._key)
-        ret_val = self.connection_or_session.execute(stmt).scalar()
+        r = await self.connection_or_session.execute(stmt)
+        ret_val = r.scalar_one()
         if ret_val:
             self._acquired = False
         else:
