@@ -55,7 +55,7 @@ class AbstractSessionLevelLock(local):
         """
         Parameters
         ----------
-        connection : sqlalchemy Connection or orm Session object.
+        connection : sqlalchemy Connection or orm Session/ScopedSession object.
             SQL locking functions will be invoked on it
 
         key

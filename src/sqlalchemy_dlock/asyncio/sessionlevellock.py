@@ -1,6 +1,6 @@
-from typing import Union
+from typing import Any, Union
 
-from sqlalchemy.engine import Connection
+from .types import TConnectionOrSession
 
 
 class AbstractSessionLevelLock:
@@ -37,29 +37,29 @@ class AbstractSessionLevelLock:
     """
 
     def __init__(self,
-                 connection: Connection,
-                 key,
-                 **kwargs
+                 connection_or_session: TConnectionOrSession,
+                 key: Any,
+                 **_
                  ):
         """
         Parameters
         ----------
-        connection : sqlalchemy.engine.Connection
+        connection : sqlalchemy Connection or orm Session/ScopedSession object.
             SQL locking functions will be invoked on it
 
         key
             ID or name used as SQL locking function's key
         """
         self._acquired = False
-        self._connection = connection
+        self._connection_or_session = connection_or_session
         self._key = key
 
-    def __enter__(self):
-        self.acquire()
+    async def __aenter__(self):
+        await self.acquire()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.close()
+    async def __aexit__(self, type_, value, traceback):
+        await self.close()
 
     def __str__(self):
         return '<{} {} key={} at 0x{:x}>'.format(
@@ -69,10 +69,10 @@ class AbstractSessionLevelLock:
         )
 
     @property
-    def connection(self) -> Connection:
-        """Returns `connection` parameter of the constructor
+    def connection_or_session(self) -> TConnectionOrSession:
+        """Returns `connection_or_session` parameter of the constructor
         """
-        return self._connection
+        return self._connection_or_session
 
     @property
     def key(self):
@@ -94,24 +94,13 @@ class AbstractSessionLevelLock:
         """
         return self._acquired
 
-    @acquired.setter
-    def acquired(self, value: bool):
-        if value:
-            self.acquire()
-        else:
-            self.release()
-
     @property
     def locked(self) -> bool:
         """Alias of :data:`acquired`
         """
         return self.acquired
 
-    @locked.setter
-    def locked(self, value: bool):
-        self.acquired = value
-
-    def acquire(self,
+    async def acquire(self,
                 block: bool = True,
                 timeout: Union[float, int, None] = None,
                 **kwargs
@@ -138,7 +127,7 @@ class AbstractSessionLevelLock:
         """
         raise NotImplementedError()
 
-    def release(self, **kwargs):
+    async def release(self, **kwargs):
         """Release a lock.
 
         Since the class is thread-local, this cannot be called from other thread or process,
@@ -154,7 +143,7 @@ class AbstractSessionLevelLock:
         """
         raise NotImplementedError()
 
-    def close(self, **kwargs):
+    async def close(self, **kwargs):
         """Same as :meth:`release`
 
         Except that a :class:`ValueError` is **NOT** raised when invoked on an unlocked lock.
@@ -188,4 +177,4 @@ class AbstractSessionLevelLock:
             assert not lock.acquired
         """
         if self._acquired:
-            self.release(**kwargs)
+            await self.release(**kwargs)
