@@ -1,14 +1,14 @@
-from os import environ
+from pathlib import Path
+import json
 
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
-
-load_dotenv()
+from sqlalchemy import engine_from_config
 
 __all__ = ['ENGINES']
 
+with Path(__file__).parent.joinpath('engines.conf.json').open() as fp:
+    data = json.load(fp)
+
 ENGINES = [
-    create_engine(v)
-    for k, v in environ.items()
-    if k.startswith('SQLALCHEMY_DLOCK_') and not k.startswith('SQLALCHEMY_DLOCK_ASYNCIO_')
+    engine_from_config(cfg['configuration'], connect_args=cfg.get('args', {}))
+    for cfg in data
 ]

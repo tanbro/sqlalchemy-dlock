@@ -9,7 +9,7 @@ from .engines import ENGINES
 
 class ScopedSessionTestCase(TestCase):
 
-    def setUpClass(self):
+    def setUp(self):
         self.Sessions = []
         self.sessions = []
         for engine in ENGINES:
@@ -18,11 +18,9 @@ class ScopedSessionTestCase(TestCase):
             self.Sessions.append(Session)
             self.sessions.append(Session())
 
-    def tearDownClass(self):
+    def tearDown(self):
         for Session in self.Sessions:
             Session.remove()
-
-    def tearDown(self):
         for engine in ENGINES:
             engine.dispose()
 

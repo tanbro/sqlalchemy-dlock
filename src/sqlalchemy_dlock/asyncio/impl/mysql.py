@@ -80,10 +80,10 @@ class SessionLevelLock(AbstractSessionLevelLock):
         super().__init__(connection_or_session, key)
 
     async def acquire(self,
-                block: bool = True,
-                timeout: Union[float, int, None] = None,
-                **_
-                ) -> bool:
+                      block: bool = True,
+                      timeout: Union[float, int, None] = None,
+                      **_
+                      ) -> bool:
         if self._acquired:
             raise ValueError('invoked on a locked lock')
         if block:
@@ -96,7 +96,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         else:
             timeout = 0
         stmt = GET_LOCK.params(str=self._key, timeout=timeout)
-        r = await self.connection_or_session.execute(stmt)
+        r = await self.connection_or_session.execute(stmt)  # type: ignore
         ret_val = r.scalar_one()
         if ret_val == 1:
             self._acquired = True
@@ -114,7 +114,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
         stmt = RELEASE_LOCK.params(str=self._key)
-        r = await self.connection_or_session.execute(stmt)
+        r = await self.connection_or_session.execute(stmt)  # type: ignore
         ret_val = r.scalar_one()
         if ret_val == 1:
             self._acquired = False

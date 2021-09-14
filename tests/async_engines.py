@@ -1,22 +1,32 @@
-from os import environ
-
-from dotenv import load_dotenv
+import json
+from pathlib import Path
 from sqlalchemy.ext.asyncio import create_async_engine
 
 __all__ = ['create_engins', 'dispose_engins', 'get_engins']
 
 
 _ENGINES = []
+_PREFIX = 'sqlalchemy.'
+
 
 def create_engins():
     global _ENGINES
-    load_dotenv()
-    _ENGINES = [
-        create_async_engine(v)
-        for k, v in environ.items()
-        if k.startswith('SQLALCHEMY_DLOCK_ASYNCIO_')
-    ]
+
+    with Path(__file__).parent.joinpath('async_engines.conf.json').open() as fp:
+        data = json.load(fp)
+
+    for cfg in data:
+        url = cfg['configuration'][_PREFIX + 'url']
+        kwds = {
+            k[len(_PREFIX):]: v for k, v in cfg['configuration'].items()
+            if k.startswith(_PREFIX) and k != _PREFIX + 'url'
+        }
+        connect_args = cfg.get('args', {})
+        engine = create_async_engine(url, connect_args=connect_args, **kwds)
+        _ENGINES.append(engine)
+
     return _ENGINES
+
 
 async def dispose_engins():
     for engine in _ENGINES:
