@@ -168,7 +168,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 stmt = self._stmt_dict['trylock'].params(key=self._key)
                 ts_begin = time()
                 while True:
-                    ret_val = self.connection_or_session.execute(stmt).scalar_one()
+                    ret_val = self.connection_or_session.execute(
+                        stmt).scalar_one()
                     if ret_val:  # succeed
                         self._acquired = True
                         break

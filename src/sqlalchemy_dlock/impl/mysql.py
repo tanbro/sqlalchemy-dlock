@@ -96,7 +96,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         else:
             timeout = 0
         stmt = GET_LOCK.params(str=self._key, timeout=timeout)
-        ret_val = self.connection_or_session.execute(stmt).scalar()
+        ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:
             self._acquired = True
         elif ret_val == 0:
@@ -113,7 +113,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
         stmt = RELEASE_LOCK.params(str=self._key)
-        ret_val = self.connection_or_session.execute(stmt).scalar()
+        ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:
             self._acquired = False
         elif ret_val == 0:
