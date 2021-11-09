@@ -14,7 +14,7 @@ class AbstractSessionLevelLock(local):
 
     .. attention::
 
-        The *session* here means that of Database,
+        The *Session* here means that of Database,
         **NOT** SQLAlchemy's :class:`sqlalchemy.orm.session.Session`,
         which is more like a transaction.
         Here we roughly take :class:`sqlalchemy.engine.Connection` as database's session.
@@ -49,13 +49,13 @@ class AbstractSessionLevelLock(local):
 
     def __init__(self,
                  connection_or_session: TConnectionOrSession,
-                 key: Any,
+                 key,
                  **_
                  ):
         """
         Parameters
         ----------
-        connection : sqlalchemy Connection or orm Session/ScopedSession object.
+        connection_or_session : sqlalchemy Connection or orm Session/ScopedSession object.
             SQL locking functions will be invoked on it
 
         key

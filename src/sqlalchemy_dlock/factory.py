@@ -3,14 +3,14 @@ from importlib import import_module
 from sqlalchemy.engine import Connection
 
 from .sessionlevellock import AbstractSessionLevelLock
-from .utils import safe_name
 from .types import TConnectionOrSession
+from .utils import safe_name
 
 __all__ = ['sadlock']
 
 
 def sadlock(
-        connection_or_engine: TConnectionOrSession,
+        connection_or_session: TConnectionOrSession,
         key,
         **kwargs
 ) -> AbstractSessionLevelLock:
@@ -33,13 +33,13 @@ def sadlock(
 
         MySQL and PostgreSQL are supported til now.
     """
-    if isinstance(connection_or_engine, Connection):
-        name = safe_name(connection_or_engine.engine.name)
+    if isinstance(connection_or_session, Connection):
+        name = safe_name(connection_or_session.engine.name)
     else:
-        name = safe_name(connection_or_engine.get_bind().name)
+        name = safe_name(connection_or_session.get_bind().name)
     try:
         mod = import_module('..impl.{}'.format(name), __name__)
     except ImportError as exception:
         raise NotImplementedError('{}: {}'.format(name, exception))
     lock_cls = getattr(mod, 'SessionLevelLock')
-    return lock_cls(connection_or_engine, key, **kwargs)
+    return lock_cls(connection_or_session, key, **kwargs)

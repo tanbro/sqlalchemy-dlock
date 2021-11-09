@@ -136,9 +136,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
             key = default_convert(key)
         #
         self._interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
-        if level is None:
-            level = 'session'
-        self._stmt_dict = STATEMENTS[level]
+        self._level = level or 'session'
+        self._stmt_dict = STATEMENTS[self._level]
         #
         super().__init__(connection_or_session, key)
 
@@ -196,3 +195,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 'The advisory lock "{}" was not held.'.format(self._key))
+
+    @property
+    def level(self) -> str:
+        return self._level
