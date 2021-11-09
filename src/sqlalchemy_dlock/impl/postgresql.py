@@ -1,10 +1,10 @@
 from collections import deque
+from hashlib import blake2b
 from sys import byteorder
 from textwrap import dedent
 from time import sleep, time
 from typing import Any, Callable, Optional, Union
 
-import libscrc
 from sqlalchemy import text
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
@@ -56,14 +56,14 @@ STATEMENTS = {
 TConvertFunction = Callable[[Any], int]
 
 
-def default_convert(key: Union[bytearray, bytes, str]) -> int:
+def default_convert(key: Union[bytearray, bytes, memoryview, str, int]) -> int:
     if isinstance(key, str):
         key = key.encode()
-    if isinstance(key, (bytearray, bytes)):
-        result = libscrc.iso(key)  # type: ignore
-    else:
-        raise TypeError('{}'.format(type(key)))
-    return ensure_int64(result)
+    if isinstance(key, (bytearray, bytes, memoryview)):
+        return int.from_bytes(blake2b(key, digest_size=8).digest(), byteorder, signed=True)
+    elif isinstance(key, int):
+        return ensure_int64(key)
+    raise TypeError('{}'.format(type(key)))
 
 
 def ensure_int64(i: int) -> int:
@@ -113,7 +113,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
 
         The ``level`` argument should be one of:
 
-        - ``"session"`` (Omitted): locks an application-defined resource. 
+        - ``"session"`` (Omitted): locks an application-defined resource.
             If another session already holds a lock on the same resource identifier, this function will wait until the resource becomes available.
             The lock is exclusive. Multiple lock requests stack, so that if the same resource is locked three times it must then be unlocked three times to be released for other sessions' use.
 
@@ -130,8 +130,6 @@ class SessionLevelLock(AbstractSessionLevelLock):
         """
         if convert:
             key = ensure_int64(convert(key))
-        elif isinstance(key, int):
-            key = ensure_int64(key)
         else:
             key = default_convert(key)
         #
@@ -167,9 +165,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 stmt = self._stmt_dict['trylock'].params(key=self._key)
                 ts_begin = time()
                 while True:
-                    ret_val = self.connection_or_session.execute(
-                        stmt).scalar_one()
-                    if ret_val:  # succeed
+                    r = self.connection_or_session.execute(stmt)
+                    if r.scalar_one():  # succeed
                         self._acquired = True
                         break
                     if time() - ts_begin > timeout:  # expired
