@@ -1,5 +1,5 @@
 from threading import local
-from typing import Any, Union
+from typing import Union
 
 from .types import TConnectionOrSession
 
@@ -19,23 +19,25 @@ class AbstractSessionLevelLock(local):
         which is more like a transaction.
         Here we roughly take :class:`sqlalchemy.engine.Connection` as database's session.
 
-    The lock's :meth:`acquire` and :meth:`release` methods can be used as context managers for a with statement.
-    The :meth:`acquire` method will be called when the block is entered,
+    The :meth:`acquire` and :meth:`release` methods can be used as context managers for a :keyword:`with` statement.
+    :meth:`acquire` will be called when the block is entered,
     and :meth:`release` will be called when the block is exited.
     Hence, the following snippet::
 
         with some_lock:
             # do something...
+            pass
 
     is equivalent to::
 
         some_lock.acquire()
         try:
             # do something...
+            pass
         finally:
             some_lock.release()
 
-    If do not want it to be locked automatically in `with` statement, :func:`contextlib.closing` maybe useful::
+    If do not want it to be locked automatically in :keyword:`with` statement, :func:`contextlib.closing` maybe useful::
 
         from contextlib import closing
 
@@ -50,12 +52,12 @@ class AbstractSessionLevelLock(local):
     def __init__(self,
                  connection_or_session: TConnectionOrSession,
                  key,
-                 **_
+                 **kwargs
                  ):
         """
         Parameters
         ----------
-        connection_or_session : sqlalchemy Connection or orm Session/ScopedSession object.
+        connection_or_session : sqlalchemy Connection or orm Session/ScopedSession object
             SQL locking functions will be invoked on it
 
         key
@@ -96,7 +98,8 @@ class AbstractSessionLevelLock(local):
         """locked/unlocked state property
 
         As a `Getter`:
-        it returns ``True`` if the lock has been acquired, ``False`` otherwise.
+
+        - It returns ``True`` if the lock has been acquired, ``False`` otherwise.
 
         As a `Setter`:
 
@@ -153,8 +156,8 @@ class AbstractSessionLevelLock(local):
         """Release a lock.
 
         Since the class is thread-local, this cannot be called from other thread or process,
-        and also can not be called from other connection
-        (PostgreSQL's shared advisory lock supports so, but we haven't).
+        and also can not be called from other connection.
+        (Although PostgreSQL's shared advisory lock supports so).
 
         When the lock is locked, reset it to unlocked, and return.
         If any other threads are blocked waiting for the lock to become unlocked, allow exactly one of them to proceed.
@@ -176,7 +179,7 @@ class AbstractSessionLevelLock(local):
                 some_lock.release()
 
         This method maybe useful together with :func:`contextlib.closing`,
-        when we need a with-statement, but don't want it acquire at the begining of the block.
+        when we need a :keyword:`with` statement, but don't want it to acquire at the beginning of the block.
 
         eg::
 

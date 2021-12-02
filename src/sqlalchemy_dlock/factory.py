@@ -18,7 +18,7 @@ def sadlock(
 
     Parameters
     ----------
-    connection_or_engine : sqlalchemy Connection or orm Session/ScoptedSession object.
+    connection_or_session : sqlalchemy Connection or orm Session/ScopedSession object.
         Database Connection on which the SQL locking functions will be invoked
 
     key:
@@ -27,7 +27,7 @@ def sadlock(
     Returns
     -------
     AbstractSessionLevelLock
-        New created lock object, whose type is a sub-class of :class:`AbstractSessionLevelLock`.
+        New created lock object, whose type is a subclass of :class:`AbstractSessionLevelLock`.
 
         The actual type of the lock object depends on the type of `connection` object.
 
