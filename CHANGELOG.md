@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## v0.2a1
+
+Date: 2021-03-08
+
+- New:
+
+  - Asynchronous IO Support by:
+
+    - [aiomysql](https://github.com/aio-libs/aiomysql) for MySQL
+
+      Connection URL is like: `"mysql+aiomysql://user:password@host:3306/schema?charset=utf8mb4"`
+
+    - [asyncpg](https://github.com/MagicStack/asyncpg) for PostgreSQL
+
+      Connection URL is like: `"postgresql+asyncpg://user:password@host:5432/db"`
+
+    Read <https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html> for details
+
 ## v0.1.2
 
 Date: 2021-01-26
