@@ -42,4 +42,4 @@ def create_async_sadlock(
     except ImportError as exception:
         raise NotImplementedError('{}: {}'.format(name, exception))
     lock_cls = getattr(mod, 'AsyncSadLock')
-    return lock_cls(connection_or_engine, key, **kwargs)
+    return lock_cls(connection_or_engine, key, *args, **kwargs)

@@ -42,4 +42,4 @@ def create_sadlock(
     except ImportError as exception:
         raise NotImplementedError('{}: {}'.format(name, exception))
     lock_cls = getattr(mod, 'SadLock')
-    return lock_cls(connection_or_session, key, **kwargs)
+    return lock_cls(connection_or_session, key, *args, **kwargs)
