@@ -11,5 +11,5 @@ python -m venv /opt/venv
 if [ -n "${PYPI_INDEX_URL}" ] ; then
     /opt/venv/bin/pip config --site set global.index-url ${PYPI_INDEX_URL} ;
 fi
-/opt/venv/bin/pip install .[asyncio] pytest -r requires/test.txt
+/opt/venv/bin/pip install -U .[asyncio] pytest -r requires/test.txt
 /opt/venv/bin/pytest
