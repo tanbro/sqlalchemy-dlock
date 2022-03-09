@@ -1,14 +1,15 @@
-from pathlib import Path
-import json
+from os import environ
 
-from sqlalchemy import engine_from_config
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 __all__ = ['ENGINES']
 
-with Path(__file__).parent.joinpath('engines.conf.json').open() as fp:
-    data = json.load(fp)
+load_dotenv()
+
+urls = environ['TEST_URLS'].split()
 
 ENGINES = [
-    engine_from_config(cfg['configuration'], connect_args=cfg.get('args', {}))
-    for cfg in data
+    create_engine(url)
+    for url in urls
 ]

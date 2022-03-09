@@ -76,6 +76,13 @@ It currently supports blow locks:
 
 - Work with [SQLAlchemy][]'s `ORM` session:
 
+  > ❗ **Note**:
+  >
+  > According to <https://docs.sqlalchemy.org/14/orm/extensions/asyncio.html>:
+  >
+  > - The asyncio extension as of SQLAlchemy 1.4.3 can now be considered to be **beta level** software.
+  > - The asyncio extension requires at least Python version 3.6
+
   ```python
   from sqlalchemy import create_engine
   from sqlalchemy.orm import sessionmaker
