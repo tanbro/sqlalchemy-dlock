@@ -4,7 +4,7 @@ from time import sleep, time
 from unittest import TestCase
 from uuid import uuid4
 
-from sqlalchemy_dlock import sadlock
+from sqlalchemy_dlock import create_sadlock
 
 from .engines import ENGINES
 
@@ -19,7 +19,7 @@ class MultiProcessTestCase(TestCase):
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with sadlock(conn, key) as lock:
+                    with create_sadlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
                     b.wait()
@@ -27,7 +27,7 @@ class MultiProcessTestCase(TestCase):
             def fn2(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with closing(sadlock(conn, key)) as lock:
+                    with closing(create_sadlock(conn, key)) as lock:
                         b.wait()
                         self.assertTrue(lock.acquire(False))
 
@@ -52,7 +52,7 @@ class MultiProcessTestCase(TestCase):
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with sadlock(conn, key) as lock:
+                    with create_sadlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                         b.wait()
                         sleep(delay)
@@ -62,7 +62,7 @@ class MultiProcessTestCase(TestCase):
             def fn2(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with closing(sadlock(conn, key)) as lock:
+                    with closing(create_sadlock(conn, key)) as lock:
                         b.wait()
                         self.assertFalse(lock.acquire(False))
 
@@ -89,7 +89,7 @@ class MultiProcessTestCase(TestCase):
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with sadlock(conn, key) as lock:
+                    with create_sadlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                         b.wait()
                         sleep(delay)
@@ -99,7 +99,7 @@ class MultiProcessTestCase(TestCase):
             def fn2(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with closing(sadlock(conn, key)) as lock:
+                    with closing(create_sadlock(conn, key)) as lock:
                         b.wait()
                         ts = time()
                         self.assertTrue(lock.acquire(timeout=timeout))
@@ -129,7 +129,7 @@ class MultiProcessTestCase(TestCase):
             def fn1(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with sadlock(conn, key) as lock:
+                    with create_sadlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                         b.wait()
                         sleep(delay)
@@ -139,7 +139,7 @@ class MultiProcessTestCase(TestCase):
             def fn2(engine_index, b):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with closing(sadlock(conn, key)) as lock:
+                    with closing(create_sadlock(conn, key)) as lock:
                         b.wait()
                         ts = time()
                         self.assertFalse(lock.acquire(timeout=timeout))
@@ -164,13 +164,13 @@ class MultiProcessTestCase(TestCase):
         for i in range(len(ENGINES)):
             def fn1(engine_index):
                 engine = ENGINES[engine_index]
-                lock = sadlock(engine.connect(), key)
+                lock = create_sadlock(engine.connect(), key)
                 self.assertTrue(lock.acquire(False))
 
             def fn2(engine_index):
                 engine = ENGINES[engine_index]
                 with engine.connect() as conn:
-                    with closing(sadlock(conn, key)) as lock:
+                    with closing(create_sadlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(False))
 
             p1 = Process(target=fn1, args=(i,))

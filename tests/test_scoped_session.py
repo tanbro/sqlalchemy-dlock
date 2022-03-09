@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from sqlalchemy_dlock import sadlock
+from sqlalchemy_dlock import create_sadlock
 from .engines import ENGINES
 
 
@@ -27,7 +27,7 @@ class ScopedSessionTestCase(TestCase):
     def test_once(self):
         key = uuid4().hex
         for session in self.sessions:
-            with sadlock(session, key) as lock:
+            with create_sadlock(session, key) as lock:
                 self.assertTrue(lock.acquired)
             self.assertFalse(lock.acquired)
 
@@ -35,7 +35,7 @@ class ScopedSessionTestCase(TestCase):
         key = uuid4().hex
         for session in self.sessions:
             for _ in range(2):
-                with sadlock(session, key) as lock:
+                with create_sadlock(session, key) as lock:
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
 
@@ -43,7 +43,7 @@ class ScopedSessionTestCase(TestCase):
         key = uuid4().hex
         for session in self.sessions:
             session.commit()
-            lock = sadlock(session, key)
+            lock = create_sadlock(session, key)
             session.rollback()
             self.assertTrue(lock.acquire())
             session.close()

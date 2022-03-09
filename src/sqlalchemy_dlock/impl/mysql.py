@@ -3,8 +3,8 @@ from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
 
+from ..types import BaseSadLock
 from ..exceptions import SqlAlchemyDLockDatabaseError
-from ..sessionlevellock import AbstractSessionLevelLock
 from ..types import TConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
@@ -30,7 +30,7 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
     return result
 
 
-class SessionLevelLock(AbstractSessionLevelLock):
+class SadLock(BaseSadLock):
     """MySQL named-lock
 
     .. seealso:: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
@@ -39,9 +39,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
     def __init__(self,
                  connection_or_session: TConnectionOrSession,
                  key,
-                 *,
                  convert: Optional[TConvertFunction] = None,
-                 **_
+                 *args, **kwargs
                  ):
         """
         MySQL named lock requires the key given by string.
@@ -82,7 +81,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
     def acquire(self,
                 block: bool = True,
                 timeout: Union[float, int, None] = None,
-                **_
+                *args, **kwargs
                 ) -> bool:
         if self._acquired:
             raise ValueError('invoked on a locked lock')
@@ -109,7 +108,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
                 'GET_LOCK("{}", {}) returns {}'.format(self._key, timeout, ret_val))
         return self._acquired
 
-    def release(self, **_):
+    def release(self, **kwargs):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
         stmt = RELEASE_LOCK.params(str=self._key)
@@ -124,8 +123,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
         elif ret_val is None:
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                'The named lock "{}" did not exist， '
-                'was never obtained by a call to GET_LOCK()， '
+                'The named lock "{}" did not exist, '
+                'was never obtained by a call to GET_LOCK(), '
                 'or has previously been released.'.format(self._key)
             )
         else:

@@ -2,18 +2,17 @@ from importlib import import_module
 
 from sqlalchemy.engine import Connection
 
-from .sessionlevellock import AbstractSessionLevelLock
-from .types import TConnectionOrSession
+from .types import BaseSadLock, TConnectionOrSession
 from .utils import safe_name
 
-__all__ = ['sadlock']
+__all__ = ['create_sadlock']
 
 
-def sadlock(
+def create_sadlock(
         connection_or_session: TConnectionOrSession,
         key,
         **kwargs
-) -> AbstractSessionLevelLock:
+) -> BaseSadLock:
     """Create a session level distributed lock object
 
     Parameters
@@ -26,8 +25,8 @@ def sadlock(
 
     Returns
     -------
-    AbstractSessionLevelLock
-        New created lock object, whose type is a subclass of :class:`AbstractSessionLevelLock`.
+    BaseSadLock
+        New created lock object, whose type is a subclass of :class:`BaseSadLock`.
 
         The actual type of the lock object depends on the type of `connection` object.
 
@@ -41,5 +40,5 @@ def sadlock(
         mod = import_module('..impl.{}'.format(name), __name__)
     except ImportError as exception:
         raise NotImplementedError('{}: {}'.format(name, exception))
-    lock_cls = getattr(mod, 'SessionLevelLock')
+    lock_cls = getattr(mod, 'SadLock')
     return lock_cls(connection_or_session, key, **kwargs)

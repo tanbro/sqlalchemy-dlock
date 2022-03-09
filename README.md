@@ -19,23 +19,23 @@ It currently supports blow locks:
 
   ```python
   from sqlalchemy import create_engine
-  from sqlalchemy_dlock import sadlock
-  
+  from sqlalchemy_dlock import create_sadlock
+
   key = 'user/001'
-  
+
   engine = create_engine('postgresql://scott:tiger@localhost/')
   conn = engine.connect()
-  
+
   # Create the D-Lock on the connection
-  lock = sadlock(conn, key)
-  
+  lock = create_sadlock(conn, key)
+
   # it's not lock when constructed
   assert not lock.acquired
-  
+
   # lock
   lock.acquire()
   assert lock.acquired
-  
+
   # un-lock
   lock.release()
   assert not lock.acquired
@@ -47,23 +47,23 @@ It currently supports blow locks:
   from contextlib import closing
 
   from sqlalchemy import create_engine
-  from sqlalchemy_dlock import sadlock
-  
+  from sqlalchemy_dlock import create_sadlock
+
   key = 'user/001'
-  
+
   engine = create_engine('postgresql://scott:tiger@localhost/')
   with engine.connect() as conn:
 
       # Create the D-Lock on the connection
-      with sadlock(conn, key) as lock:
+      with create_sadlock(conn, key) as lock:
           # It's locked
           assert lock.acquired
 
       # Auto un-locked
       assert not lock.acquired
-  
+
       # If do not want to be locked in `with`, a `closing` wrapper may help
-      with closing(sadlock(conn, key)) as lock2:
+      with closing(create_sadlock(conn, key)) as lock2:
           # It's NOT locked here
           assert not lock2.acquired
           # lock it now:
@@ -74,35 +74,36 @@ It currently supports blow locks:
       assert not lock2.acquired
   ```
 
-- Work with [SQLAlchemy][]'s `Session` object:
+- Work with [SQLAlchemy][]'s `ORM` session:
 
   ```python
   from sqlalchemy import create_engine
-  from sqlalchemy.orm import scoped_session, sessionmaker
-  from sqlalchemy_dlock import sadlock
-  
-  engine = create_engine('postgresql://scott:tiger@localhost/')
-  factory = sessionmaker(bind=engine)
-  Session = scoped_session(factory)
-  session = Session()
-  
+  from sqlalchemy.orm import sessionmaker
+  from sqlalchemy_dlock import create_sadlock
+
   key = 'user/001'
-  
-  with sadlock(session, key) as lock:
-      assert lock.acquired
-  assert not lock.acquired
+
+  engine = create_engine('postgresql://scott:tiger@localhost/')
+  Session = sessionmaker(bind=engine)
+
+  with Session() as session:
+    with create_sadlock(session, key) as lock:
+        assert lock.acquired
+    assert not lock.acquired
   ```
 
-- Work with `asycio`
+- Work asynchronously
 
   ```python
   from sqlalchemy.ext.asyncio import create_async_engine
-  from sqlalchemy_dlock.asyncio import sadlock
-  
+  from sqlalchemy_dlock.asyncio import create_async_sadlock
+
+  key = 'user/001'
+
   engine = create_async_engine('postgresql+asyncpg://scott:tiger@localhost/')
-  
+
   async with engine.begin() as conn:
-      async with sadlock(conn, key) as lock:
+      async with create_async_sadlock(conn, key) as lock:
           assert lock.acquired
       assert not lock.acquired
   ```

@@ -4,7 +4,7 @@ from random import randint
 from unittest import IsolatedAsyncioTestCase
 from uuid import uuid4
 
-from sqlalchemy_dlock.asyncio import sadlock
+from sqlalchemy_dlock.asyncio import create_async_sadlock
 
 from .async_engines import *
 
@@ -24,7 +24,7 @@ class BasicTestCase(IsolatedAsyncioTestCase):
             key = uuid4().hex
             async with engine.begin() as conn:
                 assert conn is not None
-                lock = sadlock(conn, key)
+                lock = create_async_sadlock(conn, key)
                 self.assertFalse(lock.acquired)
                 await lock.acquire()
                 self.assertTrue(lock.acquired)
@@ -36,7 +36,7 @@ class BasicTestCase(IsolatedAsyncioTestCase):
             async with engine.begin() as conn:
                 assert conn is not None
                 key = uuid4().hex
-                async with sadlock(conn, key) as lock:
+                async with create_async_sadlock(conn, key) as lock:
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
 
@@ -46,7 +46,7 @@ class BasicTestCase(IsolatedAsyncioTestCase):
                 assert conn is not None
                 for _ in range(100):
                     key = uuid4().hex + uuid4().hex
-                    async with sadlock(conn, key) as lock:
+                    async with create_async_sadlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
@@ -57,7 +57,7 @@ class BasicTestCase(IsolatedAsyncioTestCase):
                 for _ in range(100):
                     key = randint(-0x8000_0000_0000_0000,
                                   0x7fff_ffff_ffff_ffff)
-                    async with sadlock(conn, key) as lock:
+                    async with create_async_sadlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
@@ -67,7 +67,7 @@ class BasicTestCase(IsolatedAsyncioTestCase):
             for _ in range(CPU_COUNT + 1):
                 async with engine.begin() as conn:
                     assert conn is not None
-                    lock = sadlock(conn, key)
+                    lock = create_async_sadlock(conn, key)
                     try:
                         self.assertFalse(lock.locked)
                         r = await lock.acquire(timeout=randint(1, 1024))
@@ -82,7 +82,7 @@ class BasicTestCase(IsolatedAsyncioTestCase):
             async with engine.begin() as conn:
                 assert conn is not None
                 key = uuid4().hex
-                lock = sadlock(conn, key)
+                lock = create_async_sadlock(conn, key)
                 try:
                     self.assertFalse(lock.locked)
                     r = await lock.acquire(timeout=0)
@@ -98,7 +98,7 @@ class BasicTestCase(IsolatedAsyncioTestCase):
                 async with engine.begin() as conn:
                     assert conn is not None
                     key = uuid4().hex
-                    lock = sadlock(conn, key)
+                    lock = create_async_sadlock(conn, key)
                     try:
                         r = await lock.acquire(timeout=-1*randint(1, 1024))
                         self.assertTrue(r)
@@ -112,7 +112,7 @@ class BasicTestCase(IsolatedAsyncioTestCase):
                 async with engine.begin() as conn:
                     assert conn is not None
                     key = uuid4().hex
-                    lock = sadlock(conn, key)
+                    lock = create_async_sadlock(conn, key)
                     try:
                         r = await lock.acquire(timeout=None)
                         self.assertTrue(r)
@@ -129,13 +129,13 @@ class BasicTestCase(IsolatedAsyncioTestCase):
                     for _ in range(2)
                 ]
 
-                lock0 = sadlock(conn0, key)
+                lock0 = create_async_sadlock(conn0, key)
                 self.assertFalse(lock0.acquired)
                 r = await lock0.acquire(False)
                 self.assertTrue(r)
                 self.assertTrue(lock0.acquired)
 
-                lock1 = sadlock(conn1, key)
+                lock1 = create_async_sadlock(conn1, key)
                 self.assertFalse(lock1.acquired)
                 r = await lock1.acquire(block=False)
                 self.assertFalse(r)
@@ -160,11 +160,11 @@ class BasicTestCase(IsolatedAsyncioTestCase):
                     for _ in range(2)
                 ]
 
-                lock0 = sadlock(conn0, key)
+                lock0 = create_async_sadlock(conn0, key)
                 r = await lock0.acquire(False)
                 self.assertTrue(r)
                 self.assertTrue(lock0.locked)
 
-                lock1 = sadlock(conn1, key)
+                lock1 = create_async_sadlock(conn1, key)
                 with self.assertRaisesRegex(ValueError, 'invoked on an unlocked lock'):
                     await lock1.release()

@@ -2,18 +2,17 @@ from importlib import import_module
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from .sessionlevellock import AbstractSessionLevelLock
-from .types import TConnectionOrSession
 from ..utils import safe_name
+from .types import BaseAsyncSadLock, TAsyncConnectionOrSession
 
-__all__ = ['sadlock']
+__all__ = ['create_async_sadlock']
 
 
-def sadlock(
-        connection_or_engine: TConnectionOrSession,
+def create_async_sadlock(
+        connection_or_engine: TAsyncConnectionOrSession,
         key,
         **kwargs
-) -> AbstractSessionLevelLock:
+) -> BaseAsyncSadLock:
     """Create a session level distributed lock object
 
     Parameters
@@ -26,8 +25,8 @@ def sadlock(
 
     Returns
     -------
-    AbstractSessionLevelLock
-        New created lock object, whose type is a sub-class of :class:`AbstractSessionLevelLock`.
+    BaseAsyncSadLock
+        New created lock object, whose type is a sub-class of :class:`BaseAsyncSadLock`.
 
         The actual type of the lock object depends on the type of `connection` object.
 
@@ -41,5 +40,5 @@ def sadlock(
         mod = import_module('..impl.{}'.format(name), __name__)
     except ImportError as exception:
         raise NotImplementedError('{}: {}'.format(name, exception))
-    lock_cls = getattr(mod, 'SessionLevelLock')
+    lock_cls = getattr(mod, 'AsyncSadLock')
     return lock_cls(connection_or_engine, key, **kwargs)

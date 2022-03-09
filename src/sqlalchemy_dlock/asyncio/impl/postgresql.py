@@ -9,8 +9,7 @@ from typing import Any, Callable, Optional, Union
 from sqlalchemy import text
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
-from ..sessionlevellock import AbstractSessionLevelLock
-from ..types import TConnectionOrSession
+from ..types import BaseAsyncSadLock, TAsyncConnectionOrSession
 
 INT64_MAX = 2**63-1  # max of signed int64: 2**63-1(+0x7fff_ffff_ffff_ffff)
 INT64_MIN = -2**63  # min of signed int64: -2**63(-0x8000_0000_0000_0000)
@@ -78,20 +77,19 @@ def ensure_int64(i: int) -> int:
     return i
 
 
-class SessionLevelLock(AbstractSessionLevelLock):
+class AsyncSadLock(BaseAsyncSadLock):
     """PostgreSQL advisory lock
 
     .. seealso:: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
     """
 
     def __init__(self,
-                 connection_or_session: TConnectionOrSession,
+                 connection_or_session: TAsyncConnectionOrSession,
                  key,
-                 *,
                  convert: Optional[TConvertFunction] = None,
                  interval: Union[float, int, None] = None,
                  level: Optional[str] = None,
-                 **_
+                 *args, **kwargs
                  ):
         """
         PostgreSQL advisory lock requires the key given by ``INT64``.
@@ -100,10 +98,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
           :class:`OverflowError` is raised if too big or too small for an ``INT64``.
 
         - When `key` is :class:`str` or :class:`bytes`,
-          the constructor calculates its checksum using CRC-64(ISO),
-          and takes the checksum integer value as actual key.
-
-          .. seealso:: https://en.wikipedia.org/wiki/Cyclic_redundancy_check
+          the constructor calculates its checksum using :func:`hashlib.blake2b`,
+          and takes the hash result integer value as actual key.
 
         - Or you can specify a `convert` function to that argument.
           The function is like::
@@ -145,9 +141,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
     async def acquire(self,
                       block: bool = True,
                       timeout: Union[float, int, None] = None,
-                      *,
                       interval: Union[float, int, None] = None,
-                      **_
+                      *args, **kwargs
                       ) -> bool:
         if self._acquired:
             raise ValueError('invoked on a locked lock')
@@ -186,7 +181,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         #
         return self._acquired
 
-    async def release(self, **_):
+    async def release(self, *args, **kwargs):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
         stmt = self._stmt_dict['unlock'].params(key=self._key)
