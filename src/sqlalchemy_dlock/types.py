@@ -8,23 +8,15 @@ TConnectionOrSession = Union[Connection, Session, scoped_session]
 
 
 class BaseSadLock(local):
-    """Base class of database session level lock implementation
+    """Base class of database lock implementation
 
     .. note::
 
         - It's Thread-Local (:class:`threading.local`)
         - It's an abstract class, do not manual instantiate
 
-    .. attention::
-
-        The *Session* here means that of Database,
-        **NOT** SQLAlchemy's :class:`sqlalchemy.orm.session.Session`,
-        which is more like a transaction.
-        Here we roughly take :class:`sqlalchemy.engine.Connection` as database's session.
-
     The :meth:`acquire` and :meth:`release` methods can be used as context managers for a :keyword:`with` statement.
-    :meth:`acquire` will be called when the block is entered,
-    and :meth:`release` will be called when the block is exited.
+    :meth:`acquire` will be called when the block is entered, and :meth:`release` will be called when the block is exited.
     Hence, the following snippet::
 
         with some_lock:
@@ -39,17 +31,6 @@ class BaseSadLock(local):
             pass
         finally:
             some_lock.release()
-
-    If do not want it to be locked automatically in :keyword:`with` statement, :func:`contextlib.closing` maybe useful::
-
-        from contextlib import closing
-
-        with closing(some_lock):
-            # not locked
-            some_lock.acquire()
-            # locked
-        pass
-        # un-locked automatically
     """
 
     def __init__(self,
@@ -64,7 +45,7 @@ class BaseSadLock(local):
             SQL locking functions will be invoked on it
 
         key
-            ID or name used as SQL locking function's key
+            ID or name of the SQL locking function
         """
         self._acquired = False
         self._connection_or_session = connection_or_session
@@ -175,7 +156,7 @@ class BaseSadLock(local):
     def close(self, *args, **kwargs):
         """Same as :meth:`release`
 
-        Except that a :class:`ValueError` is **NOT** raised when invoked on an unlocked lock.
+        Except that the :class:`ValueError` is **NOT** raised when invoked on an unlocked lock.
 
         An invocation of this method is equivalent to::
 
@@ -190,11 +171,11 @@ class BaseSadLock(local):
             # ...
 
             from contextlib import closing
-            from sqlalchemy_dlock import sadlock
+            from sqlalchemy_dlock import create_sadlock
 
             # ...
 
-            with closing(sadlock(some_connection, some_key)) as lock:
+            with closing(create_sadlock(some_connection, some_key)) as lock:
                 # will not acquire at the begin of with-block
                 assert not lock.acquired
                 # ...

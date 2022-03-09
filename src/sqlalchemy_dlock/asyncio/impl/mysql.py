@@ -30,39 +30,12 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
 
 
 class AsyncSadLock(BaseAsyncSadLock):
-    """MySQL named-lock
-
-    .. seealso:: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
-    """
-
     def __init__(self,
                  connection_or_session: TAsyncConnectionOrSession,
                  key,
                  convert: Optional[TConvertFunction] = None,
                  *args, **kwargs
                  ):
-        """
-        MySQL named lock requires the key given by string.
-
-        If `key` is not a :class:`str`:
-
-        - When :class:`int` or :class:`float`,
-          the constructor will force convert it to :class:`str`::
-
-            key = str(key)
-
-        - When :class:`bytes`,
-          the constructor tries to decode it with default encoding::
-
-            key = key.decode()
-
-        - Or you can specify a `convert` function to that argument.
-          The function is like::
-
-            def convert(val: Any) -> str:
-                # do something ...
-                return string
-        """
         if convert:
             key = convert(key)
         elif not isinstance(key, str):

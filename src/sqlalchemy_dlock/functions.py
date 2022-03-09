@@ -13,7 +13,7 @@ def create_sadlock(
         key,
         *args, **kwargs
 ) -> BaseSadLock:
-    """Create a session level distributed lock object
+    """Create a database distributed lock object
 
     Parameters
     ----------

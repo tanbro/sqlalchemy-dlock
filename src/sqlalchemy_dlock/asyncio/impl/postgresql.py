@@ -78,11 +78,6 @@ def ensure_int64(i: int) -> int:
 
 
 class AsyncSadLock(BaseAsyncSadLock):
-    """PostgreSQL advisory lock
-
-    .. seealso:: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
-    """
-
     def __init__(self,
                  connection_or_session: TAsyncConnectionOrSession,
                  key,
@@ -91,40 +86,6 @@ class AsyncSadLock(BaseAsyncSadLock):
                  level: Optional[str] = None,
                  *args, **kwargs
                  ):
-        """
-        PostgreSQL advisory lock requires the key given by ``INT64``.
-
-        - When `key` is :class:`int`, the constructor ensures it to be ``INT64``.
-          :class:`OverflowError` is raised if too big or too small for an ``INT64``.
-
-        - When `key` is :class:`str` or :class:`bytes`,
-          the constructor calculates its checksum using :func:`hashlib.blake2b`,
-          and takes the hash result integer value as actual key.
-
-        - Or you can specify a `convert` function to that argument.
-          The function is like::
-
-            def convert(val: Any) -> int:
-                # do something ...
-                return integer
-
-        The ``level`` argument should be one of:
-
-        - ``"session"`` (Omitted): locks an application-defined resource.
-            If another session already holds a lock on the same resource identifier, this function will wait until the resource becomes available.
-            The lock is exclusive. Multiple lock requests stack, so that if the same resource is locked three times it must then be unlocked three times to be released for other sessions' use.
-
-        - ``"shared"``: works the same as session level lock, except the lock can be shared with other sessions requesting shared locks.
-            Only would-be exclusive lockers are locked out.
-
-        - ``"transaction"``: works the same as session level lock, except the lock is automatically released at the end of the current transaction and cannot be released explicitly.
-
-        .. tip::
-
-            PostgreSQL's advisory lock has no timeout mechanism in itself.
-            When `timeout` is a non-negative number, we simulate it by looping and sleeping.
-            The `interval` argument specifies the sleep seconds, whose default is ``1``.
-        """
         if convert:
             key = ensure_int64(convert(key))
         elif isinstance(key, int):
