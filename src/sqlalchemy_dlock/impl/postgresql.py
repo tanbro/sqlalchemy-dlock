@@ -1,18 +1,13 @@
 from collections import deque
-from hashlib import blake2b
-from sys import byteorder
 from textwrap import dedent
 from time import sleep, time
 from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
 
-from ..types import BaseSadLock
 from ..exceptions import SqlAlchemyDLockDatabaseError
-from ..types import TConnectionOrSession
-
-INT64_MAX = 2**63-1  # max of signed int64: 2**63-1(+0x7fff_ffff_ffff_ffff)
-INT64_MIN = -2**63  # min of signed int64: -2**63(-0x8000_0000_0000_0000)
+from ..types import BaseSadLock, TConnectionOrSession
+from ..utils import ensure_int64, string_or_int_to_int64
 
 SLEEP_INTERVAL_DEFAULT = 1
 
@@ -54,27 +49,6 @@ STATEMENTS = {
 
 
 TConvertFunction = Callable[[Any], int]
-
-
-def default_convert(key: Union[bytearray, bytes, memoryview, str, int]) -> int:
-    if isinstance(key, str):
-        key = key.encode()
-    if isinstance(key, (bytearray, bytes, memoryview)):
-        return int.from_bytes(blake2b(key, digest_size=8).digest(), byteorder, signed=True)
-    elif isinstance(key, int):
-        return ensure_int64(key)
-    raise TypeError('{}'.format(type(key)))
-
-
-def ensure_int64(i: int) -> int:
-    if i > INT64_MAX:
-        i = int.from_bytes(
-            i.to_bytes(8, byteorder, signed=False),
-            byteorder, signed=True
-        )
-    elif i < INT64_MIN:
-        raise OverflowError('int too small to convert')
-    return i
 
 
 class SadLock(BaseSadLock):
@@ -128,7 +102,7 @@ class SadLock(BaseSadLock):
         if convert:
             key = ensure_int64(convert(key))
         else:
-            key = default_convert(key)
+            key = string_or_int_to_int64(key)
         #
         self._interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
         self._level = level or 'session'
