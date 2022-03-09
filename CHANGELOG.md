@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v0.2a2
+
+Date: 2021-03-09
+
+- Change:
+
+  - Rename a lot of function/class:
+
+    - `sadlock` -> `create_sadlock`
+    - `asyncio.sadlock` -> `asyncio.create_async_sadlock`
+  
+    and some other ...
+
 ## v0.2a1
 
 Date: 2021-03-08
