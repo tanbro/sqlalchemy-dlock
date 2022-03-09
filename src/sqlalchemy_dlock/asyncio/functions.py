@@ -11,13 +11,14 @@ __all__ = ['create_async_sadlock']
 def create_async_sadlock(
         connection_or_engine: TAsyncConnectionOrSession,
         key,
-        **kwargs
+        *args, **kwargs
 ) -> BaseAsyncSadLock:
     """Create a session level distributed lock object
 
     Parameters
     ----------
-    connection_or_engine : sqlalchemy Connection or orm Session/ScoptedSession object.
+    connection_or_engine :
+        sqlalchemy Connection or orm Session/ScoptedSession object.
         Database Connection on which the SQL locking functions will be invoked
 
     key:

@@ -11,13 +11,14 @@ __all__ = ['create_sadlock']
 def create_sadlock(
         connection_or_session: TConnectionOrSession,
         key,
-        **kwargs
+        *args, **kwargs
 ) -> BaseSadLock:
     """Create a session level distributed lock object
 
     Parameters
     ----------
-    connection_or_session : sqlalchemy Connection or orm Session/ScopedSession object.
+    connection_or_session :
+        sqlalchemy Connection or orm Session/ScopedSession object.
         Database Connection on which the SQL locking functions will be invoked
 
     key:

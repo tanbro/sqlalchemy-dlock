@@ -14,7 +14,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-from pkg_resources import get_distribution
+from importlib.metadata import distribution
 
 
 # -- Project information -----------------------------------------------------
@@ -25,7 +25,8 @@ author = 'liu xue yan'
 
 # The full version, including alpha/beta/rc tags
 # full version
-version = get_distribution(project).version
+dist = distribution('SQLAlchemy-DLock')
+version = dist.version
 # major/minor version
 release = '.'.join(version.split('.')[:2])
 
