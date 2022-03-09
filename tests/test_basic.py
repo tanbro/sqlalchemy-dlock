@@ -4,7 +4,7 @@ from random import randint
 from unittest import TestCase
 from uuid import uuid4
 
-from sqlalchemy_dlock import sadlock
+from sqlalchemy_dlock import create_sadlock
 
 from .engines import ENGINES
 
@@ -21,7 +21,7 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             key = uuid4().hex
             with engine.connect() as conn:
-                lock = sadlock(conn, key)
+                lock = create_sadlock(conn, key)
                 self.assertFalse(lock.acquired)
                 lock.acquire()
                 self.assertTrue(lock.acquired)
@@ -32,7 +32,7 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             key = uuid4().hex
             with engine.connect() as conn:
-                with sadlock(conn, key) as lock:
+                with create_sadlock(conn, key) as lock:
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
 
@@ -41,7 +41,7 @@ class BasicTestCase(TestCase):
             for _ in range(100):
                 with engine.connect() as conn:
                     key = uuid4().hex + uuid4().hex
-                    with sadlock(conn, key) as lock:
+                    with create_sadlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
@@ -51,7 +51,7 @@ class BasicTestCase(TestCase):
                 with engine.connect() as conn:
                     key = randint(-0x8000_0000_0000_0000,
                                   0x7fff_ffff_ffff_ffff)
-                    with sadlock(conn, key) as lock:
+                    with create_sadlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
 
@@ -59,7 +59,7 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             key = uuid4().hex
             with engine.connect() as conn:
-                with closing(sadlock(conn, key)) as lock:
+                with closing(create_sadlock(conn, key)) as lock:
                     self.assertFalse(lock.acquired)
                     self.assertTrue(lock.acquire())
                     self.assertTrue(lock.acquired)
@@ -69,7 +69,7 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             key = uuid4().hex
             with engine.connect() as conn:
-                with closing(sadlock(conn, key)) as lock:
+                with closing(create_sadlock(conn, key)) as lock:
                     self.assertFalse(lock.acquired)
                     acquired = lock.acquire(False)
                     self.assertTrue(acquired)
@@ -81,7 +81,7 @@ class BasicTestCase(TestCase):
             key = uuid4().hex
             for _ in range(CPU_COUNT + 1):
                 with engine.connect() as conn:
-                    with closing(sadlock(conn, key)) as lock:
+                    with closing(create_sadlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(timeout=randint(1, 1024)))
                     self.assertFalse(lock.acquired)
 
@@ -89,7 +89,7 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             key = uuid4().hex
             with engine.connect() as conn:
-                with closing(sadlock(conn, key)) as lock:
+                with closing(create_sadlock(conn, key)) as lock:
                     self.assertTrue(lock.acquire(timeout=0))
                 self.assertFalse(lock.acquired)
 
@@ -98,7 +98,7 @@ class BasicTestCase(TestCase):
             key = uuid4().hex
             for _ in range(CPU_COUNT + 1):
                 with engine.connect() as conn:
-                    with closing(sadlock(conn, key)) as lock:
+                    with closing(create_sadlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(
                             timeout=-1*randint(1, 1024)))
                     self.assertFalse(lock.acquired)
@@ -108,7 +108,7 @@ class BasicTestCase(TestCase):
             key = uuid4().hex
             for i in range(CPU_COUNT + 1):
                 with engine.connect() as conn:
-                    with closing(sadlock(conn, key)) as lock:
+                    with closing(create_sadlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(timeout=None))
                     self.assertFalse(lock.acquired)
 
@@ -117,7 +117,7 @@ class BasicTestCase(TestCase):
             key = uuid4().hex
             for i in range(CPU_COUNT + 1):
                 with engine.connect() as conn:
-                    with closing(sadlock(conn, key)) as lock:
+                    with closing(create_sadlock(conn, key)) as lock:
                         self.assertFalse(lock.acquired)
                         lock.acquired = True
                         self.assertTrue(lock.acquired)
@@ -135,9 +135,9 @@ class BasicTestCase(TestCase):
                     stack.enter_context(engine.connect())
                     for _ in range(2)
                 ]
-                lock0 = sadlock(conn0, key)
+                lock0 = create_sadlock(conn0, key)
                 self.assertTrue(lock0.acquire(False))
-                lock1 = sadlock(conn1, key)
+                lock1 = create_sadlock(conn1, key)
                 self.assertFalse(lock1.acquire(False))
                 lock0.release()
                 self.assertFalse(lock0.acquired)
@@ -153,8 +153,8 @@ class BasicTestCase(TestCase):
                     stack.enter_context(engine.connect())
                     for _ in range(2)
                 ]
-                lock0 = sadlock(conn0, key)
+                lock0 = create_sadlock(conn0, key)
                 self.assertTrue(lock0.acquire(False))
-                lock1 = sadlock(conn1, key)
+                lock1 = create_sadlock(conn1, key)
                 with self.assertRaisesRegex(ValueError, 'invoked on an unlocked lock'):
                     lock1.release()

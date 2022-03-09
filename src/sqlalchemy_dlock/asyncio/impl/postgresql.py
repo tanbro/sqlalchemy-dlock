@@ -9,8 +9,7 @@ from typing import Any, Callable, Optional, Union
 from sqlalchemy import text
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
-from ..sessionlevellock import AbstractSessionLevelLock
-from ..types import TConnectionOrSession
+from ..types import BaseAsyncSadLock, TAsyncConnectionOrSession
 
 INT64_MAX = 2**63-1  # max of signed int64: 2**63-1(+0x7fff_ffff_ffff_ffff)
 INT64_MIN = -2**63  # min of signed int64: -2**63(-0x8000_0000_0000_0000)
@@ -78,57 +77,15 @@ def ensure_int64(i: int) -> int:
     return i
 
 
-class SessionLevelLock(AbstractSessionLevelLock):
-    """PostgreSQL advisory lock
-
-    .. seealso:: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
-    """
-
+class AsyncSadLock(BaseAsyncSadLock):
     def __init__(self,
-                 connection_or_session: TConnectionOrSession,
+                 connection_or_session: TAsyncConnectionOrSession,
                  key,
-                 *,
                  convert: Optional[TConvertFunction] = None,
                  interval: Union[float, int, None] = None,
                  level: Optional[str] = None,
-                 **_
+                 *args, **kwargs
                  ):
-        """
-        PostgreSQL advisory lock requires the key given by ``INT64``.
-
-        - When `key` is :class:`int`, the constructor ensures it to be ``INT64``.
-          :class:`OverflowError` is raised if too big or too small for an ``INT64``.
-
-        - When `key` is :class:`str` or :class:`bytes`,
-          the constructor calculates its checksum using CRC-64(ISO),
-          and takes the checksum integer value as actual key.
-
-          .. seealso:: https://en.wikipedia.org/wiki/Cyclic_redundancy_check
-
-        - Or you can specify a `convert` function to that argument.
-          The function is like::
-
-            def convert(val: Any) -> int:
-                # do something ...
-                return integer
-
-        The ``level`` argument should be one of:
-
-        - ``"session"`` (Omitted): locks an application-defined resource.
-            If another session already holds a lock on the same resource identifier, this function will wait until the resource becomes available.
-            The lock is exclusive. Multiple lock requests stack, so that if the same resource is locked three times it must then be unlocked three times to be released for other sessions' use.
-
-        - ``"shared"``: works the same as session level lock, except the lock can be shared with other sessions requesting shared locks.
-            Only would-be exclusive lockers are locked out.
-
-        - ``"transaction"``: works the same as session level lock, except the lock is automatically released at the end of the current transaction and cannot be released explicitly.
-
-        .. tip::
-
-            PostgreSQL's advisory lock has no timeout mechanism in itself.
-            When `timeout` is a non-negative number, we simulate it by looping and sleeping.
-            The `interval` argument specifies the sleep seconds, whose default is ``1``.
-        """
         if convert:
             key = ensure_int64(convert(key))
         elif isinstance(key, int):
@@ -145,9 +102,8 @@ class SessionLevelLock(AbstractSessionLevelLock):
     async def acquire(self,
                       block: bool = True,
                       timeout: Union[float, int, None] = None,
-                      *,
                       interval: Union[float, int, None] = None,
-                      **_
+                      *args, **kwargs
                       ) -> bool:
         if self._acquired:
             raise ValueError('invoked on a locked lock')
@@ -186,7 +142,7 @@ class SessionLevelLock(AbstractSessionLevelLock):
         #
         return self._acquired
 
-    async def release(self, **_):
+    async def release(self, *args, **kwargs):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
         stmt = self._stmt_dict['unlock'].params(key=self._key)
