@@ -12,7 +12,7 @@ from .engines import ENGINES
 
 if not sys.platform.startswith('linux'):
     warn(
-        'The test module will not run on {}, because it need sub-process fork feature'
+        'The test module will not run on {}, because it need process fork feature'
         .format(sys.platform)
     )
 
