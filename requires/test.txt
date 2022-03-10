@@ -1,6 +1,6 @@
 python-dotenv
 packaging
 mysqlclient
+psycopg2
 aiomysql
-psycopg2-binary
 asyncpg

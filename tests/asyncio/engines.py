@@ -1,7 +1,6 @@
 from os import environ, getenv
 
 from dotenv import load_dotenv
-from sqlalchemy.ext.asyncio import create_async_engine
 
 __all__ = ['create_engins', 'dispose_engins', 'get_engins']
 
@@ -14,8 +13,10 @@ def create_engins():
 
     load_dotenv()
 
-    if getenv('TEST_NO_ASYNCIO'):
+    if getenv('NO_ASYNCIO'):
         return []
+
+    from sqlalchemy.ext.asyncio import create_async_engine
 
     urls = environ['TEST_ASYNC_URLS'].split()
 

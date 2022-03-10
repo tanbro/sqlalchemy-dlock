@@ -1,4 +1,4 @@
 python-dotenv
 packaging
 mysqlclient
-psycopg2-binary
+psycopg2
