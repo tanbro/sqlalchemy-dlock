@@ -14,7 +14,7 @@ from .engines import *
 load_dotenv()
 
 if getenv('NO_ASYNCIO'):
-    warn('The test module will not run because environment "NO_ASYNCIO"')
+    warn('The test module will not run because environment vairable "NO_ASYNCIO" was set')
 
 else:
 
