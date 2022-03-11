@@ -1,198 +1,213 @@
-import sys
 from contextlib import closing
 from multiprocessing import Barrier, Process
 from time import sleep, time
 from unittest import TestCase
 from uuid import uuid4
-from warnings import warn
 
+from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-from .engines import ENGINES
+from .engines import URLS
 
-if not sys.platform.startswith('linux'):
-    warn(
-        'The test module will not run on {}, because it need process fork feature'
-        .format(sys.platform)
-    )
 
-    class DummyMultiProcessTestCase(TestCase):
-        pass
+class MpNonBlockingSuccessTestCase(TestCase):
 
-else:
+    @staticmethod
+    def fn1(url, k, b):
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            with create_sadlock(conn, k) as lock:
+                assert lock.acquired
+            assert not lock.acquired
+            b.wait()
 
-    class MultiProcessTestCase(TestCase):
+    @staticmethod
+    def fn2(url, k, b):
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            with closing(create_sadlock(conn, k)) as lock:
+                b.wait()
+                assert lock.acquire(False)
 
-        def test_non_blocking_success(self):
-            key = uuid4().hex
-            for i in range(len(ENGINES)):
-                bar = Barrier(2)
+    def test(self):
+        key = uuid4().hex
+        for url in URLS:
+            bar = Barrier(2)
 
-                def fn1(engine_index, b):
-                    engine = ENGINES[engine_index]
-                    with engine.connect() as conn:
-                        with create_sadlock(conn, key) as lock:
-                            self.assertTrue(lock.acquired)
-                        self.assertFalse(lock.acquired)
-                        b.wait()
+            p1 = Process(target=self.__class__.fn1, args=(url, key, bar))
+            p2 = Process(target=self.__class__.fn2, args=(url, key, bar))
 
-                def fn2(engine_index, b):
-                    engine = ENGINES[engine_index]
-                    with engine.connect() as conn:
-                        with closing(create_sadlock(conn, key)) as lock:
-                            b.wait()
-                            self.assertTrue(lock.acquire(False))
+            p1.start()
+            p2.start()
 
-                p1 = Process(target=fn1, args=(i, bar))
-                p2 = Process(target=fn2, args=(i, bar))
+            p1.join()
+            p2.join()
 
-                p1.start()
-                p2.start()
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)
 
-                p1.join()
-                p2.join()
 
-                self.assertEqual(p1.exitcode, 0)
-                self.assertEqual(p2.exitcode, 0)
+class MpNonBlockingFailTestCase(TestCase):
+    @staticmethod
+    def fn1(url, k, b, delay):
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            with create_sadlock(conn, k) as lock:
+                assert lock.acquired
+                b.wait()
+                sleep(delay)
+                assert lock.acquired
+            assert not lock.acquired
 
-        def test_non_blocking_fail(self):
-            key = uuid4().hex
-            delay = 1
-            for i in range(len(ENGINES)):
-                bar = Barrier(2)
+    @staticmethod
+    def fn2(url, k, b):
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            with closing(create_sadlock(conn, k)) as lock:
+                b.wait()
+                assert not lock.acquire(False)
 
-                def fn1(engine_index, b):
-                    engine = ENGINES[engine_index]
-                    with engine.connect() as conn:
-                        with create_sadlock(conn, key) as lock:
-                            self.assertTrue(lock.acquired)
-                            b.wait()
-                            sleep(delay)
-                            self.assertTrue(lock.acquired)
-                        self.assertFalse(lock.acquired)
+    def test(self):
+        key = uuid4().hex
+        delay = 1
+        cls = self.__class__
+        for url in URLS:
+            bar = Barrier(2)
 
-                def fn2(engine_index, b):
-                    engine = ENGINES[engine_index]
-                    with engine.connect() as conn:
-                        with closing(create_sadlock(conn, key)) as lock:
-                            b.wait()
-                            self.assertFalse(lock.acquire(False))
+            p1 = Process(target=cls.fn1, args=(url, key, bar, delay))
+            p2 = Process(target=cls.fn2, args=(url, key, bar))
 
-                p1 = Process(target=fn1, args=(i, bar))
-                p2 = Process(target=fn2, args=(i, bar))
+            p1.start()
+            p2.start()
 
-                p1.start()
-                p2.start()
+            p1.join()
+            p2.join()
 
-                p1.join()
-                p2.join()
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)
 
-                self.assertEqual(p1.exitcode, 0)
-                self.assertEqual(p2.exitcode, 0)
 
-        def test_timeout_success(self):
-            key = uuid4().hex
-            delay = 1
-            timeout = 3
+class MpTimeoutSuccessTestCase(TestCase):
+    @staticmethod
+    def fn1(url, k, b, delay):
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            with create_sadlock(conn, k) as lock:
+                assert lock.acquired
+                b.wait()
+                sleep(delay)
+                assert lock.acquired
+            assert not lock.acquired
 
-            for i in range(len(ENGINES)):
-                bar = Barrier(2)
+    @staticmethod
+    def fn2(url, k, b, delay, timeout):
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            with closing(create_sadlock(conn, k)) as lock:
+                b.wait()
+                ts = time()
+                assert lock.acquire(timeout=timeout)
+                assert time() - ts >= delay
+                assert timeout >= time() - ts
+                assert lock.acquired
 
-                def fn1(engine_index, b):
-                    engine = ENGINES[engine_index]
-                    with engine.connect() as conn:
-                        with create_sadlock(conn, key) as lock:
-                            self.assertTrue(lock.acquired)
-                            b.wait()
-                            sleep(delay)
-                            self.assertTrue(lock.acquired)
-                        self.assertFalse(lock.acquired)
+    def test(self):
+        key = uuid4().hex
+        delay = 1
+        timeout = 3
+        cls = self.__class__
 
-                def fn2(engine_index, b):
-                    engine = ENGINES[engine_index]
-                    with engine.connect() as conn:
-                        with closing(create_sadlock(conn, key)) as lock:
-                            b.wait()
-                            ts = time()
-                            self.assertTrue(lock.acquire(timeout=timeout))
-                            self.assertGreaterEqual(time() - ts, delay)
-                            self.assertGreaterEqual(timeout, time() - ts)
-                            self.assertTrue(lock.acquired)
+        for url in URLS:
+            bar = Barrier(2)
 
-                p1 = Process(target=fn1, args=(i, bar))
-                p2 = Process(target=fn2, args=(i, bar))
+            p1 = Process(target=cls.fn1, args=(url, key, bar, delay))
+            p2 = Process(target=cls.fn2, args=(url, key, bar, delay, timeout))
 
-                p1.start()
-                p2.start()
+            p1.start()
+            p2.start()
 
-                p1.join()
-                p2.join()
+            p1.join()
+            p2.join()
 
-                self.assertEqual(p1.exitcode, 0)
-                self.assertEqual(p2.exitcode, 0)
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)
 
-        def test_timeout_fail(self):
-            key = uuid4().hex
-            delay = 3
-            timeout = 1
-            for i in range(len(ENGINES)):
-                bar = Barrier(2)
 
-                def fn1(engine_index, b):
-                    engine = ENGINES[engine_index]
-                    with engine.connect() as conn:
-                        with create_sadlock(conn, key) as lock:
-                            self.assertTrue(lock.acquired)
-                            b.wait()
-                            sleep(delay)
-                            self.assertTrue(lock.acquired)
-                        self.assertFalse(lock.acquired)
+class MpTimtoutFailTestCase(TestCase):
 
-                def fn2(engine_index, b):
-                    engine = ENGINES[engine_index]
-                    with engine.connect() as conn:
-                        with closing(create_sadlock(conn, key)) as lock:
-                            b.wait()
-                            ts = time()
-                            self.assertFalse(lock.acquire(timeout=timeout))
-                            self.assertGreaterEqual(time() - ts, timeout)
-                            self.assertFalse(lock.acquired)
+    @staticmethod
+    def fn1(url, k, b, delay):
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            with create_sadlock(conn, k) as lock:
+                assert lock.acquired
+                b.wait()
+                sleep(delay)
+                assert lock.acquired
+            assert not lock.acquired
 
-                p1 = Process(target=fn1, args=(i, bar))
-                p2 = Process(target=fn2, args=(i, bar))
+    @staticmethod
+    def fn2(url, k, b, timeout):
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            with closing(create_sadlock(conn, k)) as lock:
+                b.wait()
+                ts = time()
+                assert not lock.acquire(timeout=timeout)
+                assert time() - ts >= timeout
+                assert not lock.acquired
 
-                p1.start()
-                p2.start()
+    def test(self):
+        cls = self.__class__
+        key = uuid4().hex
+        delay = 3
+        timeout = 1
 
-                p1.join()
-                p2.join()
+        for url in URLS:
+            bar = Barrier(2)
 
-                self.assertEqual(p1.exitcode, 0)
-                self.assertEqual(p2.exitcode, 0)
+            p1 = Process(target=cls.fn1, args=(url, key, bar, delay))
+            p2 = Process(target=cls.fn2, args=(url, key, bar, timeout))
 
-        def test_release_omitted(self):
-            key = uuid4().hex
+            p1.start()
+            p2.start()
 
-            for i in range(len(ENGINES)):
-                def fn1(engine_index):
-                    engine = ENGINES[engine_index]
-                    lock = create_sadlock(engine.connect(), key)
-                    self.assertTrue(lock.acquire(False))
+            p1.join()
+            p2.join()
 
-                def fn2(engine_index):
-                    engine = ENGINES[engine_index]
-                    with engine.connect() as conn:
-                        with closing(create_sadlock(conn, key)) as lock:
-                            self.assertTrue(lock.acquire(False))
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)
 
-                p1 = Process(target=fn1, args=(i,))
-                p2 = Process(target=fn2, args=(i,))
 
-                p1.start()
-                p1.join()
+class MpReleaseOmitedTestCase(TestCase):
 
-                p2.start()
-                p2.join()
+    @staticmethod
+    def fn1(url, k):
+        engine = create_engine(url)
+        lock = create_sadlock(engine.connect(), k)
+        assert lock.acquire(False)
 
-                self.assertEqual(p1.exitcode, 0)
-                self.assertEqual(p2.exitcode, 0)
+    @staticmethod
+    def fn2(url, k):
+        engine = create_engine(url)
+        with engine.connect() as conn:
+            with closing(create_sadlock(conn, k)) as lock:
+                assert lock.acquire(False)
+
+    def test(self):
+        cls = self.__class__
+        key = uuid4().hex
+
+        for url in URLS:
+
+            p1 = Process(target=cls.fn1, args=(url, key))
+            p2 = Process(target=cls.fn2, args=(url, key))
+
+            p1.start()
+            p1.join()
+
+            p2.start()
+            p2.join()
+
+            self.assertEqual(p1.exitcode, 0)
+            self.assertEqual(p2.exitcode, 0)

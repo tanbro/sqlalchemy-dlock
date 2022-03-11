@@ -7,9 +7,9 @@ __all__ = ['ENGINES']
 
 load_dotenv()
 
-urls = environ['TEST_URLS'].split()
+URLS = environ['TEST_URLS'].split()
 
 ENGINES = [
     create_engine(url)
-    for url in urls
+    for url in URLS
 ]
