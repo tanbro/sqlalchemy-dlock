@@ -67,8 +67,9 @@ class AsyncSadLock(BaseAsyncSadLock):
         else:
             timeout = 0
         stmt = GET_LOCK.params(str=self._key, timeout=timeout)
-        r = await self.connection_or_session.execute(stmt)  # type: ignore
-        ret_val = r.scalar_one()
+        r = await self.connection_or_session.stream(stmt)
+        ret_val = (await r.one())[0]
+
         if ret_val == 1:
             self._acquired = True
         elif ret_val == 0:
@@ -85,8 +86,8 @@ class AsyncSadLock(BaseAsyncSadLock):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
         stmt = RELEASE_LOCK.params(str=self._key)
-        r = await self.connection_or_session.execute(stmt)  # type: ignore
-        ret_val = r.scalar_one()
+        r = await self.connection_or_session.stream(stmt)
+        ret_val = (await r.one())[0]
         if ret_val == 1:
             self._acquired = False
         elif ret_val == 0:

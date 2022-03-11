@@ -99,8 +99,8 @@ class AsyncSadLock(BaseAsyncSadLock):
                 stmt = self._stmt_dict['trylock'].params(key=self._key)
                 ts_begin = time()
                 while True:
-                    r = await self.connection_or_session.execute(stmt)
-                    ret_val = r.scalar_one()
+                    r = await self.connection_or_session.stream(stmt)
+                    ret_val = (await r.one())[0]
                     if ret_val:  # succeed
                         self._acquired = True
                         break
@@ -111,8 +111,8 @@ class AsyncSadLock(BaseAsyncSadLock):
             # This will either obtain the lock immediately and return true,
             # or return false without waiting if the lock cannot be acquired immediately.
             stmt = self._stmt_dict['trylock'].params(key=self._key)
-            r = await self.connection_or_session.execute(stmt)
-            ret_val = r.scalar_one()
+            r = await self.connection_or_session.stream(stmt)
+            ret_val = (await r.one())[0]
             self._acquired = bool(ret_val)
         #
         return self._acquired
@@ -121,8 +121,8 @@ class AsyncSadLock(BaseAsyncSadLock):
         if not self._acquired:
             raise ValueError('invoked on an unlocked lock')
         stmt = self._stmt_dict['unlock'].params(key=self._key)
-        r = await self.connection_or_session.execute(stmt)
-        ret_val = r.scalar_one()
+        r = await self.connection_or_session.stream(stmt)
+        ret_val = (await r.one())[0]
         if ret_val:
             self._acquired = False
         else:
