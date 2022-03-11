@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..types import BaseSadLock, TConnectionOrSession
-from ..utils import ensure_int64, string_or_int_to_int64
+from ..utils import ensure_int64, to_int64_key
 
 SLEEP_INTERVAL_DEFAULT = 1
 
@@ -102,7 +102,7 @@ class SadLock(BaseSadLock):
         if convert:
             key = ensure_int64(convert(key))
         else:
-            key = string_or_int_to_int64(key)
+            key = to_int64_key(key)
         #
         self._interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
         self._level = level or 'session'

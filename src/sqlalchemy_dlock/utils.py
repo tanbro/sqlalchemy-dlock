@@ -10,14 +10,14 @@ def safe_name(s):
     return SAFE_NAME_PATTERN.sub('_', s).strip().lower()
 
 
-def string_or_int_to_int64(key: Union[bytearray, bytes, memoryview, str, int]) -> int:
-    if isinstance(key, str):
-        key = key.encode()
-    if isinstance(key, (bytearray, bytes, memoryview)):
-        return int.from_bytes(blake2b(key, digest_size=8).digest(), byteorder, signed=True)
-    elif isinstance(key, int):
-        return ensure_int64(key)
-    raise TypeError('{}'.format(type(key)))
+def to_int64_key(k: Union[bytearray, bytes, memoryview, str, int]) -> int:
+    if isinstance(k, str):
+        k = k.encode()
+    if isinstance(k, (bytearray, bytes, memoryview)):
+        return int.from_bytes(blake2b(k, digest_size=8).digest(), byteorder, signed=True)
+    elif isinstance(k, int):
+        return ensure_int64(k)
+    raise TypeError('{}'.format(type(k)))
 
 
 INT64_MAX = 2**63-1  # max of signed int64: 2**63-1(+0x7fff_ffff_ffff_ffff)

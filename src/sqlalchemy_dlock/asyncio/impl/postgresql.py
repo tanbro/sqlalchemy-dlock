@@ -7,7 +7,7 @@ from typing import Any, Callable, Optional, Union
 from sqlalchemy import text
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
-from ...utils import ensure_int64, string_or_int_to_int64
+from ...utils import ensure_int64, to_int64_key
 from ..types import BaseAsyncSadLock, TAsyncConnectionOrSession
 
 SLEEP_INTERVAL_DEFAULT = 1
@@ -66,7 +66,7 @@ class AsyncSadLock(BaseAsyncSadLock):
         elif isinstance(key, int):
             key = ensure_int64(key)
         else:
-            key = string_or_int_to_int64(key)
+            key = to_int64_key(key)
         #
         self._interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
         self._level = level or 'session'
