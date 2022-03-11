@@ -1,0 +1,30 @@
+services:
+
+  python:
+    image: python
+    depends_on:
+      - mysql
+      - postgres
+    volumes:
+      - type: bind
+        source: ..
+        target: /work
+    working_dir: /work
+    environment:
+      TEST_URLS: mysql://test:test@mysql:3306/test postgresql://postgres:test@postgres/
+      TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql:3306/test postgresql+asyncpg://postgres:test@postgres/
+    env_file:
+      - test-envs.conf
+
+  mysql:
+    image: mysql
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "1"
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: test
