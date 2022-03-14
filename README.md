@@ -1,5 +1,11 @@
 # SQLAlchemy-DLock
 
+[![GitHub](https://img.shields.io/github/license/tanbro/sqlalchemy-dlock)](https://github.com/tanbro/sqlalchemy-dlock)
+[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/tanbro/sqlalchemy-dlock)](https://github.com/tanbro/sqlalchemy-dlock/tags)
+[![Python package](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml/badge.svg)](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml)
+[![PyPI - Status](https://img.shields.io/pypi/status/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
+[![PyPI - License](https://img.shields.io/pypi/l/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
 [![Documentation Status](https://readthedocs.org/projects/sqlalchemy-dlock/badge/?version=latest)](https://sqlalchemy-dlock.readthedocs.io/en/latest/?badge=latest)
 
 Distributed lock based on Database and [SQLAlchemy][].
