@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## v0.2a3
+
+Date: 2021-03-14
+
+- Change:
+
+  - Drop Python 3.5 support.
+  - Remove SQLAlchemy version requires earlier than 1.4 in setup, it's not supported actually.
+  - Adjust PostgreSQL lock's constructor arguments order
+
+- Add:
+
+  - More test cases, and add test/deploy workflow in github actions.
+  - Add docker-compose test scripts
+
 ## v0.2a2
 
 Date: 2021-03-09
