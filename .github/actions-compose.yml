@@ -3,7 +3,7 @@ services:
   mysql:
     image: mysql
     expose:
-      - 3306
+      - "127.0.0.1:3306:3306"
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "1"
       MYSQL_DATABASE: test
@@ -13,6 +13,6 @@ services:
   postgres:
     image: postgres
     expose:
-      - 5432
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_PASSWORD: test
