@@ -5,7 +5,6 @@ from sqlalchemy.orm import sessionmaker
 
 from sqlalchemy_dlock import create_sadlock
 from .engines import ENGINES
-from .utils import session_scope
 
 
 class SessionTestCase(TestCase):
