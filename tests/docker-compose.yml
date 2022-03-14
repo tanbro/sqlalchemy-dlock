@@ -1,6 +1,5 @@
 services:
-
-  python:
+  pytest:
     image: python
     depends_on:
       - mysql
@@ -15,11 +14,19 @@ services:
       TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql:3306/test postgresql+asyncpg://postgres:test@postgres/
     env_file:
       - test-envs.conf
+    command:
+        - bash
+        - -c
+        - |
+          apt update && apt install -y mariadb-client postgresql-client && \
+          bash tests/scripts/wait-for-mysql.sh mysql "test" "test" "test" && \
+          bash tests/scripts/wait-for-postgres.sh postgres test && \
+          bash tests/scripts/run.sh
 
   mysql:
     image: mysql
     environment:
-      MYSQL_ALLOW_EMPTY_PASSWORD: "1"
+      MYSQL_RANDOM_ROOT_PASSWORD: "1"
       MYSQL_DATABASE: test
       MYSQL_USER: test
       MYSQL_PASSWORD: test
