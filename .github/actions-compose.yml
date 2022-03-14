@@ -2,7 +2,7 @@ services:
 
   mysql:
     image: mysql
-    expose:
+    ports:
       - "127.0.0.1:3306:3306"
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "1"
@@ -12,7 +12,7 @@ services:
 
   postgres:
     image: postgres
-    expose:
+    ports:
       - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_PASSWORD: test
