@@ -5,7 +5,7 @@ name: Python package
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -35,7 +35,7 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Startup compose
+    - name: Startup databases
       run: |
         docker-compose -f .github/actions-compose.yml -- up -d
         bash tests/scripts/wait-for-mysql.sh 127.0.0.1 test test test
@@ -46,6 +46,6 @@ jobs:
         echo "TEST_URLS=mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/" | tee -a .env
         echo "TEST_ASYNC_URLS=mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/" | tee -a .env
         dotenv run pytest
-    - name: Shutdown compose
+    - name: Shutdown databases
       run: |
         docker-compose -f .github/actions-compose.yml -- down
