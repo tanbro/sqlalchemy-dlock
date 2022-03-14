@@ -1,4 +1,5 @@
 services:
+
   pytest:
     image: python
     depends_on:
@@ -10,18 +11,19 @@ services:
         target: /work
     working_dir: /work
     environment:
-      TEST_URLS: mysql://test:test@mysql:3306/test postgresql://postgres:test@postgres/
-      TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql:3306/test postgresql+asyncpg://postgres:test@postgres/
+      TEST_URLS: mysql://test:test@mysql/test postgresql://postgres:test@postgres/
+      TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql/test postgresql+asyncpg://postgres:test@postgres/
     env_file:
       - test-envs.conf
     command:
         - bash
         - -c
-        - |
-          apt update && apt install -y mariadb-client postgresql-client && \
-          bash tests/scripts/wait-for-mysql.sh mysql "test" "test" "test" && \
-          bash tests/scripts/wait-for-postgres.sh postgres test && \
-          bash tests/scripts/run.sh
+        - >
+          apt update &&
+          apt install -y mariadb-client postgresql-client &&
+          bash tests/scripts/wait-for-mysql.sh mysql test test test &&
+          bash tests/scripts/wait-for-postgres.sh postgres test &&
+          bash tests/scripts/run-test.sh
 
   mysql:
     image: mysql

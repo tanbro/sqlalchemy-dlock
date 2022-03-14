@@ -2,8 +2,8 @@
 
 ## Run tests in docker-compose
 
-In `tests` directory, run:
+Just `up` the docker-compose in `tests` directory:
 
 ```bash
-docker-compose up --exit-code-from pytest
+(cd tests; docker-compose up --exit-code-from pytest; docker-compose down;)
 ```
