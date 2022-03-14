@@ -37,15 +37,15 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Startup compose
       run: |
-        docker-compose -f .github/workflows/docker-compose.yml -- up -d
+        docker-compose -f .github/actions-compose.yml -- up -d
     - name: Test with pytest
       run: |
         echo "" | tee .env
-        echo "TEST_URLS=mysql://test:test@localhost:3306/test postgresql://postgres:test@localhost:5432/" | tee -a .env
-        echo "TEST_ASYNC_URLS=mysql+aiomysql://test:test@localhost:3306/test postgresql://postgres+asyncpg:test@localhost:5432/" | tee -a .env
-        bash tests/scripts/wait-for-mysql.sh localhost test test test
-        bash tests/scripts/wait-for-postgres.sh localhost test
+        echo "TEST_URLS=mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/" | tee -a .env
+        echo "TEST_ASYNC_URLS=mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql://postgres+asyncpg:test@127.0.0.1:5432/" | tee -a .env
+        bash tests/scripts/wait-for-mysql.sh 127.0.0.1 test test test
+        bash tests/scripts/wait-for-postgres.sh 127.0.0.1 test
         dotenv run pytest
     - name: Shutdown compose
       run: |
-        docker-compose -f .github/workflows/docker-compose.yml -- down
+        docker-compose -f .github/actions-compose.yml -- down
