@@ -19,4 +19,4 @@ ${ENV_DIR}/bin/pip install -U --no-cache-dir \
 pytest pytest-cov \
 -r $(if [ -n "${NO_ASYNCIO}" ] ; then echo "requires/test-no-asyncio.txt" ; else echo "requires/test.txt" ; fi)
 
-${ENV_DIR}/bin/pytest --cov=sqlalchemy_dlock
+${ENV_DIR}/bin/pytest --no-cov-on-fail --cov=sqlalchemy_dlock
