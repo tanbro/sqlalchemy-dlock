@@ -1,0 +1,18 @@
+services:
+
+  mysql:
+    image: mysql
+    expose:
+      - 3306
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "1"
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+
+  postgres:
+    image: postgres
+    expose:
+      - 5432
+    environment:
+      POSTGRES_PASSWORD: test
