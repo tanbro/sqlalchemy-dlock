@@ -56,9 +56,9 @@ class AsyncSadLock(BaseAsyncSadLock):
     def __init__(self,
                  connection_or_session: TAsyncConnectionOrSession,
                  key,
-                 convert: Optional[TConvertFunction] = None,
-                 interval: Union[float, int, None] = None,
                  level: Optional[str] = None,
+                 interval: Union[float, int, None] = None,
+                 convert: Optional[TConvertFunction] = None,
                  *args, **kwargs
                  ):
         if convert:
