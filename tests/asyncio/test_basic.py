@@ -84,6 +84,28 @@ else:
                                 self.assertTrue(lock.acquired)
                             self.assertFalse(lock.acquired)
 
+            async def test_invoke_locked_lock(self):
+                for engine in get_engins():
+                    async with engine.begin() as conn:
+                        assert conn is not None
+                        key = uuid4().hex
+                        async with create_async_sadlock(conn, key) as lock:
+                            self.assertTrue(lock.locked)
+                            with self.assertRaisesRegex(ValueError, 'invoked on a locked lock'):
+                                await lock.acquire()
+                        self.assertFalse(lock.acquired)
+
+            async def test_invoke_unlocked_lock(self):
+                for engine in get_engins():
+                    async with engine.begin() as conn:
+                        assert conn is not None
+                        key = uuid4().hex
+                        lock = create_async_sadlock(conn, key)
+                        self.assertFalse(lock.acquired)
+                        with self.assertRaisesRegex(ValueError, 'invoked on an unlocked lock'):
+                            await lock.release()
+                        self.assertFalse(lock.acquired)
+
             async def test_timeout_positive(self):
                 for engine in get_engins():
                     key = uuid4().hex

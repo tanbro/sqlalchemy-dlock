@@ -122,4 +122,12 @@ It currently supports blow locks:
       assert not lock.acquired
   ```
 
+## Tests
+
+Just `up` the docker-compose in `tests` directory:
+
+```bash
+(cd tests; docker-compose up --abort-on-container-exit --exit-code-from pytest; docker-compose down)
+```
+
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
