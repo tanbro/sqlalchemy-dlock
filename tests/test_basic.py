@@ -76,6 +76,30 @@ class BasicTestCase(TestCase):
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
 
+    def test_invoke_locked_lock(self):
+        for engine in ENGINES:
+            key = uuid4().hex
+            with engine.connect() as conn:
+                with create_sadlock(conn, key) as lock:
+                    self.assertTrue(lock.locked)
+                    self.assertRaisesRegex(
+                        ValueError, 'invoked on a locked lock',
+                        lock.acquire
+                    )
+                self.assertFalse(lock.acquired)
+
+    def test_invoke_unlocked_lock(self):
+        for engine in ENGINES:
+            key = uuid4().hex
+            with engine.connect() as conn:
+                with closing(create_sadlock(conn, key)) as lock:
+                    self.assertFalse(lock.locked)
+                    self.assertRaisesRegex(
+                        ValueError, 'invoked on an unlocked lock',
+                        lock.release
+                    )
+                self.assertFalse(lock.acquired)
+
     def test_timeout_positive(self):
         for engine in ENGINES:
             key = uuid4().hex
