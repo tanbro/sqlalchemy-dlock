@@ -12,7 +12,7 @@ on:
 jobs:
 
   test:
-    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,22 +28,21 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        python -m pip install flake8 pytest pytest-cov
+        python -m pip install flake8 pytest pytest-cov python-dotenv[cli]
         pip install -e .[asyncio] -r requires/test.txt
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        flake8 . --count --exit-zero --statistics
     - name: Startup databases
       run: |
-        docker-compose -f .github/actions-compose.yml -- up -d
-        bash tests/scripts/wait-for-mysql.sh 127.0.0.1 test test test
-        bash tests/scripts/wait-for-postgres.sh 127.0.0.1 test
+        ( cd .github ; docker-compose up -d ; )
+        bash scripts/wait-for-mysql.sh 127.0.0.1 test test test
+        bash scripts/wait-for-postgres.sh 127.0.0.1 test
     - name: Test with pytest
       run: |
-        echo "" | tee .env
         echo "TEST_URLS=mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/" | tee -a .env
         echo "TEST_ASYNC_URLS=mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/" | tee -a .env
         dotenv run pytest --cov src/ --cov-report xml .
@@ -53,8 +52,8 @@ jobs:
     - name: Upload coverage reports to Codecov with GitHub Action
       uses: codecov/codecov-action@v2
 
-  deploy:
-    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags') }}
+  publish:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: test
     runs-on: ubuntu-latest
 
