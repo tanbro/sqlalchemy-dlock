@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.2b1
+
+Date: 2021-03-16
+
+- Add:
+
+  - New unit tests
+  - CI by github workflows
+
 ## v0.2a3
 
 Date: 2021-03-14
