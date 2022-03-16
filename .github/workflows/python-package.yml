@@ -43,7 +43,6 @@ jobs:
         bash scripts/wait-for-postgres.sh 127.0.0.1 test
     - name: Test with pytest
       run: |
-        echo "" | tee .env
         echo "TEST_URLS=mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/" | tee -a .env
         echo "TEST_ASYNC_URLS=mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/" | tee -a .env
         dotenv run pytest --cov src/ --cov-report xml .
