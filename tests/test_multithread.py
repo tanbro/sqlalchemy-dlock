@@ -1,5 +1,5 @@
 from contextlib import closing
-from threading import Barrier, Thread
+from threading import Barrier, Condition, Thread
 from time import sleep, time
 from unittest import TestCase
 from uuid import uuid4

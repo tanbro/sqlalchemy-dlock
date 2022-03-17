@@ -100,10 +100,10 @@ class SadLock(BaseSadLock):
             self._acquired = True
         elif ret_val == 0:
             pass  # 直到超时也没有成功锁定
-        elif ret_val is None:
+        elif ret_val is None:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(
                 'An error occurred while attempting to obtain the lock "{}"'.format(self._key))
-        else:
+        else:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(
                 'GET_LOCK("{}", {}) returns {}'.format(self._key, timeout, ret_val))
         return self._acquired
@@ -115,18 +115,18 @@ class SadLock(BaseSadLock):
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:
             self._acquired = False
-        elif ret_val == 0:
+        elif ret_val == 0:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 'The named lock "{}" was not established by this thread, '
                 'and the lock is not released.'.format(self._key))
-        elif ret_val is None:
+        elif ret_val is None:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 'The named lock "{}" did not exist, '
                 'was never obtained by a call to GET_LOCK(), '
                 'or has previously been released.'.format(self._key)
             )
-        else:
+        else:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(
                 'RELEASE_LOCK("{}") returns {}'.format(self._key, ret_val))

@@ -130,7 +130,7 @@ class SadLock(BaseSadLock):
                 if timeout < 0:
                     timeout = 0
                 interval = self._interval if interval is None else interval
-                if interval < 0:
+                if interval < 0:  # pragma: no cover
                     raise ValueError('interval must not be smaller than 0')
                 stmt = self._stmt_dict['trylock'].params(key=self._key)
                 ts_begin = time()
