@@ -53,7 +53,7 @@ else:
                 key = uuid1().hex
                 for session in self.sessions:
                     async with session.begin():
-                        session.commit()
+                        await session.commit()
                         lock = create_async_sadlock(session, key)
                         session.rollback()
                         r = await lock.acquire()
