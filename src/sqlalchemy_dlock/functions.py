@@ -39,7 +39,7 @@ def create_sadlock(
         name = safe_name(connection_or_session.get_bind().name)
     try:
         mod = import_module('..impl.{}'.format(name), __name__)
-    except ImportError as exception:
+    except ImportError as exception:  # pragma: no cover
         raise NotImplementedError('{}: {}'.format(name, exception))
     lock_cls = getattr(mod, 'SadLock')
     return lock_cls(connection_or_session, key, *args, **kwargs)

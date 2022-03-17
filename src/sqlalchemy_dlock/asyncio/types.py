@@ -24,7 +24,7 @@ class BaseAsyncSadLock:
     async def __aexit__(self, type_, value, traceback):
         await self.close()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return '<{} {} key={} at 0x{:x}>'.format(
             'locked' if self._acquired else 'unlocked',
             self.__class__.__name__,

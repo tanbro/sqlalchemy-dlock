@@ -58,7 +58,7 @@ class BaseSadLock(local):
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return '<{} {} key={} at 0x{:x}>'.format(
             'locked' if self._acquired else 'unlocked',
             self.__class__.__name__,
