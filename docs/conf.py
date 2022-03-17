@@ -19,13 +19,13 @@ from importlib.metadata import distribution
 
 # -- Project information -----------------------------------------------------
 
-project = 'SQLAlchemy-DLock'
+project = 'sqlalchemy-dlock'
 copyright = '2021, liu xue yan'
 author = 'liu xue yan'
 
 # The full version, including alpha/beta/rc tags
 # full version
-dist = distribution('SQLAlchemy-DLock')
+dist = distribution(project)
 version = dist.version
 # major/minor version
 release = '.'.join(version.split('.')[:2])
