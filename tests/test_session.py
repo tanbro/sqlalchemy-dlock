@@ -28,7 +28,7 @@ class SessionTestCase(TestCase):
                     self.assertTrue(lock.acquired)
                 self.assertFalse(lock.acquired)
 
-    def test_seprated_connection(self):
+    def test_cross_transaction(self):
         key = uuid1().hex
         for Session in self.Sessions:
             with Session() as session:

@@ -7,7 +7,6 @@ from uuid import uuid4
 from warnings import warn
 from zlib import crc32
 
-from dotenv import load_dotenv
 from packaging.version import parse
 from sqlalchemy_dlock.asyncio import create_async_sadlock
 from sqlalchemy_dlock.impl.mysql import MYSQL_LOCK_NAME_MAX_LENGTH
@@ -15,9 +14,6 @@ from sqlalchemy_dlock.impl.mysql import MYSQL_LOCK_NAME_MAX_LENGTH
 from .engines import create_engins, dispose_engins, get_engins
 
 CPU_COUNT = cpu_count()
-
-
-load_dotenv()
 
 if getenv('NO_ASYNCIO'):
     warn('The test module will not run because environment vairable "NO_ASYNCIO" was set')

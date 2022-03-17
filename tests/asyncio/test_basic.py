@@ -6,12 +6,10 @@ from secrets import token_bytes, token_hex
 from uuid import uuid4
 from warnings import warn
 
-from dotenv import load_dotenv
 from packaging.version import parse
 
 from .engines import create_engins, dispose_engins, get_engins
 
-load_dotenv()
 
 if getenv('NO_ASYNCIO'):
     warn('The test module will not run because environment vairable "NO_ASYNCIO" was set')
