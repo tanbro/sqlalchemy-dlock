@@ -52,7 +52,7 @@ else:
             async def test_seprated_connection(self):
                 key = uuid1().hex
                 for session in self.sessions:
-                    with session.begin():
+                    async with session.begin():
                         session.commit()
                         lock = create_async_sadlock(session, key)
                         session.rollback()
