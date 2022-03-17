@@ -6,7 +6,7 @@ from warnings import warn
 
 from dotenv import load_dotenv
 from packaging.version import parse
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_dlock.asyncio import create_async_sadlock
 
 from .engines import dispose_engins, get_engins
@@ -29,13 +29,13 @@ else:
     else:
 
         class SessionTestCase(IsolatedAsyncioTestCase):
-            Sessions = []
+            sessions = []
 
             @classmethod
             def setUp(cls):
                 for engine in get_engins():
-                    Session = sessionmaker(bind=engine)
-                    cls.Sessions.append(Session)
+                    session = AsyncSession(bind=engine)
+                    cls.sessions.append(session)
 
             @classmethod
             async def asyncTearDown(cls):
@@ -43,16 +43,16 @@ else:
 
             async def test_once(self):
                 key = uuid1().hex
-                for Session in self.Sessions:
-                    with Session() as session:
+                for session in self.sessions:
+                    async with session.begin():
                         async with create_async_sadlock(session, key) as lock:
                             self.assertTrue(lock.acquired)
                         self.assertFalse(lock.acquired)
 
             async def test_seprated_connection(self):
                 key = uuid1().hex
-                for Session in self.Sessions:
-                    with Session() as session:
+                for session in self.sessions:
+                    with session.begin():
                         session.commit()
                         lock = create_async_sadlock(session, key)
                         session.rollback()
