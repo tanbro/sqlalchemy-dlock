@@ -12,10 +12,10 @@
 
 Distributed lock based on Database and [SQLAlchemy][].
 
-It currently supports blow locks:
+It currently supports below locks:
 
-- `MySQL` named lock: <https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html>
-- `PostgreSQL` advisory lock: <https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS>
+- `MySQL` - named lock: <https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html>
+- `PostgreSQL` - advisory lock: <https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS>
 
 > ❗ **Note**:
 >
@@ -119,8 +119,11 @@ It currently supports blow locks:
 
   async with engine.begin() as conn:
       async with create_async_sadlock(conn, key) as lock:
-          assert lock.acquired
-      assert not lock.acquired
+          assert lock.locked
+          await lock.release()
+          assert not lock.locked
+          await lock.acquire()
+      assert not lock.locked
   ```
 
 ## Tests
