@@ -2,6 +2,7 @@ from multiprocessing import cpu_count
 from os import getenv
 from platform import python_version
 from random import randint
+from secrets import token_bytes, token_hex
 from uuid import uuid4
 from warnings import warn
 
@@ -80,6 +81,20 @@ else:
                         for _ in range(100):
                             key = randint(-0x8000_0000_0000_0000,
                                           0x7fff_ffff_ffff_ffff)
+                            async with create_async_sadlock(conn, key) as lock:
+                                self.assertTrue(lock.acquired)
+                            self.assertFalse(lock.acquired)
+
+            async def test_many_bytes_key(self):
+                for engine in get_engins():
+                    for _ in range(100):
+                        async with engine.connect() as conn:
+                            if engine.name == 'mysql':
+                                key = token_hex().encode()
+                            elif engine.name == 'postgresql':
+                                key = token_bytes()
+                            else:
+                                raise NotImplementedError()
                             async with create_async_sadlock(conn, key) as lock:
                                 self.assertTrue(lock.acquired)
                             self.assertFalse(lock.acquired)

@@ -1,5 +1,6 @@
 from contextlib import ExitStack, closing
 from os import cpu_count
+from secrets import token_bytes, token_hex
 from random import randint
 from unittest import TestCase
 from uuid import uuid4
@@ -51,6 +52,20 @@ class BasicTestCase(TestCase):
                 with engine.connect() as conn:
                     key = randint(-0x8000_0000_0000_0000,
                                   0x7fff_ffff_ffff_ffff)
+                    with create_sadlock(conn, key) as lock:
+                        self.assertTrue(lock.acquired)
+                    self.assertFalse(lock.acquired)
+
+    def test_many_bytes_key(self):
+        for engine in ENGINES:
+            for _ in range(100):
+                with engine.connect() as conn:
+                    if engine.name == 'mysql':
+                        key = token_hex().encode()
+                    elif engine.name == 'postgresql':
+                        key = token_bytes()
+                    else:
+                        raise NotImplementedError()
                     with create_sadlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
