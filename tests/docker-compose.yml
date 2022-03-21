@@ -19,8 +19,8 @@ services:
         - bash
         - -c
         - |
-          apt update
-          apt install -y mariadb-client postgresql-client
+          apt-get update
+          apt-get install -y mariadb-client postgresql-client
           bash scripts/wait-for-mysql.sh mysql test test test
           bash scripts/wait-for-postgres.sh postgres test
           bash scripts/run-test.sh
