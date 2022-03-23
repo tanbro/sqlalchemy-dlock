@@ -1,11 +1,12 @@
 # CHANGELOG
 
-## v0.2b2
+## v0.2b2/b3
 
 Date: 2021-03-23
 
 - Add:
   - More unit tests
+  - Optimized CI
 
 ## v0.2b1
 
