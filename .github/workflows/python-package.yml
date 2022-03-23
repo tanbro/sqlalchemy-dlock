@@ -63,7 +63,7 @@ jobs:
     if: github.event_name == 'push'
 
     outputs:
-      version: ${{ steps.get-version.outputs.PEP440_VERSION }}
+      version: ${{ steps.get-version.outputs.version }}
 
     steps:
       - name: Check PEP-440 style version
