@@ -59,6 +59,9 @@ jobs:
 
   check-tag:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     needs: test
     if: github.event_name == 'push'
 
@@ -69,7 +72,7 @@ jobs:
       - name: Check if tag matches PEP-440
         id: check
         run: |
-          if [ ${{ github.event.ref }} =~ ^v?(?:(?:(?P<epoch>[0-9]+)!)?(?P<release>[0-9]+(?:\.[0-9]+)*)(?P<pre>[-_\.]?(?P<pre_l>(a|b|c|rc|alpha|beta|pre|preview))[-_\.]?(?P<pre_n>[0-9]+)?)?(?P<post>(?:-(?P<post_n1>[0-9]+))|(?:[-_\.]?(?P<post_l>post|rev|r)[-_\.]?(?P<post_n2>[0-9]+)?))?(?P<dev>[-_\.]?(?P<dev_l>dev)[-_\.]?(?P<dev_n>[0-9]+)?)?)(?:\+(?P<local>[a-z0-9]+(?:[-_\.][a-z0-9]+)*))?$ ]
+          if [ ${{ github.event.ref }} =~ ^v?(([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?)$ ]
           then
             echo ::set-output name=matched::true
           else
