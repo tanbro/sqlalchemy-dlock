@@ -74,8 +74,10 @@ jobs:
         run: |
           if [[ ${{ github.event.ref }} =~ ^v?(([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*((a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?)$ ]]
           then
+            echo "${{ github.event.ref }} IS a PEP-440 style version"
             echo ::set-output name=matched::true
           else
+            echo "${{ github.event.ref }} is NOT a PEP-440 style version"
             echo ::set-output name=matched::false
           fi
 
