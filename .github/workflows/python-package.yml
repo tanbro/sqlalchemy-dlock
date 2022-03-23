@@ -38,18 +38,17 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Startup databases
       run: |
-        ( cd .github ; docker-compose up -d ; )
+        (cd .github; docker-compose up -d)
         bash scripts/wait-for-mysql.sh 127.0.0.1 test test test
         bash scripts/wait-for-postgres.sh 127.0.0.1 test
-    - name: Test with pytest
+    - name: Test with PyTest
       run: |
         echo "TEST_URLS=mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/" | tee -a .env
         echo "TEST_ASYNC_URLS=mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/" | tee -a .env
         dotenv run pytest --cov src/ --cov-report xml .
     - name: Shutdown databases
-      run: |
-        ( cd .github ; docker-compose down ; )
-    - name: Upload coverage reports to Codecov with GitHub Action
+      run: (cd .github; docker-compose down)
+    - name: Upload coverage reports to CodeCov with GitHub Action
       uses: codecov/codecov-action@v2
 
   publish:

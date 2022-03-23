@@ -20,8 +20,8 @@ services:
         - -c
         - |
           set -e
-          apt-get update
-          apt-get install -y mariadb-client postgresql-client
+          if [ -n "${APT_SOURCES}" ]; then printenv APT_SOURCES | tee /etc/apt/sources.list; fi
+          apt-get update && apt-get install -y mariadb-client postgresql-client
           bash scripts/wait-for-mysql.sh mysql test test test
           bash scripts/wait-for-postgres.sh postgres test
           bash scripts/run-test.sh
