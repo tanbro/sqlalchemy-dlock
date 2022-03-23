@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v0.2b2
+
+Date: 2021-03-23
+
+- Add:
+  - More unit tests
+
 ## v0.2b1
 
 Date: 2021-03-16
