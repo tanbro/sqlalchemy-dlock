@@ -6,7 +6,7 @@ name: Python package
 on:
   push:
     branches: [main]
-    tags: [v*]
+    tags: ["*"]
   pull_request:
     branches: [main]
 
@@ -43,8 +43,8 @@ jobs:
       - name: Startup databases
         run: |
           (cd .github; docker-compose up -d)
-          bash scripts/wait-for-mysql.sh 127.0.0.1 test test test
-          bash scripts/wait-for-postgres.sh 127.0.0.1 test
+          /bin/bash -e scripts/wait-for-mysql.sh 127.0.0.1 test test test
+          /bin/bash -e scripts/wait-for-postgres.sh 127.0.0.1 test
 
       - name: Test with PyTest
         run: |

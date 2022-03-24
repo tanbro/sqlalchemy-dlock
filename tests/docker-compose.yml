@@ -16,15 +16,15 @@ services:
     env_file:
       - .env
     command:
-        - bash
+        - /bin/bash
         - -c
         - |
           set -e
           if [ -n "${APT_SOURCES}" ]; then printenv APT_SOURCES | tee /etc/apt/sources.list; fi
           apt-get update && apt-get install -y mariadb-client postgresql-client
-          bash scripts/wait-for-mysql.sh mysql test test test
-          bash scripts/wait-for-postgres.sh postgres test
-          bash scripts/run-test.sh
+          /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
+          /bin/bash -e scripts/wait-for-postgres.sh postgres test
+          /bin/bash -e scripts/run-test.sh
 
   mysql:
     image: mysql

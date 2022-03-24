@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.2
+
+Date: 2021-03-23
+
+First v0.2.x version released.
+
 ## v0.2b2/b3
 
 Date: 2021-03-23

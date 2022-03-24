@@ -2,7 +2,6 @@ from multiprocessing import cpu_count
 from os import getenv
 from platform import python_version
 from random import choice
-from unittest import IsolatedAsyncioTestCase
 from uuid import uuid4
 from warnings import warn
 from zlib import crc32
@@ -29,6 +28,7 @@ else:
         )
 
     else:
+        from unittest import IsolatedAsyncioTestCase
 
         class KeyConvertTestCase(IsolatedAsyncioTestCase):
 

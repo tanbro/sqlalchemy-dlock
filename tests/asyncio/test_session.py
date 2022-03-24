@@ -1,6 +1,5 @@
 from os import getenv
 from platform import python_version
-from unittest import IsolatedAsyncioTestCase
 from uuid import uuid1
 from warnings import warn
 
@@ -25,6 +24,7 @@ else:
         )
 
     else:
+        from unittest import IsolatedAsyncioTestCase
 
         class SessionTestCase(IsolatedAsyncioTestCase):
             sessions = []
