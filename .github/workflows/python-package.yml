@@ -28,12 +28,12 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install virtualbox docker-machine docker docker-compose
 
-      - name: Install/Configure system dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          cd "C:\Program Files\Docker"
-          dir
-          DockerCli.exe -SwitchDaemon
+      # - name: Install/Configure system dependencies (Windows)
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     cd "C:\Program Files\Docker"
+      #     dir
+      #     DockerCli.exe -SwitchDaemon
 
       - name: Startup databases
         shell: bash
