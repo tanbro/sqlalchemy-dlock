@@ -24,15 +24,28 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Install/Configure system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install virtualbox docker-machine docker docker-compose
+
+      - name: Install/Configure system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd "C:\Program Files\Docker\Docker"
+          .\DockerCli.exe -SwitchDaemon
+
+      - name: Startup databases
+        shell: bash
+        run: |
+          (cd .github && docker-compose up -d)
+          sh scripts/wait-for-mysql.sh 127.0.0.1 test test test
+          sh scripts/wait-for-postgres.sh 127.0.0.1 test
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
-
-      - name: Install system dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: brew install virtualbox docker-machine docker docker-compose
 
       - name: Install Python project
         run: pip install -e .[asyncio] -r requires/test.txt
@@ -47,35 +60,11 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Startup databases (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          (cd .github && docker-compose up -d)
-          sh scripts/wait-for-mysql.sh 127.0.0.1 test test test
-          sh scripts/wait-for-postgres.sh 127.0.0.1 test
-
-      - name: Startup databases (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          "C:\Program Files\Docker\Docker\DockerCli.exe" -SwitchDaemon
-          Restart-Service docker
-          docker-compose -f .github/docker-compose.yml up -d
-          bash scripts/wait-for-mysql.sh 127.0.0.1 test
-          bash scripts/wait-for-postgres.sh 127.0.0.1 test
-
-      - name: Test with PyTest (Linux)
-        if: runner.os == 'Linux'
+      - name: Test with PyTest
         shell: bash
         run: |
           export TEST_URLS="mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/"
           export TEST_ASYNC_URLS="mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/"
-          pytest --cov src/ --cov-report xml .
-
-      - name: Test with PyTest (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          $Env:TEST_URLS = "postgresql://postgres:test@127.0.0.1:5432/"
-          $Env:TEST_ASYNC_URLS="postgresql+asyncpg://postgres:test@127.0.0.1:5432/"
           pytest --cov src/ --cov-report xml .
 
       - name: Shutdown databases
@@ -87,7 +76,7 @@ jobs:
 
   check-pep440:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && runner.os == 'Linux'
 
     outputs:
       version: ${{ steps.get-version.outputs.version }}
