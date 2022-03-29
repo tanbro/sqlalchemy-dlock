@@ -32,7 +32,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           cd "C:\Program Files\Docker"
-          .\DockerCli.exe -SwitchDaemon
+          dir
+          DockerCli.exe -SwitchDaemon
 
       - name: Startup databases
         shell: bash
