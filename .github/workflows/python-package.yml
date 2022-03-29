@@ -31,7 +31,7 @@ jobs:
       - name: Install/Configure system dependencies (Windows)
         if: runner.os == 'Windows'
         run: |
-          cd "C:\Program Files\Docker\Docker"
+          cd "C:\Program Files\Docker"
           .\DockerCli.exe -SwitchDaemon
 
       - name: Startup databases
