@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        os: [ubuntu-latest, windows-latest]
         # python-version: ["3.8", "3.9", "3.10"]
         python-version: ["3.10"]
 
@@ -31,9 +31,7 @@ jobs:
 
       - name: Install dependencies on macOS
         if: runner.os == 'macOS'
-        run: |
-          brew install mysql docker docker-machine docker-compose
-          sudo docker version
+        run: brew install virtualbox docker-machine docker docker-compose
 
       - name: Install PyPI dependencies
         run: pip install flake8 pytest pytest-cov python-dotenv[cli]
@@ -48,23 +46,29 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Startup databases on POSIX
+      - name: Startup databases
         if: contains(fromJson('["macOS", "Linux"]'), runner.os)
         run: |
           docker-compose -f .github/docker-compose.yml up -d
-          /bin/sh scripts/wait-for-mysql.sh 127.0.0.1 test test test
-          /bin/sh scripts/wait-for-postgres.sh 127.0.0.1 test
+          bash scripts/wait-for-mysql.sh 127.0.0.1 test test test
+          bash scripts/wait-for-postgres.sh 127.0.0.1 test
 
-      - name: Test with PyTest on POSIX
+      - name: Test with PyTest on UN*X
         if: contains(fromJson('["macOS", "Linux"]'), runner.os)
         run: |
           export TEST_URLS="mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/"
           export TEST_ASYNC_URLS="mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/"
           pytest --cov src/ --cov-report xml .
 
-      - name: Shutdown databases
+      - name: Test with PyTest on Windows
+        if: runner.os == 'Windows'
         run: |
-          docker-compose -f .github/docker-compose.yml down
+          $Env:TEST_URLS = "mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/"
+          $Env:TEST_ASYNC_URLS = "mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/"
+          pytest --cov src/ --cov-report xml .
+
+      - name: Shutdown databases
+        run: docker-compose -f .github/docker-compose.yml down
 
       - name: Upload coverage reports to CodeCov with GitHub Action
         uses: codecov/codecov-action@v2
