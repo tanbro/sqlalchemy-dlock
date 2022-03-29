@@ -64,7 +64,7 @@ jobs:
       - name: Startup databases (Windows)
         if: runner.os == 'Windows'
         run: |
-          py script/update_windows_docker_config.py
+          py scripts/update_windows_docker_config.py
           Restart-Service docker
           docker-compose -f .github/docker-compose.yml up -d
           bash scripts/wait-for-postgres.sh 127.0.0.1 test
