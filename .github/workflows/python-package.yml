@@ -16,8 +16,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # os: [ubuntu-latest, windows-latest]
         # python-version: ["3.8", "3.9", "3.10"]
+        os: [windows-latest]
         python-version: ["3.10"]
 
     steps:
@@ -29,17 +30,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install system dependencies on macOS
+      - name: Install system dependencies (macOS)
         if: runner.os == 'macOS'
         run: brew install virtualbox docker-machine docker docker-compose
-
-      # - name: Install system dependencies on Windows
-      #   if: runner.os == 'Windows'
-      #   run: |
-      #     Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
-      #     Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
-      #     wsl --set-default-version 2
-
 
       - name: Install Python project
         run: pip install -e .[asyncio] -r requires/test.txt
@@ -64,7 +57,7 @@ jobs:
       - name: Startup databases (Windows)
         if: runner.os == 'Windows'
         run: |
-          C:\Program Files\Docker\Docker\DockerCli.exe -SwitchDaemon
+          "C:\Program Files\Docker\Docker\DockerCli.exe" -SwitchDaemon
           Restart-Service docker
           docker-compose -f .github/docker-compose.yml up -d
           bash scripts/wait-for-mysql.sh 127.0.0.1 test
