@@ -76,7 +76,7 @@ jobs:
 
   check-pep440:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && runner.os == 'Linux'
+    if: github.event_name == 'push' && matrix.os == 'ubuntu-latest'
 
     outputs:
       version: ${{ steps.get-version.outputs.version }}
