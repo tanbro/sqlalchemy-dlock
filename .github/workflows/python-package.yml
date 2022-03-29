@@ -47,7 +47,6 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Startup databases
-        if: contains(fromJson('["macOS", "Linux"]'), runner.os)
         run: |
           docker-compose -f .github/docker-compose.yml up -d
           bash scripts/wait-for-mysql.sh 127.0.0.1 test test test
