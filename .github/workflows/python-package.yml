@@ -5,7 +5,7 @@ name: Python package
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
     tags: ["*"]
   pull_request:
     branches: [main]
@@ -16,6 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.8", "3.9", "3.10"]
 
     steps:
@@ -53,7 +54,9 @@ jobs:
           dotenv run pytest --cov src/ --cov-report xml .
 
       - name: Shutdown databases
-        run: (cd .github; docker-compose down)
+        run: |
+          cd .github
+          docker-compose down
 
       - name: Upload coverage reports to CodeCov with GitHub Action
         uses: codecov/codecov-action@v2
