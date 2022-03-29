@@ -63,10 +63,12 @@ jobs:
 
       - name: Startup databases (Windows)
         if: runner.os == 'Windows'
-        shell: bash
         run: |
-          (cd .github && docker-compose up -d postgres)
-          sh scripts/wait-for-postgres.sh 127.0.0.1 test
+          py script/update_windows_docker_config.py
+          Restart-Service docker
+          docker-compose -f .github/docker-compose.yml up -d
+          bash scripts/wait-for-postgres.sh 127.0.0.1 test
+          bash scripts/wait-for-postgres.sh 127.0.0.1 test
 
       - name: Test with PyTest (Linux)
         if: runner.os == 'Linux'
