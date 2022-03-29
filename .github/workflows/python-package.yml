@@ -64,10 +64,10 @@ jobs:
       - name: Startup databases (Windows)
         if: runner.os == 'Windows'
         run: |
-          py scripts/update_windows_docker_config.py
+          C:\Program Files\Docker\Docker\DockerCli.exe -SwitchDaemon
           Restart-Service docker
           docker-compose -f .github/docker-compose.yml up -d
-          bash scripts/wait-for-postgres.sh 127.0.0.1 test
+          bash scripts/wait-for-mysql.sh 127.0.0.1 test
           bash scripts/wait-for-postgres.sh 127.0.0.1 test
 
       - name: Test with PyTest (Linux)
