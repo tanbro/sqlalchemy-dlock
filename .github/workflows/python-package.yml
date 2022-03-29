@@ -29,15 +29,23 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install dependencies on macOS
+      - name: Install system dependencies on macOS
         if: runner.os == 'macOS'
         run: brew install virtualbox docker-machine docker docker-compose
 
-      - name: Install PyPI dependencies
-        run: pip install flake8 pytest pytest-cov python-dotenv[cli]
+      # - name: Install system dependencies on Windows
+      #   if: runner.os == 'Windows'
+      #   run: |
+      #     Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+      #     Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
+      #     wsl --set-default-version 2
 
-      - name: Install project
+
+      - name: Install Python project
         run: pip install -e .[asyncio] -r requires/test.txt
+
+      - name: Install Python testing tools
+        run: pip install flake8 pytest pytest-cov python-dotenv[cli]
 
       - name: Lint with flake8
         run: |
@@ -46,28 +54,38 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Startup databases
+      - name: Startup databases (Linux)
+        if: runner.os == 'Linux'
         run: |
-          docker-compose -f .github/docker-compose.yml up -d
-          bash scripts/wait-for-mysql.sh 127.0.0.1 test test test
-          bash scripts/wait-for-postgres.sh 127.0.0.1 test
+          (cd .github && docker-compose up -d)
+          sh scripts/wait-for-mysql.sh 127.0.0.1 test test test
+          sh scripts/wait-for-postgres.sh 127.0.0.1 test
 
-      - name: Test with PyTest on UN*X
-        if: contains(fromJson('["macOS", "Linux"]'), runner.os)
+      - name: Startup databases (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          (cd .github && docker-compose up -d postgres)
+          sh scripts/wait-for-postgres.sh 127.0.0.1 test
+
+      - name: Test with PyTest (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
         run: |
           export TEST_URLS="mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/"
           export TEST_ASYNC_URLS="mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/"
           pytest --cov src/ --cov-report xml .
 
-      - name: Test with PyTest on Windows
+      - name: Test with PyTest (Windows)
         if: runner.os == 'Windows'
         run: |
-          $Env:TEST_URLS = "mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/"
-          $Env:TEST_ASYNC_URLS = "mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/"
+          $Env:TEST_URLS = "postgresql://postgres:test@127.0.0.1:5432/"
+          $Env:TEST_ASYNC_URLS="postgresql+asyncpg://postgres:test@127.0.0.1:5432/"
           pytest --cov src/ --cov-report xml .
 
       - name: Shutdown databases
-        run: docker-compose -f .github/docker-compose.yml down
+        shell: bash
+        run: (cd .github && docker-compose down)
 
       - name: Upload coverage reports to CodeCov with GitHub Action
         uses: codecov/codecov-action@v2
