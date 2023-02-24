@@ -2,13 +2,13 @@ from os import environ, getenv
 
 from dotenv import load_dotenv
 
-__all__ = ['create_engins', 'dispose_engins', 'get_engins']
+__all__ = ['create_engines', 'dispose_engins', 'get_engins']
 
 
 _ENGINES = []
 
 
-def create_engins():
+def create_engines():
     global _ENGINES
 
     load_dotenv()

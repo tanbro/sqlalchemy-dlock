@@ -1,33 +1,35 @@
 services:
 
-  pytest:
-    image: python
-    depends_on:
-      - mysql
-      - postgres
-    volumes:
-      - type: bind
-        source: ..
-        target: /work
-    working_dir: /work
-    environment:
-      TEST_URLS: mysql://test:test@mysql/test postgresql://postgres:test@postgres/
-      TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql/test postgresql+asyncpg://postgres:test@postgres/
-    env_file:
-      - .env
-    command:
-        - /bin/bash
-        - -c
-        - |
-          set -e
-          if [ -n "${APT_SOURCES}" ]; then printenv APT_SOURCES | tee /etc/apt/sources.list; fi
-          apt-get update && apt-get install -y mariadb-client postgresql-client
-          /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
-          /bin/bash -e scripts/wait-for-postgres.sh postgres test
-          /bin/bash -e scripts/run-test.sh
+  # pytest:
+  #   image: python
+  #   depends_on:
+  #     - mysql
+  #     - postgres
+  #   volumes:
+  #     - type: bind
+  #       source: ..
+  #       target: /work
+  #   working_dir: /work
+  #   environment:
+  #     TEST_URLS: mysql://test:test@mysql/test postgresql://postgres:test@postgres/
+  #     TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql/test postgresql+asyncpg://postgres:test@postgres/
+  #   env_file:
+  #     - .env
+  #   command:
+  #       - /bin/bash
+  #       - -c
+  #       - |
+  #         set -e
+  #         if [ -n "${APT_SOURCES}" ]; then printenv APT_SOURCES | tee /etc/apt/sources.list; fi
+  #         apt-get update && apt-get install -y mariadb-client postgresql-client
+  #         /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
+  #         /bin/bash -e scripts/wait-for-postgres.sh postgres test
+  #         /bin/bash -e scripts/run-test.sh
 
   mysql:
     image: mysql
+    ports:
+      - "3306:3306"
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "1"
       MYSQL_DATABASE: test
@@ -36,5 +38,7 @@ services:
 
   postgres:
     image: postgres
+    ports:
+      - "5432:5432"
     environment:
       POSTGRES_PASSWORD: test

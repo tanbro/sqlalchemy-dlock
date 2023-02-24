@@ -7,7 +7,7 @@ from packaging.version import parse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy_dlock.asyncio import create_async_sadlock
 
-from .engines import dispose_engins, get_engins, create_engins
+from .engines import dispose_engins, get_engins, create_engines
 
 
 if getenv('NO_ASYNCIO'):
@@ -30,7 +30,7 @@ else:
             sessions = []
 
             def setUp(self):
-                create_engins()
+                create_engines()
 
             async def asyncTearDown(self):
                 await dispose_engins()

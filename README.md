@@ -49,7 +49,7 @@ It currently supports below locks:
   assert not lock.acquired
   ```
 
-- Use in `with` statement
+- Used in `with` statement
 
   ```python
   from contextlib import closing

@@ -8,7 +8,7 @@ from warnings import warn
 
 from packaging.version import parse
 
-from .engines import create_engins, dispose_engins, get_engins
+from .engines import create_engines, dispose_engins, get_engins
 
 
 if getenv('NO_ASYNCIO'):
@@ -36,7 +36,7 @@ else:
         class BasicTestCase(IsolatedAsyncioTestCase):
 
             def setUp(self):
-                create_engins()
+                create_engines()
 
             async def asyncTearDown(self):
                 await dispose_engins()

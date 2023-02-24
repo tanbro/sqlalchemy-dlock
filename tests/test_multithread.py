@@ -82,6 +82,7 @@ class MutliThreadTestCase(TestCase):
             def fn1(b):
                 with engine.connect() as conn:
                     with create_sadlock(conn, key) as lock:
+                        self.assertTrue(lock.acquired)
                         b.wait()
                         self.assertTrue(lock.acquired)
                         sleep(delay)
@@ -142,14 +143,14 @@ class MutliThreadTestCase(TestCase):
             trd1.join()
             trd2.join()
 
-    def test_release_omitted(self):
+    def test_connection_released(self):
         key = uuid4().hex
 
         for engine in ENGINES:
             def fn1():
-                conn = engine.connect()
-                lock = create_sadlock(conn, key)
-                self.assertTrue(lock.acquire(False))
+                with engine.connect() as conn:
+                    lock = create_sadlock(conn, key)
+                    self.assertTrue(lock.acquire(False))
 
             def fn2():
                 with engine.connect() as conn:

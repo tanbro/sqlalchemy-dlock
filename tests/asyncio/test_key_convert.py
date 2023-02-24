@@ -10,7 +10,7 @@ from packaging.version import parse
 from sqlalchemy_dlock.asyncio import create_async_sadlock
 from sqlalchemy_dlock.impl.mysql import MYSQL_LOCK_NAME_MAX_LENGTH
 
-from .engines import create_engins, dispose_engins, get_engins
+from .engines import create_engines, dispose_engins, get_engins
 
 CPU_COUNT = cpu_count()
 
@@ -33,7 +33,7 @@ else:
         class KeyConvertTestCase(IsolatedAsyncioTestCase):
 
             def setUp(self):
-                create_engins()
+                create_engines()
 
             async def asyncTearDown(self):
                 await dispose_engins()
