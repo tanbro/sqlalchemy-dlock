@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v0.2.1
+
+Date: 2023-02-25
+
+- New:
+  - support SQLAlchemy 2.0
+
 ## v0.2
 
 Date: 2021-03-23
