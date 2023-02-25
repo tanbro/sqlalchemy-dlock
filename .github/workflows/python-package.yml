@@ -61,7 +61,7 @@ jobs:
 
       - name: Shutdown databases
         shell: bash
-        run: (cd .github && docker-compose down)
+        run: (cd .github && docker-compose down -v)
 
       - name: Upload coverage reports to CodeCov with GitHub Action
         uses: codecov/codecov-action@v2
