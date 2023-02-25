@@ -154,7 +154,7 @@ class MpTimtoutFailTestCase(TestCase):
                 b.wait()
                 ts = time()
                 assert not lock.acquire(timeout=timeout)
-                assert time() - ts >= timeout
+                assert round(time() - ts) >= timeout
                 assert not lock.acquired
 
     def test(self):

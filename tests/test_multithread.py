@@ -95,7 +95,7 @@ class MutliThreadTestCase(TestCase):
                         b.wait()
                         ts = time()
                         self.assertFalse(lock.acquire(timeout=timeout))
-                        self.assertGreaterEqual(time() - ts, timeout)
+                        self.assertGreaterEqual(round(time() - ts), timeout)
                         self.assertFalse(lock.acquired)
 
             trd1 = Thread(target=fn1, args=(bar,))

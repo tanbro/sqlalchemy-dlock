@@ -2,7 +2,7 @@ from os import environ, getenv
 
 from dotenv import load_dotenv
 
-__all__ = ['create_engines', 'dispose_engins', 'get_engins']
+__all__ = ['create_engines', 'dispose_engines', 'get_engines']
 
 
 _ENGINES = []
@@ -18,7 +18,8 @@ def create_engines():
 
     from sqlalchemy.ext.asyncio import create_async_engine
 
-    urls = environ['TEST_ASYNC_URLS'].split()
+    urls = getenv('TEST_ASYNC_URLS',
+                  'mysql+aiomysql://test:test@localhost/test postgresql+asyncpg://postgres:test@localhost/').split()
 
     for url in urls:
         engine = create_async_engine(url)
@@ -27,10 +28,10 @@ def create_engines():
     return _ENGINES
 
 
-async def dispose_engins():
+async def dispose_engines():
     for engine in _ENGINES:
         await engine.dispose()
 
 
-def get_engins():
+def get_engines():
     return _ENGINES

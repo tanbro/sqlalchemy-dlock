@@ -128,10 +128,18 @@ It currently supports below locks:
 
 ## Tests
 
-Just `up` the docker-compose in `tests` directory:
+Set environment variables `TEST_URLS` and `TEST_ASYNC_URLS` for sync and async database connection url.
+Multiple connections separated by space.
 
-```bash
-(cd tests; docker-compose up --abort-on-container-exit --exit-code-from pytest; docker-compose down)
+Set environment variables `NO_ASYNCIO` to `1` disable asyncio tests.
+
+The test cases load environment variables in `tests/.env`.
+
+eg (and also the defaults):
+
+```conf
+TEST_URLS=mysql://test:test@localhost/test postgresql://postgres:test@localhost/
+TEST_ASYNC_URLS=mysql+aiomysql://test:test@localhost/test postgresql+asyncpg://postgres:test@localhost/
 ```
 
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
