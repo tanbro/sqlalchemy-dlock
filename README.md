@@ -137,7 +137,7 @@ The test cases load environment variables in `tests/.env`.
 
 eg (and also the defaults):
 
-```conf
+```ini
 TEST_URLS=mysql://test:test@localhost/test postgresql://postgres:test@localhost/
 TEST_ASYNC_URLS=mysql+aiomysql://test:test@localhost/test postgresql+asyncpg://postgres:test@localhost/
 ```

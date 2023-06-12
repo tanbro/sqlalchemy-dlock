@@ -1,2 +1,5 @@
-Sphinx>=4.3
+Sphinx>=6.2
 myst-parser
+importlib_metadata;python_version<"3.8"
+sphinx-inline-tabs
+sphinx-copybutton

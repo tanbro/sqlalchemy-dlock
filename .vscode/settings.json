@@ -2,4 +2,5 @@
     "[python]": {
         "editor.defaultFormatter": "ms-python.black-formatter"
     },
+    "esbonio.sphinx.confDir": "",
 }
