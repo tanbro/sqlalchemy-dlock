@@ -1,7 +1,47 @@
 [build-system]
-requires = ["setuptools>=48.0", "wheel", "setuptools_scm[toml]>=3.4", "setuptools_scm_git_archive>=1.1"]
 build-backend = "setuptools.build_meta"
+requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
+
+[project]
+authors = [
+  {name = "liu xue yan", email = "liu_xue_yan@foxmail.com"},
+]
+classifiers = [
+  "License :: OSI Approved :: BSD License",
+  "Development Status :: 4 - Beta",
+  "Topic :: Database :: Front-Ends",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+]
+description = "A distributed lock implementation based on SQLAlchemy"
+keywords = ["SQLAlchemy", "lock", "distributed", "distributed lock", "SQL", "database", "DBMS"]
+license = {file = 'LICENSE'}
+name = "sqlalchemy-dlock"
+readme = {file = 'README.md', content-type = 'text/markdown'}
+requires-python = ">=3.7"
+
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://github.com/tanbro/sqlalchemy-dlock"
+repository = "https://github.com/tanbro/sqlalchemy-dlock.git"
 
 [tool.setuptools_scm]
-version_scheme = "guess-next-dev" # or post-release
 write_to = "src/sqlalchemy_dlock/version.py"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 127
+
+dependencies = [
+  "SQLAlchemy>=1.4,<3.0",
+]
+
+[options.packages.find]
+where = "src"
+
+[project.optional-dependencies]
+asyncio = ["SQLAlchemy[asyncio]"]
