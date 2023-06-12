@@ -1,6 +1,8 @@
 exclude Dockerfile
 exclude .git*
 exclude .readthedocs.yml
+exclude docker-compose.yml
+exclude *.docker-compose.yml
 
 prune .*
 prune bootstrap

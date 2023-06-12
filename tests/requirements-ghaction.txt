@@ -1,0 +1,7 @@
+python-dotenv
+
+mysqlclient
+aiomysql
+
+psycopg2-binary
+asyncpg

@@ -1,33 +1,38 @@
-from os import getenv
-from unittest import IsolatedAsyncioTestCase
-from uuid import uuid1
-from warnings import warn
+from sys import version_info
 
-from sqlalchemy.ext.asyncio import AsyncSession
+if version_info >= (3, 8):
+    from os import getenv
+    from unittest import IsolatedAsyncioTestCase
+    from uuid import uuid1
+    from warnings import warn
 
-from sqlalchemy_dlock.asyncio import create_async_sadlock
+    from sqlalchemy.ext.asyncio import AsyncSession
 
-from .engines import create_engines, dispose_engines, get_engines
+    from sqlalchemy_dlock.asyncio import create_async_sadlock
 
-if getenv('NO_ASYNCIO'):
-    warn('The test module will not run because environment variable "NO_ASYNCIO" was set')
+    from .engines import create_engines, dispose_engines, get_engines
 
-else:
+    if getenv("NO_ASYNCIO"):
+        warn(
+            'The test module will not run because environment variable "NO_ASYNCIO" was set'
+        )
 
-    class SessionTestCase(IsolatedAsyncioTestCase):
-        sessions = []
+    else:
 
-        def setUp(self):
-            create_engines()
+        class SessionTestCase(IsolatedAsyncioTestCase):
+            sessions = []
 
-        async def asyncTearDown(self):
-            await dispose_engines()
+            def setUp(self):
+                create_engines()
 
-        async def test_once(self):
-            key = uuid1().hex
-            for engine in get_engines():
-                session = AsyncSession(engine)
-                async with session.begin():
-                    async with create_async_sadlock(session, key) as lock:
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+            async def asyncTearDown(self):
+                await dispose_engines()
+
+            async def test_once(self):
+                key = uuid1().hex
+                for engine in get_engines():
+                    session = AsyncSession(engine)
+                    async with session.begin():
+                        async with create_async_sadlock(session, key) as lock:
+                            self.assertTrue(lock.acquired)
+                        self.assertFalse(lock.acquired)

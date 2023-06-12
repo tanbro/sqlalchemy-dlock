@@ -1,4 +1,5 @@
 {
-    "python.testing.pytestEnabled": true,
-    "esbonio.server.enabled": false,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
 }

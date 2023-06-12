@@ -51,10 +51,10 @@ jobs:
           cache: pip
 
       - name: Install Python project
-        run: pip install -e .[asyncio] -r requires/test.txt
+        run: pip install -e .[asyncio]
 
-      - name: Install Python testing tools
-        run: pip install flake8 pytest pytest-cov python-dotenv[cli]
+      - name: Install Python testing requires
+        run: pip install flake8 pytest pytest-cov python-dotenv[cli] -r tests/requirements.txt
 
       - name: Lint with flake8
         run: |

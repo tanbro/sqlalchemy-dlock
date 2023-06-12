@@ -1,7 +1,0 @@
-pytest
-python-dotenv[cli]
-packaging
-mysqlclient
-psycopg2-binary
-aiomysql
-asyncpg

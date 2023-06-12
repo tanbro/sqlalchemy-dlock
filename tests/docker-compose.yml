@@ -1,36 +1,38 @@
+---
+x-test-common: &test-common
+  volumes:
+    - type: bind
+      source: ..
+      target: /work
+  working_dir: /work
+  depends_on:
+    - mysql
+    - postgres
+  env_file:
+    - .env
+  environment:
+    PIP_ROOT_USER_ACTION: ignore
+    TEST_URLS: mysql://test:test@mysql/test postgresql://postgres:test@postgres/
+    TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql/test postgresql+asyncpg://postgres:test@postgres/
+  command:
+    - /bin/bash
+    - -c
+    - |
+      set -e
+      if [ -n "${APT_SOURCES}" ]; then printenv APT_SOURCES | tee /etc/apt/sources.list; fi
+      apt update && apt install -y default-mysql-client postgresql-client default-libmysqlclient-dev libpq-dev
+      /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
+      /bin/bash -e scripts/wait-for-postgres.sh postgres test
+      python -m pip install --disable-pip-version-check --upgrade --find-links dist -r tests/requirements.txt sqlalchemy-dlock
+      python -B -m unittest -v
+
 services:
-
-  # pytest:
-  #   image: python
-  #   depends_on:
-  #     - mysql
-  #     - postgres
-  #   volumes:
-  #     - type: bind
-  #       source: ..
-  #       target: /work
-  #   working_dir: /work
-  #   environment:
-  #     TEST_URLS: mysql://test:test@mysql/test postgresql://postgres:test@postgres/
-  #     TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql/test postgresql+asyncpg://postgres:test@postgres/
-  #   env_file:
-  #     - .env
-  #   command:
-  #       - /bin/bash
-  #       - -c
-  #       - |
-  #         set -e
-  #         if [ -n "${APT_SOURCES}" ]; then printenv APT_SOURCES | tee /etc/apt/sources.list; fi
-  #         apt-get update && apt-get install -y mariadb-client postgresql-client
-  #         /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
-  #         /bin/bash -e scripts/wait-for-postgres.sh postgres test
-  #         /bin/bash -e scripts/run-test.sh
-
   mysql:
     image: mysql
     ports:
-      - "127.0.0.1:3306:3306"
+      - "3306:3306"
     environment:
+      MYSQL_ROOT_HOST: "%"
       MYSQL_RANDOM_ROOT_PASSWORD: "1"
       MYSQL_DATABASE: test
       MYSQL_USER: test
@@ -39,6 +41,14 @@ services:
   postgres:
     image: postgres
     ports:
-      - "127.0.0.1:5432:5432"
+      - "5432:5432"
     environment:
       POSTGRES_PASSWORD: test
+
+  # python3.7:
+  #   image: python:3.7-slim
+  #   <<: *test-common
+
+  python3.7:
+    image: python:3.7
+    <<: *test-common
