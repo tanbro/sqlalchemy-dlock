@@ -57,7 +57,7 @@ html_static_path = ['_static']
 autodoc_typehints = "description"
 
 # Don't show class signature with the class' name.
-autodoc_class_signature = "separated"
+# autodoc_class_signature = "separated"
 
 autoclass_content = "both"
 autodoc_member_order = "bysource"
@@ -67,4 +67,5 @@ autodoc_member_order = "bysource"
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     "python": ("https://docs.python.org/", None),
+    "sphinx": ("https://docs.sqlalchemy.org/", None),
 }

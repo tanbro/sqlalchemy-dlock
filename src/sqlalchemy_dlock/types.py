@@ -33,16 +33,12 @@ class BaseSadLock(local):
             some_lock.release()
     """
 
-    def __init__(self,
-                 connection_or_session: TConnectionOrSession,
-                 key,
-                 *args, **kwargs
-                 ):
+    def __init__(self, connection_or_session: TConnectionOrSession, key, *args, **kwargs):
         """
         Parameters
         ----------
-        connection_or_session : sqlalchemy Connection or orm Session/ScopedSession object
-            SQL locking functions will be invoked on it
+        connection_or_session :
+            Connection or Session object SQL locking functions will be invoked on it
 
         key
             ID or name of the SQL locking function
@@ -59,22 +55,18 @@ class BaseSadLock(local):
         self.close()
 
     def __str__(self):  # pragma: no cover
-        return '<{} {} key={} at 0x{:x}>'.format(
-            'locked' if self._acquired else 'unlocked',
-            self.__class__.__name__,
-            self._key, id(self)
+        return "<{} {} key={} at 0x{:x}>".format(
+            "locked" if self._acquired else "unlocked", self.__class__.__name__, self._key, id(self)
         )
 
     @property
     def connection_or_session(self) -> TConnectionOrSession:
-        """Returns `connection_or_session` parameter of the constructor
-        """
+        """Returns `connection_or_session` parameter of the constructor"""
         return self._connection_or_session
 
     @property
     def key(self):
-        """Returns `key` parameter of the constructor
-        """
+        """Returns `key` parameter of the constructor"""
         return self._key
 
     @property
@@ -101,20 +93,14 @@ class BaseSadLock(local):
 
     @property
     def locked(self) -> bool:
-        """Alias of :data:`acquired`
-        """
+        """Alias of :data:`acquired`"""
         return self.acquired
 
     @locked.setter
     def locked(self, value: bool):
         self.acquired = value
 
-    def acquire(self,
-                block: bool = True,
-                timeout: Union[float, int, None] = None,
-                *args,
-                **kwargs
-                ) -> bool:
+    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         """
         Acquire a lock, blocking or non-blocking.
 
