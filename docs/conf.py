@@ -11,9 +11,9 @@ except ImportError:
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'sqlalchemy-dlock'
-copyright = '2023, liu xue yan'
-author = 'liu xue yan'
+project = "sqlalchemy-dlock"
+copyright = "2023, liu xue yan"
+author = "liu xue yan"
 
 # full version
 version = importlib_metadata.version(project)
@@ -38,16 +38,15 @@ source_suffix = {
     ".md": "markdown",
 }
 
-templates_path = ['_templates']
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
-
+templates_path = ["_templates"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 # html_theme = 'alabaster'
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # -- Options for autodoc ----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
@@ -61,6 +60,22 @@ autodoc_typehints = "description"
 
 autoclass_content = "both"
 autodoc_member_order = "bysource"
+
+# -- Options for myst_parser extension ---------------------------------------
+
+myst_enable_extensions = [
+    "amsmath",
+    "attrs_inline",
+    "deflist",
+    "dollarmath",
+    "fieldlist",
+    "html_image",
+    "replacements",
+    "smartquotes",
+    "strikethrough",
+    "substitution",
+    "tasklist",
+]
 
 # -- Options for intersphinx extension ---------------------------------------
 
