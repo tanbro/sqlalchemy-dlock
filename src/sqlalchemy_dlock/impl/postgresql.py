@@ -100,8 +100,6 @@ class SadLock(BaseSadLock):
         level: Optional[str] = None,
         interval: Union[float, int, None] = None,
         convert: Optional[TConvertFunction] = None,
-        *args,
-        **kwargs,
     ):
         """
         PostgreSQL advisory lock requires the key given by ``INT64``.
@@ -153,8 +151,6 @@ class SadLock(BaseSadLock):
         block: bool = True,
         timeout: Union[float, int, None] = None,
         interval: Union[float, int, None] = None,
-        *args,
-        **kwargs,
     ) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
@@ -191,7 +187,7 @@ class SadLock(BaseSadLock):
         #
         return self._acquired
 
-    def release(self, **kwargs):
+    def release(self):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
         stmt = self._stmt_dict["unlock"].params(key=self._key)

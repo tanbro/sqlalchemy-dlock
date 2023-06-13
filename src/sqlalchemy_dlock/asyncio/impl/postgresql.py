@@ -96,8 +96,6 @@ class AsyncSadLock(BaseAsyncSadLock):
         level: Optional[str] = None,
         interval: Union[float, int, None] = None,
         convert: Optional[TConvertFunction] = None,
-        *args,
-        **kwargs,
     ):
         if convert:
             key = ensure_int64(convert(key))
@@ -117,8 +115,6 @@ class AsyncSadLock(BaseAsyncSadLock):
         block: bool = True,
         timeout: Union[float, int, None] = None,
         interval: Union[float, int, None] = None,
-        *args,
-        **kwargs,
     ) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
@@ -157,7 +153,7 @@ class AsyncSadLock(BaseAsyncSadLock):
         #
         return self._acquired
 
-    async def release(self, *args, **kwargs):
+    async def release(self):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
         stmt = self._stmt_dict["unlock"].params(key=self._key)
