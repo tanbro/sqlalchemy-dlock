@@ -3,9 +3,15 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+================
 sqlalchemy-dlock
 ================
 
+:release:  |release|
+:version:  |version|
+:built at: |today|
+
+--------
 Contents
 --------
 
@@ -18,13 +24,13 @@ Contents
    AUTHORS <AUTHORS.md>
 
 .. toctree::
-   :maxdepth: 1
    :caption: References
-   :titlesonly:
+   :maxdepth: 4
 
-   sqlalchemy_dlock
+   API Doc <apidoc/modules>
 
 
+------------------
 Indices and tables
 ------------------
 
