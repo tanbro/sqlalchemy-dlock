@@ -170,12 +170,21 @@ You can run unit-tests:
      python -m unittest
      ```
 
-- by docker-compose:
+- in docker-compose:
 
-  ```bash
-  cd tests
-  docker compose up --abort-on-container-exit
-  ```
+  1. build
+
+     ```bash
+     python -m pip install build && python -m build
+     ```
+
+  1. run unit-tests
+
+     ```bash
+     cd tests
+     docker compose up --abort-on-container-exit
+     docker compose rm -fsv
+     ```
 
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
 [asyncio]: https://docs.python.org/library/asyncio.html "asyncio is a library to write concurrent code using the async/await syntax."
