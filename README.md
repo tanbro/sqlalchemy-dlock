@@ -1,12 +1,7 @@
 # SQLAlchemy-DLock
 
-[![GitHub](https://img.shields.io/github/license/tanbro/sqlalchemy-dlock)](https://github.com/tanbro/sqlalchemy-dlock)
-[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/tanbro/sqlalchemy-dlock)](https://github.com/tanbro/sqlalchemy-dlock/tags)
 [![Python package](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml/badge.svg)](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml)
 [![PyPI](https://img.shields.io/pypi/v/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
-[![PyPI - Status](https://img.shields.io/pypi/status/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
-[![PyPI - License](https://img.shields.io/pypi/l/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
 [![Documentation Status](https://readthedocs.org/projects/sqlalchemy-dlock/badge/?version=latest)](https://sqlalchemy-dlock.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/tanbro/sqlalchemy-dlock/branch/main/graph/badge.svg?token=GfcDT1ckFX)](https://codecov.io/gh/tanbro/sqlalchemy-dlock)
 
@@ -14,16 +9,14 @@ Distributed lock based on Database and [SQLAlchemy][].
 
 It currently supports below locks:
 
-- `MySQL` - named lock: <https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html>
-- `PostgreSQL` - advisory lock: <https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS>
-
-> ❗ **Note**:
->
-> The project is not stable enough and **DO NOT** use it in production.
+ Database  |                                             Lock
+---------- | ---------------------------------------------------------------------------------------------
+MySQL      | [named lock](https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html)
+PostgreSQL | [advisory lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)
 
 ## Usages
 
-- Work with [SQLAlchemy][]'s `Connection` object:
+- Work with [SQLAlchemy][] `Connection`:
 
   ```python
   from sqlalchemy import create_engine
@@ -49,7 +42,7 @@ It currently supports below locks:
   assert not lock.acquired
   ```
 
-- Used in `with` statement
+- `with` statement
 
   ```python
   from contextlib import closing
@@ -82,14 +75,7 @@ It currently supports below locks:
       assert not lock2.acquired
   ```
 
-- Work with [SQLAlchemy][]'s `ORM` session:
-
-  > ❗ **Note**:
-  >
-  > According to <https://docs.sqlalchemy.org/14/orm/extensions/asyncio.html>:
-  >
-  > - The asyncio extension as of SQLAlchemy 1.4.3 can now be considered to be **beta level** software.
-  > - The asyncio extension requires at least Python version 3.6
+- Work with [SQLAlchemy][] `ORM` session:
 
   ```python
   from sqlalchemy import create_engine
@@ -107,7 +93,12 @@ It currently supports below locks:
     assert not lock.acquired
   ```
 
-- Work asynchronously
+- Asynchronous I/O Support
+
+  > ℹ️ **info**:
+  >
+  > - [SQLAlchemy][] `1.x`: <https://docs.sqlalchemy.org/14/orm/extensions/asyncio.html>
+  > - [SQLAlchemy][] `2.x`: <https://docs.sqlalchemy.org/20/orm/extensions/asyncio.html>
 
   ```python
   from sqlalchemy.ext.asyncio import create_async_engine
@@ -164,7 +155,7 @@ You can run unit-tests:
      TEST_ASYNC_URLS=mysql+aiomysql://test:test@localhost/test postgresql+asyncpg://postgres:test@localhost/
      ```
 
-  1. run the tests:
+  1. run unit-test
 
      ```bash
      python -m unittest
@@ -172,13 +163,13 @@ You can run unit-tests:
 
 - in docker-compose:
 
-  1. build
+  1. build the project
 
      ```bash
-     python -m pip install build && python -m build
+     python -m pip install build && python -m build -w
      ```
 
-  1. run unit-tests
+  1. run unit-test
 
      ```bash
      cd tests
