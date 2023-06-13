@@ -25,6 +25,7 @@ prune test
 prune tests
 prune tmp
 prune temp
+prune scripts
 prune tool
 prune tools
 prune *.git*
