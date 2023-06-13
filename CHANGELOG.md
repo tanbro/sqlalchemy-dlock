@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## v0.3
+
+Date: 2023-06-13
+
+- Remove:
+  - Python 3.6 support
+
+- Tests:
+  - New docker compose based tests, from python 3.7 to 3.11, both SQLAlchemy 1.x and 2.x
+
+- Docs:
+  - Update to newer Sphinx docs
+
+- Build:
+  - Move all project meta to pyproject.toml, remove setup.cfg and setup.py
+
 ## v0.2.1
 
 Date: 2023-02-25
