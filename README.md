@@ -128,18 +128,55 @@ It currently supports below locks:
 
 ## Tests
 
-Set environment variables `TEST_URLS` and `TEST_ASYNC_URLS` for sync and async database connection url.
-Multiple connections separated by space.
+Following [SQLAlchemy][] engines are tested:
 
-Set environment variables `NO_ASYNCIO` to `1` disable asyncio tests.
+- MySQL:
 
-The test cases load environment variables in `tests/.env`.
+  - mysqlclient
+  - PyMySQL
+  - aiomysql ([asyncio][])
 
-eg (and also the defaults):
+- Postgres:
 
-```ini
-TEST_URLS=mysql://test:test@localhost/test postgresql://postgres:test@localhost/
-TEST_ASYNC_URLS=mysql+aiomysql://test:test@localhost/test postgresql+asyncpg://postgres:test@localhost/
-```
+  - psycopg2
+  - asyncpg ([asyncio][])
+
+You can run unit-tests:
+
+- directly:
+
+  1. Install the project (A virtual environment ([venv][]) is strongly advised):
+
+     ```bash
+     pip install -e .
+     ```
+
+  1. Start up your mysql and postgresql
+
+  1. Set environment variables `TEST_URLS` and `TEST_ASYNC_URLS` for sync and async database connection url.
+     Multiple connections separated by space.
+     The test cases load environment variables in `tests/.env`.
+
+     eg (and also the defaults):
+
+     ```ini
+     TEST_URLS=mysql://test:test@localhost/test postgresql://postgres:test@localhost/
+     TEST_ASYNC_URLS=mysql+aiomysql://test:test@localhost/test postgresql+asyncpg://postgres:test@localhost/
+     ```
+
+  1. run the tests:
+
+     ```bash
+     python -m unittest
+     ```
+
+- by docker-compose:
+
+  ```bash
+  cd tests
+  docker compose up --abort-on-container-exit
+  ```
 
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
+[asyncio]: https://docs.python.org/library/asyncio.html "asyncio is a library to write concurrent code using the async/await syntax."
+[venv]: https://docs.python.org/library/venv.html "The venv module supports creating lightweight “virtual environments”, each with their own independent set of Python packages installed in their site directories. "

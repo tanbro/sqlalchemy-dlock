@@ -10,8 +10,9 @@ x-test-common: &test-common
     - postgres
   env_file:
     - .env
-  environment:
+  environment: &text-common-env
     PIP_ROOT_USER_ACTION: ignore
+    _PIP_ADDITIONAL_REQUIREMENTS: ""
     TEST_URLS: mysql://test:test@mysql/test postgresql://postgres:test@postgres/
     TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql/test postgresql+asyncpg://postgres:test@postgres/
   command:
@@ -20,10 +21,10 @@ x-test-common: &test-common
     - |
       set -e
       if [ -n "${APT_SOURCES}" ]; then printenv APT_SOURCES | tee /etc/apt/sources.list; fi
-      apt update && apt install -y default-mysql-client postgresql-client default-libmysqlclient-dev libpq-dev
+      apt-get update && apt-get install -y default-mysql-client postgresql-client default-libmysqlclient-dev libpq-dev
       /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
       /bin/bash -e scripts/wait-for-postgres.sh postgres test
-      python -m pip install --disable-pip-version-check --upgrade --find-links dist -r tests/requirements.txt sqlalchemy-dlock
+      python -m pip install --disable-pip-version-check --upgrade --find-links dist -r tests/requirements.txt sqlalchemy-dlock $(printenv _PIP_ADDITIONAL_REQUIREMENTS)
       python -B -m unittest -v
 
 services:
@@ -45,22 +46,72 @@ services:
     environment:
       POSTGRES_PASSWORD: test
 
-  python3.7:
+  python3.7-sqlalchemy1.x:
     image: python:3.7
     <<: *test-common
+    environment:
+      <<: *text-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy<2.0"
 
-  python3.8:
+  python3.7-sqlalchemy2.x:
+    image: python:3.7
+    <<: *test-common
+    environment:
+      <<: *text-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy>=2.0"
+
+  python3.8-sqlalchemy1.x:
     image: python:3.8
     <<: *test-common
+    environment:
+      <<: *text-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy<2.0"
 
-  python3.9:
+  python3.8-sqlalchemy2.x:
+    image: python:3.8
+    <<: *test-common
+    environment:
+      <<: *text-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy>=2.0"
+
+  python3.9-sqlalchemy1.x:
     image: python:3.9
     <<: *test-common
+    environment:
+      <<: *text-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy<2.0"
 
-  python3.10:
+  python3.9-sqlalchemy2.x:
+    image: python:3.9
+    <<: *test-common
+    environment:
+      <<: *text-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy>=2.0"
+
+  python3.10-sqlalchemy1.x:
     image: python:3.10
     <<: *test-common
+    environment:
+      <<: *text-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy<2.0"
 
-  python3.11:
+  python3.10-sqlalchemy2.x:
+    image: python:3.10
+    <<: *test-common
+    environment:
+      <<: *text-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy>=2.0"
+
+  python3.11-sqlalchemy1.x:
     image: python:3.11
     <<: *test-common
+    environment:
+      <<: *text-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy<2.0"
+
+  python3.11-sqlalchemy2.x:
+    image: python:3.11
+    <<: *test-common
+    environment:
+      <<: *text-common-env
+      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy>=2.0"
