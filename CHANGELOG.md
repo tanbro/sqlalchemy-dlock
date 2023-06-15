@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.3.1
+
+Date: 2023-06-13
+
+- A hotfix for project's dependencies setup error.
+
 ## v0.3
 
 Date: 2023-06-13

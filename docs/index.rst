@@ -20,8 +20,8 @@ Contents
    :titlesonly:
 
    README <README.md>
-   CHANGELOG <CHANGELOG.md>
    AUTHORS <AUTHORS.md>
+   CHANGELOG <CHANGELOG.md>
 
 .. toctree::
    :caption: API References
