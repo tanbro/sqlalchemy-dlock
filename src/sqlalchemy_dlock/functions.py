@@ -30,12 +30,17 @@ def create_sadlock(connection_or_session: TConnectionOrSession, key, *args, **kw
         MySQL and PostgreSQL connection/session are supported til now.
     """
     if isinstance(connection_or_session, Connection):
-        name = safe_name(connection_or_session.engine.name)
+        engine = connection_or_session.engine
     else:
-        name = safe_name(connection_or_session.get_bind().name)
+        bind = connection_or_session.get_bind()
+        if isinstance(bind, Connection):
+            engine = bind.engine
+        else:
+            engine = bind
+    engine_name = safe_name(engine.name)
     try:
-        mod = import_module("..impl.{}".format(name), __name__)
+        mod = import_module("..impl.{}".format(engine_name), __name__)
     except ImportError as exception:  # pragma: no cover
-        raise NotImplementedError("{}: {}".format(name, exception))
+        raise NotImplementedError("{}: {}".format(engine_name, exception))
     lock_cls = getattr(mod, "SadLock")
     return lock_cls(connection_or_session, key, *args, **kwargs)
