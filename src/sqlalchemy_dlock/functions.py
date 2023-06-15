@@ -21,11 +21,13 @@ def create_sadlock(connection_or_session: TConnectionOrSession, key, *args, **kw
 
     Returns
     -------
-        New created lock object, whose type is a subclass of :class:`BaseSadLock`.
+    BaseSadLock
+        New created lock object.
 
-        The actual type of the lock object depends on the type of `connection` object.
+        Type of the lock object is sub-class of :class:`.BaseSadLock`,
+        which depends on the passed-in SQLAlchemy `connection` or `session`.
 
-        MySQL and PostgreSQL are supported til now.
+        MySQL and PostgreSQL connection/session are supported til now.
     """
     if isinstance(connection_or_session, Connection):
         name = safe_name(connection_or_session.engine.name)

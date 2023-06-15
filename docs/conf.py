@@ -45,7 +45,7 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-# html_theme = 'alabaster'
+html_theme = 'alabaster'
 html_static_path = ["_static"]
 
 # -- Options for autodoc ----------------------------------------------------
@@ -66,6 +66,7 @@ autodoc_member_order = "bysource"
 myst_enable_extensions = [
     "amsmath",
     "attrs_inline",
+    "colon_fence",
     "deflist",
     "dollarmath",
     "fieldlist",

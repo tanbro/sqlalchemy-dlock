@@ -25,7 +25,7 @@ x-test-common: &test-common
       /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
       /bin/bash -e scripts/wait-for-postgres.sh postgres test
       python -m pip install --disable-pip-version-check --upgrade --find-links dist -r tests/requirements.txt sqlalchemy-dlock $(printenv _PIP_ADDITIONAL_REQUIREMENTS)
-      python -B -m unittest -v
+      python -B -m unittest -cfv
 
 services:
   mysql:

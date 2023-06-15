@@ -24,10 +24,10 @@ Contents
    AUTHORS <AUTHORS.md>
 
 .. toctree::
-   :caption: References
+   :caption: API References
    :maxdepth: 4
 
-   API Doc <apidoc/modules>
+   apidoc/modules
 
 
 ------------------

@@ -43,8 +43,6 @@ class AsyncSadLock(BaseAsyncSadLock):
         connection_or_session: TAsyncConnectionOrSession,
         key,
         convert: Optional[TConvertFunction] = None,
-        *args,
-        **kwargs,
     ):
         if convert:
             key = convert(key)
@@ -59,7 +57,7 @@ class AsyncSadLock(BaseAsyncSadLock):
         #
         super().__init__(connection_or_session, key)
 
-    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
         if block:
@@ -85,7 +83,7 @@ class AsyncSadLock(BaseAsyncSadLock):
             raise SqlAlchemyDLockDatabaseError('GET_LOCK("{}", {}) returns {}'.format(self._key, timeout, ret_val))
         return self._acquired
 
-    async def release(self, *args, **kwargs):
+    async def release(self):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
         stmt = RELEASE_LOCK.params(str=self._key)

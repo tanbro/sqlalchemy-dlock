@@ -44,9 +44,7 @@ class SadLock(BaseSadLock):
     .. seealso:: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
     """
 
-    def __init__(
-        self, connection_or_session: TConnectionOrSession, key, convert: Optional[TConvertFunction] = None, *args, **kwargs
-    ):
+    def __init__(self, connection_or_session: TConnectionOrSession, key, convert: Optional[TConvertFunction] = None):
         """
         MySQL named lock requires the key given by string.
 
@@ -82,7 +80,7 @@ class SadLock(BaseSadLock):
         #
         super().__init__(connection_or_session, key)
 
-    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
         if block:
@@ -106,7 +104,7 @@ class SadLock(BaseSadLock):
             raise SqlAlchemyDLockDatabaseError('GET_LOCK("{}", {}) returns {}'.format(self._key, timeout, ret_val))
         return self._acquired
 
-    def release(self, **kwargs):
+    def release(self):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
         stmt = RELEASE_LOCK.params(str=self._key)
