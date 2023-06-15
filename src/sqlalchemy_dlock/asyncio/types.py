@@ -15,7 +15,7 @@ class BaseAsyncSadLock:
         await self.acquire()
         return self
 
-    async def __aexit__(self, type_, value, traceback):
+    async def __aexit__(self, exc_type, exc_value, exc_tb):
         await self.close()
 
     def __str__(self):  # pragma: no cover

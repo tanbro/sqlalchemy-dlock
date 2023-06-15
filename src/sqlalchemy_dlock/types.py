@@ -51,7 +51,7 @@ class BaseSadLock(local):
         self.acquire()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, exc_tb):
         self.close()
 
     def __str__(self):  # pragma: no cover

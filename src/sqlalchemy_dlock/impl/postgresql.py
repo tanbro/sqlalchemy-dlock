@@ -137,12 +137,17 @@ class SadLock(BaseSadLock):
         """
         if convert:
             key = ensure_int64(convert(key))
+        elif isinstance(key, int):
+            key = ensure_int64(key)
         else:
             key = to_int64_key(key)
         #
         self._interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
         self._level = level or "session"
-        self._stmt_dict = STATEMENTS[self._level]
+        try:
+            self._stmt_dict = STATEMENTS[self._level]
+        except KeyError:
+            raise ValueError(f"Value of `level` must be in {list(STATEMENTS.keys())}")
         #
         super().__init__(connection_or_session, key)
 
