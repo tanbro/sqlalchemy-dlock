@@ -1,6 +1,11 @@
-from sys import version_info
+from sys import platform, version_info
 
 if version_info >= (3, 8):
+    if platform == "win32":
+        import asyncio
+
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     from contextlib import AsyncExitStack
     from multiprocessing import cpu_count
     from os import getenv
@@ -15,9 +20,7 @@ if version_info >= (3, 8):
     from .engines import create_engines, dispose_engines, get_engines
 
     if getenv("NO_ASYNCIO"):
-        warn(
-            'The test module will not run because environment variable "NO_ASYNCIO" was set'
-        )
+        warn('The test module will not run because environment variable "NO_ASYNCIO" was set')
 
     else:
         CPU_COUNT = cpu_count()
@@ -91,9 +94,7 @@ if version_info >= (3, 8):
                         key = uuid4().hex
                         async with create_async_sadlock(conn, key) as lock:
                             self.assertTrue(lock.locked)
-                            with self.assertRaisesRegex(
-                                ValueError, "invoked on a locked lock"
-                            ):
+                            with self.assertRaisesRegex(ValueError, "invoked on a locked lock"):
                                 await lock.acquire()
                         self.assertFalse(lock.acquired)
 
@@ -104,9 +105,7 @@ if version_info >= (3, 8):
                         key = uuid4().hex
                         lock = create_async_sadlock(conn, key)
                         self.assertFalse(lock.acquired)
-                        with self.assertRaisesRegex(
-                            ValueError, "invoked on an unlocked lock"
-                        ):
+                        with self.assertRaisesRegex(ValueError, "invoked on an unlocked lock"):
                             await lock.release()
                         self.assertFalse(lock.acquired)
 
@@ -173,10 +172,7 @@ if version_info >= (3, 8):
                 for engine in get_engines():
                     key = uuid4().hex
                     async with AsyncExitStack() as stack:
-                        conn0, conn1 = [
-                            await stack.enter_async_context(engine.begin())
-                            for _ in range(2)
-                        ]
+                        conn0, conn1 = [await stack.enter_async_context(engine.begin()) for _ in range(2)]
 
                         lock0 = create_async_sadlock(conn0, key)
                         self.assertFalse(lock0.acquired)
@@ -204,10 +200,7 @@ if version_info >= (3, 8):
                 for engine in get_engines():
                     key = uuid4().hex
                     async with AsyncExitStack() as stack:
-                        conn0, conn1 = [
-                            await stack.enter_async_context(engine.begin())
-                            for _ in range(2)
-                        ]
+                        conn0, conn1 = [await stack.enter_async_context(engine.begin()) for _ in range(2)]
 
                         lock0 = create_async_sadlock(conn0, key)
                         r = await lock0.acquire(False)
@@ -215,7 +208,5 @@ if version_info >= (3, 8):
                         self.assertTrue(lock0.locked)
 
                         lock1 = create_async_sadlock(conn1, key)
-                        with self.assertRaisesRegex(
-                            ValueError, "invoked on an unlocked lock"
-                        ):
+                        with self.assertRaisesRegex(ValueError, "invoked on an unlocked lock"):
                             await lock1.release()

@@ -1,7 +1,11 @@
-from sys import version_info
+from sys import platform, version_info
 
 if version_info >= (3, 8):
-        
+    if platform == "win32":
+        import asyncio
+
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     from multiprocessing import cpu_count
     from os import getenv
     from random import choice
@@ -17,13 +21,12 @@ if version_info >= (3, 8):
 
     CPU_COUNT = cpu_count()
 
-    if getenv('NO_ASYNCIO'):
+    if getenv("NO_ASYNCIO"):
         warn('The test module will not run because environment variable "NO_ASYNCIO" was set')
 
     else:
 
         class KeyConvertTestCase(IsolatedAsyncioTestCase):
-
             def setUp(self):
                 create_engines()
 
@@ -34,12 +37,16 @@ if version_info >= (3, 8):
                 for engine in get_engines():
                     key = uuid4().hex
 
-                    if engine.name == 'mysql':
+                    if engine.name == "mysql":
+
                         def _convert(k):  # type: ignore
                             return 'key is "{}"'.format(k)
-                    elif engine.name == 'postgresql':
+
+                    elif engine.name == "postgresql":
+
                         def _convert(k):  # type: ignore
                             return crc32(str(k).encode())
+
                     else:
                         raise NotImplementedError()
 
@@ -50,12 +57,9 @@ if version_info >= (3, 8):
 
             async def test_mysql_key_max_length(self):
                 for engine in get_engines():
-                    if engine.name != 'mysql':
+                    if engine.name != "mysql":
                         continue
-                    key = ''.join(
-                        choice([chr(n) for n in range(0x20, 0x7f)])
-                        for _ in range(MYSQL_LOCK_NAME_MAX_LENGTH)
-                    )
+                    key = "".join(choice([chr(n) for n in range(0x20, 0x7F)]) for _ in range(MYSQL_LOCK_NAME_MAX_LENGTH))
                     async with engine.connect() as conn:
                         async with create_async_sadlock(conn, key) as lock:
                             self.assertTrue(lock.acquired)
@@ -63,21 +67,18 @@ if version_info >= (3, 8):
 
             async def test_mysql_key_gt_max_length(self):
                 for engine in get_engines():
-                    if engine.name != 'mysql':
+                    if engine.name != "mysql":
                         continue
-                    key = ''.join(
-                        choice([chr(n) for n in range(0x20, 0x7f)])
-                        for _ in range(MYSQL_LOCK_NAME_MAX_LENGTH + 1)
-                    )
+                    key = "".join(choice([chr(n) for n in range(0x20, 0x7F)]) for _ in range(MYSQL_LOCK_NAME_MAX_LENGTH + 1))
                     async with engine.connect() as conn:
                         with self.assertRaises(ValueError):
                             create_async_sadlock(conn, key)
 
             async def test_postgresql_key_max(self):
                 for engine in get_engines():
-                    if engine.name != 'postgresql':
+                    if engine.name != "postgresql":
                         continue
-                    key = 2**64-1
+                    key = 2**64 - 1
                     async with engine.connect() as conn:
                         async with create_async_sadlock(conn, key) as lock:
                             self.assertTrue(lock.acquired)
@@ -85,7 +86,7 @@ if version_info >= (3, 8):
 
             async def test_postgresql_key_over_max(self):
                 for engine in get_engines():
-                    if engine.name != 'postgresql':
+                    if engine.name != "postgresql":
                         continue
                     key = 2**64
                     async with engine.connect() as conn:
@@ -94,9 +95,9 @@ if version_info >= (3, 8):
 
             async def test_postgresql_key_min(self):
                 for engine in get_engines():
-                    if engine.name != 'postgresql':
+                    if engine.name != "postgresql":
                         continue
-                    key = -2**63
+                    key = -(2**63)
                     async with engine.connect() as conn:
                         async with create_async_sadlock(conn, key) as lock:
                             self.assertTrue(lock.acquired)
@@ -104,9 +105,9 @@ if version_info >= (3, 8):
 
             async def test_postgresql_key_over_min(self):
                 for engine in get_engines():
-                    if engine.name != 'postgresql':
+                    if engine.name != "postgresql":
                         continue
-                    key = -2**63 - 1
+                    key = -(2**63) - 1
                     async with engine.connect() as conn:
                         with self.assertRaises(OverflowError):
                             create_async_sadlock(conn, key)

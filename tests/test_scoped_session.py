@@ -4,11 +4,11 @@ from uuid import uuid4
 from sqlalchemy.orm import scoped_session, sessionmaker
 
 from sqlalchemy_dlock import create_sadlock
+
 from .engines import ENGINES
 
 
 class ScopedSessionTestCase(TestCase):
-
     def setUp(self):
         self.Sessions = []
         self.sessions = []

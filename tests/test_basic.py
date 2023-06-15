@@ -13,7 +13,6 @@ CPU_COUNT = cpu_count() or 1
 
 
 class BasicTestCase(TestCase):
-
     def tearDown(self):
         for engine in ENGINES:
             engine.dispose()
@@ -50,8 +49,7 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             for _ in range(100):
                 with engine.connect() as conn:
-                    key = randint(-0x8000_0000_0000_0000,
-                                  0x7fff_ffff_ffff_ffff)
+                    key = randint(-0x8000_0000_0000_0000, 0x7FFF_FFFF_FFFF_FFFF)
                     with create_sadlock(conn, key) as lock:
                         self.assertTrue(lock.acquired)
                     self.assertFalse(lock.acquired)
@@ -60,9 +58,9 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             for _ in range(100):
                 with engine.connect() as conn:
-                    if engine.name == 'mysql':
+                    if engine.name == "mysql":
                         key = token_hex().encode()
-                    elif engine.name == 'postgresql':
+                    elif engine.name == "postgresql":
                         key = token_bytes()
                     else:
                         raise NotImplementedError()
@@ -97,10 +95,7 @@ class BasicTestCase(TestCase):
             with engine.connect() as conn:
                 with create_sadlock(conn, key) as lock:
                     self.assertTrue(lock.locked)
-                    self.assertRaisesRegex(
-                        ValueError, 'invoked on a locked lock',
-                        lock.acquire
-                    )
+                    self.assertRaisesRegex(ValueError, "invoked on a locked lock", lock.acquire)
                 self.assertFalse(lock.acquired)
 
     def test_invoke_unlocked_lock(self):
@@ -109,10 +104,7 @@ class BasicTestCase(TestCase):
             with engine.connect() as conn:
                 with closing(create_sadlock(conn, key)) as lock:
                     self.assertFalse(lock.locked)
-                    self.assertRaisesRegex(
-                        ValueError, 'invoked on an unlocked lock',
-                        lock.release
-                    )
+                    self.assertRaisesRegex(ValueError, "invoked on an unlocked lock", lock.release)
                 self.assertFalse(lock.acquired)
 
     def test_timeout_positive(self):
@@ -138,8 +130,7 @@ class BasicTestCase(TestCase):
             for _ in range(CPU_COUNT + 1):
                 with engine.connect() as conn:
                     with closing(create_sadlock(conn, key)) as lock:
-                        self.assertTrue(lock.acquire(
-                            timeout=-1*randint(1, 1024)))
+                        self.assertTrue(lock.acquire(timeout=-1 * randint(1, 1024)))
                     self.assertFalse(lock.acquired)
 
     def test_timeout_none(self):
@@ -170,10 +161,7 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             key = uuid4().hex
             with ExitStack() as stack:
-                conn0, conn1 = [
-                    stack.enter_context(engine.connect())
-                    for _ in range(2)
-                ]
+                conn0, conn1 = [stack.enter_context(engine.connect()) for _ in range(2)]
                 lock0 = create_sadlock(conn0, key)
                 self.assertTrue(lock0.acquire(False))
                 lock1 = create_sadlock(conn1, key)
@@ -188,12 +176,9 @@ class BasicTestCase(TestCase):
         for engine in ENGINES:
             key = uuid4().hex
             with ExitStack() as stack:
-                conn0, conn1 = [
-                    stack.enter_context(engine.connect())
-                    for _ in range(2)
-                ]
+                conn0, conn1 = [stack.enter_context(engine.connect()) for _ in range(2)]
                 lock0 = create_sadlock(conn0, key)
                 self.assertTrue(lock0.acquire(False))
                 lock1 = create_sadlock(conn1, key)
-                with self.assertRaisesRegex(ValueError, 'invoked on an unlocked lock'):
+                with self.assertRaisesRegex(ValueError, "invoked on an unlocked lock"):
                     lock1.release()

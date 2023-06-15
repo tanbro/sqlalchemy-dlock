@@ -5,13 +5,13 @@ from unittest import TestCase
 from uuid import uuid4
 
 from sqlalchemy import create_engine
+
 from sqlalchemy_dlock import create_sadlock
 
 from .engines import URLS
 
 
 class MpNonBlockingSuccessTestCase(TestCase):
-
     @staticmethod
     def fn1(url, k, b):
         engine = create_engine(url)
@@ -134,7 +134,6 @@ class MpTimeoutSuccessTestCase(TestCase):
 
 
 class MpTimtoutFailTestCase(TestCase):
-
     @staticmethod
     def fn1(url, k, b, delay):
         engine = create_engine(url)
@@ -180,7 +179,6 @@ class MpTimtoutFailTestCase(TestCase):
 
 
 class MpReleaseOmitedTestCase(TestCase):
-
     @staticmethod
     def fn1(url, k):
         engine = create_engine(url)
@@ -199,7 +197,6 @@ class MpReleaseOmitedTestCase(TestCase):
         key = uuid4().hex
 
         for url in URLS:
-
             p1 = Process(target=cls.fn1, args=(url, key))
             p2 = Process(target=cls.fn2, args=(url, key))
 

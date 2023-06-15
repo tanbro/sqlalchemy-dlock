@@ -5,11 +5,11 @@ from unittest import TestCase
 from uuid import uuid4
 
 from sqlalchemy_dlock import create_sadlock
+
 from .engines import ENGINES
 
 
 class MutliThreadTestCase(TestCase):
-
     def tearDown(self):
         for engine in ENGINES:
             engine.dispose()
@@ -147,6 +147,7 @@ class MutliThreadTestCase(TestCase):
         key = uuid4().hex
 
         for engine in ENGINES:
+
             def fn1():
                 with engine.connect() as conn:
                     lock = create_sadlock(conn, key)

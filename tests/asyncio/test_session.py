@@ -1,6 +1,11 @@
-from sys import version_info
+from sys import platform, version_info
 
 if version_info >= (3, 8):
+    if platform == "win32":
+        import asyncio
+
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     from os import getenv
     from unittest import IsolatedAsyncioTestCase
     from uuid import uuid1
@@ -13,9 +18,7 @@ if version_info >= (3, 8):
     from .engines import create_engines, dispose_engines, get_engines
 
     if getenv("NO_ASYNCIO"):
-        warn(
-            'The test module will not run because environment variable "NO_ASYNCIO" was set'
-        )
+        warn('The test module will not run because environment variable "NO_ASYNCIO" was set')
 
     else:
 

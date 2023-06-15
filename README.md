@@ -20,15 +20,7 @@ PostgreSQL | [advisory lock](https://www.postgresql.org/docs/current/explicit-lo
 pip install sqlalchemy-dlock
 ```
 
-or:
-
-```bash
-pip install sqlalchemy-dlock[asyncio]
-```
-
-if asynchronous I/O needed.
-
-## Usages
+## Usage
 
 - Work with [SQLAlchemy][] `Connection`:
 
@@ -38,7 +30,7 @@ if asynchronous I/O needed.
 
   key = 'user/001'
 
-  engine = create_engine('postgresql://scott:tiger@localhost/')
+  engine = create_engine('postgresql://scott:tiger@127.0.0.1/')
   conn = engine.connect()
 
   # Create the D-Lock on the connection
@@ -66,7 +58,7 @@ if asynchronous I/O needed.
 
   key = 'user/001'
 
-  engine = create_engine('postgresql://scott:tiger@localhost/')
+  engine = create_engine('postgresql://scott:tiger@127.0.0.1/')
   with engine.connect() as conn:
 
       # Create the D-Lock on the connection
@@ -98,7 +90,7 @@ if asynchronous I/O needed.
 
   key = 'user/001'
 
-  engine = create_engine('postgresql://scott:tiger@localhost/')
+  engine = create_engine('postgresql://scott:tiger@127.0.0.1/')
   Session = sessionmaker(bind=engine)
 
   with Session() as session:
@@ -120,7 +112,7 @@ if asynchronous I/O needed.
 
   key = 'user/001'
 
-  engine = create_async_engine('postgresql+asyncpg://scott:tiger@localhost/')
+  engine = create_async_engine('postgresql+asyncpg://scott:tiger@127.0.0.1/')
 
   async with engine.begin() as conn:
       async with create_async_sadlock(conn, key) as lock:
@@ -131,7 +123,26 @@ if asynchronous I/O needed.
       assert not lock.locked
   ```
 
-## Tests
+  > ℹ️ **Note**:
+  >
+  > [aiomysql] and [asyncpg] are tested asynchronous engine
+  >
+  > `asyncio` optional dependency it's required.
+  > We shall install the asynchronous engines like any of blows:
+  >
+  > - ```bash
+  >   pip install sqlalchemy-dlock[asyncpg]
+  >   ```
+  >
+  > - ```bash
+  >   pip install sqlalchemy-dlock[asyncio] asyncpg
+  >   ```
+  >
+  > - ```bash
+  >   pip install SQLALchemy[asyncio] sqlalchemy-dlock asyncpg
+  >   ```
+
+## Test
 
 Following [SQLAlchemy][] engines are tested:
 
@@ -139,18 +150,18 @@ Following [SQLAlchemy][] engines are tested:
 
   - mysqlclient
   - PyMySQL
-  - aiomysql ([asyncio][])
+  - [aiomysql][] ([asyncio][])
 
 - Postgres:
 
-  - psycopg2
-  - asyncpg ([asyncio][])
+  - [psycopg2][]
+  - [asyncpg][] ([asyncio][])
 
 You can run unit-tests:
 
 - directly:
 
-  1. Install the project with connection engines and asyncio extra requires (A virtual environment ([venv][]) is strongly advised):
+  1. Install the project with connection engines and asyncio extra requires, a virtual environment ([venv][]) is strongly advised:
 
      ```bash
      pip install -e .[mysqlclient psycopg2-binary aiomysql asyncpg]
@@ -171,8 +182,8 @@ You can run unit-tests:
      eg (and also the defaults):
 
      ```ini
-     TEST_URLS=mysql://test:test@localhost/test postgresql://postgres:test@localhost/
-     TEST_ASYNC_URLS=mysql+aiomysql://test:test@localhost/test postgresql+asyncpg://postgres:test@localhost/
+     TEST_URLS=mysql://test:test@127.0.0.1/test postgresql://postgres:test@127.0.0.1/
+     TEST_ASYNC_URLS=mysql+aiomysql://test:test@127.0.0.1/test postgresql+asyncpg://postgres:test@127.0.0.1/
      ```
 
   1. run unit-test
@@ -199,3 +210,7 @@ You can run unit-tests:
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
 [asyncio]: https://docs.python.org/library/asyncio.html "asyncio is a library to write concurrent code using the async/await syntax."
 [venv]: https://docs.python.org/library/venv.html "The venv module supports creating lightweight “virtual environments”, each with their own independent set of Python packages installed in their site directories. "
+[aiomysql]: https://pypi.org/project/aiomysql/ "aiomysql is a “driver” for accessing a MySQL database from the asyncio (PEP-3156/tulip) framework."
+[asyncpg]: https://pypi.org/project/asyncpg/ "asyncpg is a database interface library designed specifically for PostgreSQL and Python/asyncio. "
+[psycopg2]: https://pypi.org/project/psycopg2/ "PostgreSQL database adapter for Python"
+[psycopg]: https://pypi.org/project/psycopg/ "Psycopg 3 is a modern implementation of a PostgreSQL adapter for Python."

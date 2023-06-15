@@ -13,6 +13,14 @@ keywords = ["SQLAlchemy", "lock", "distributed", "distributed lock", "SQL", "dat
 name = "sqlalchemy-dlock"
 readme = {file = 'README.md', content-type = 'text/markdown'}
 
+# Classifiers
+classifiers = [
+  "License :: OSI Approved :: BSD License",
+  "Topic :: Database :: Front-Ends",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python",
+]
+
 # requires python version
 requires-python = ">=3.7"
 # requires
@@ -32,21 +40,22 @@ aiomysql = ["SQLAlchemy[asyncio]", "aiomysql"]
 psycopg2 = ["psycopg2"]
 psycopg2-binary = ["psycopg2-binary"]
 # Postgres asyncio
-asyncpg = ["SQLAlchemy[asyncio]", "asyncpg"]
+asyncpg3 = ["SQLAlchemy[asyncio]", "asyncpg"]
+# Postgres - psycopg3: both sync and asyncio
+psycopg = ["SQLAlchemy>=2.0", "psycopg"]
+psycopg-asyncio = ["SQLAlchemy[asyncio]>=2.0", "psycopg"]
+psycopg-asyncio-binary = ["SQLAlchemy[asyncio]>=2.0", "psycopg[binary]"]
+psycopg-asyncio-binary-pool = ["SQLAlchemy[asyncio]>=2.0", "psycopg[bin,pool]"]
+psycopg-asyncio-pool = ["SQLAlchemy[asyncio]>=2.0", "psycopg[pool]"]
+psycopg-bin-pool = ["SQLAlchemy>=2.0", "psycopg[binary,pool]"]
+psycopg-binary = ["SQLAlchemy>=2.0", "psycopg[binary]"]
+psycopg-pool = ["SQLAlchemy>=2.0", "psycopg[pool]"]
 
 # Project links
 [project.urls]
 documentation = "https://sqlalchemy-dlock.readthedocs.io/"
 homepage = "https://github.com/tanbro/sqlalchemy-dlock"
 repository = "https://github.com/tanbro/sqlalchemy-dlock.git"
-
-# Classifiers
-classifiers = [
-  "License :: OSI Approved :: BSD License",
-  "Topic :: Database :: Front-Ends",
-  "Intended Audience :: Developers",
-  "Programming Language :: Python",
-]
 
 [tool.setuptools.packages.find]
 where = ["src"]

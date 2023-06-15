@@ -9,7 +9,7 @@ load_dotenv()
 
 URLS = getenv(
     'TEST_URLS',
-    'mysql://test:test@localhost/test postgresql://postgres:test@localhost/'
+    'mysql://test:test@127.0.0.1/test postgresql://postgres:test@127.0.0.1/'
 ).split()
 
 ENGINES = [
