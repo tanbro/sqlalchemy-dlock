@@ -178,7 +178,7 @@ class MpTimtoutFailTestCase(TestCase):
             self.assertEqual(p2.exitcode, 0)
 
 
-class MpReleaseOmitedTestCase(TestCase):
+class MpReleaseOmittedTestCase(TestCase):
     @staticmethod
     def fn1(url, k):
         engine = create_engine(url)
