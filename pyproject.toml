@@ -4,38 +4,22 @@ requires = ["setuptools>=45", "setuptools_scm>=6.2"]
 
 [project]
 authors = [
-  {name = "liu xue yan", email = "liu_xue_yan@foxmail.com"},
-]
-classifiers = [
-  "License :: OSI Approved :: BSD License",
-  "Topic :: Database :: Front-Ends",
-  "Intended Audience :: Developers",
-  "Programming Language :: Python",
-]
-dependencies = [
-  "SQLAlchemy>=1.4.3,<3.0",
+  {name = "liu xue yan"},
+  {email = "liu_xue_yan@foxmail.com"},
 ]
 description = "A distributed lock implementation based on SQLAlchemy"
 dynamic = ["version"]
 keywords = ["SQLAlchemy", "lock", "distributed", "distributed lock", "SQL", "database", "DBMS"]
-license = {file = 'LICENSE'}
 name = "sqlalchemy-dlock"
 readme = {file = 'README.md', content-type = 'text/markdown'}
+
+# requires python version
 requires-python = ">=3.7"
-
-[project.urls]
-homepage = "https://github.com/tanbro/sqlalchemy-dlock"
-repository = "https://github.com/tanbro/sqlalchemy-dlock.git"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools_scm]
-write_to = "src/sqlalchemy_dlock/version.py"
-
-[options.packages.find]
-where = "src"
-
+# requires
+dependencies = [
+  "SQLAlchemy>=1.4.3,<3.0",
+]
+# extra requires
 [project.optional-dependencies]
 # SQLAlchemy with asyncio, no engines
 asyncio = ["SQLAlchemy[asyncio]"]
@@ -49,6 +33,29 @@ psycopg2 = ["psycopg2"]
 psycopg2-binary = ["psycopg2-binary"]
 # Postgres asyncio
 asyncpg = ["SQLAlchemy[asyncio]", "asyncpg"]
+
+# Project links
+[project.urls]
+documentation = "https://sqlalchemy-dlock.readthedocs.io/"
+homepage = "https://github.com/tanbro/sqlalchemy-dlock"
+repository = "https://github.com/tanbro/sqlalchemy-dlock.git"
+
+# Classifiers
+classifiers = [
+  "License :: OSI Approved :: BSD License",
+  "Topic :: Database :: Front-Ends",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+write_to = "src/sqlalchemy_dlock/version.py"
+
+[options.packages.find]
+where = "src"
 
 [tool.black]
 line-length = 127

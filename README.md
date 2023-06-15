@@ -150,15 +150,21 @@ You can run unit-tests:
 
 - directly:
 
-  1. Install the project (A virtual environment ([venv][]) is strongly advised):
+  1. Install the project with connection engines and asyncio extra requires (A virtual environment ([venv][]) is strongly advised):
 
      ```bash
-     pip install -e .[asyncio]
+     pip install -e .[mysqlclient psycopg2-binary aiomysql asyncpg]
      ```
 
-  1. Start up your mysql and postgresql
+  1. start up mysql and postgresql
 
-  1. Set environment variables `TEST_URLS` and `TEST_ASYNC_URLS` for sync and async database connection url.
+     a docker-compose file `db.docker-compose.yml` could be used to run mysql and postgresql conveniently:
+
+     ```bash
+     docker compose -f db.docker-compose.yml up
+     ```
+
+  1. set environment variables `TEST_URLS` and `TEST_ASYNC_URLS` for sync and async database connection url.
      Multiple connections separated by space.
      The test cases load environment variables in `tests/.env`.
 
