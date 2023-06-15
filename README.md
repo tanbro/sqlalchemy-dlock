@@ -71,7 +71,7 @@ pip install sqlalchemy-dlock
 
       # If do not want to be locked in `with`, a `closing` wrapper may help
       with closing(create_sadlock(conn, key)) as lock2:
-          # It's NOT locked here
+          # It's NOT locked here !!!
           assert not lock2.acquired
           # lock it now:
           lock2.acquire()
@@ -123,7 +123,7 @@ pip install sqlalchemy-dlock
       assert not lock.locked
   ```
 
-  > ℹ️ **Note**:
+  > **Note**:
   >
   > [aiomysql][], [asyncpg][] and [psycopg][] are tested asynchronous engine
   >
@@ -146,15 +146,15 @@ pip install sqlalchemy-dlock
 Following [SQLAlchemy][] dialects are tested:
 
 - MySQL:
-  - [mysqlclient][] (asynchronous)
-  - [pymysql][] (asynchronous)
+  - [mysqlclient][] (synchronous)
+  - [pymysql][] (synchronous)
   - [aiomysql][] (asynchronous)
 - Postgres:
   - [psycopg2][] (asynchronous)
   - [asyncpg][] (asynchronous)
   - [psycopg][] (synchronous and asynchronous)
 
-You can run unit-tests:
+You can run unit-tests
 
 - directly:
 
@@ -166,7 +166,7 @@ You can run unit-tests:
 
   1. start up mysql and postgresql
 
-     a docker-compose file `db.docker-compose.yml` could be used to run mysql and postgresql conveniently:
+     a docker-compose file `db.docker-compose.yml` in the project dir could be used to run mysql and postgresql conveniently:
 
      ```bash
      docker compose -f db.docker-compose.yml up
@@ -189,7 +189,7 @@ You can run unit-tests:
      python -m unittest
      ```
 
-- in docker-compose:
+- or in docker-compose:
 
   1. build the project
 
