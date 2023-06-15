@@ -33,7 +33,7 @@ dependencies = [
 asyncio = ["SQLAlchemy[asyncio]"]
 # MySQL
 mysqlclient = ["mysqlclient"]
-pymysql = ["PyMySQL"]
+pymysql = ["pymysql"]
 # MySQL asyncio
 aiomysql = ["SQLAlchemy[asyncio]", "aiomysql"]
 # Postgres
@@ -42,14 +42,14 @@ psycopg2-binary = ["psycopg2-binary"]
 # Postgres asyncio
 asyncpg3 = ["SQLAlchemy[asyncio]", "asyncpg"]
 # Postgres - psycopg3: both sync and asyncio
-psycopg = ["SQLAlchemy>=2.0", "psycopg"]
-psycopg-asyncio = ["SQLAlchemy[asyncio]>=2.0", "psycopg"]
-psycopg-asyncio-binary = ["SQLAlchemy[asyncio]>=2.0", "psycopg[binary]"]
-psycopg-asyncio-binary-pool = ["SQLAlchemy[asyncio]>=2.0", "psycopg[bin,pool]"]
-psycopg-asyncio-pool = ["SQLAlchemy[asyncio]>=2.0", "psycopg[pool]"]
-psycopg-bin-pool = ["SQLAlchemy>=2.0", "psycopg[binary,pool]"]
-psycopg-binary = ["SQLAlchemy>=2.0", "psycopg[binary]"]
-psycopg-pool = ["SQLAlchemy>=2.0", "psycopg[pool]"]
+psycopg = ["SQLAlchemy>=2.0", "psycopg[binary]"]
+psycopg-asyncio = ["SQLAlchemy[asyncio]>=2.0", "psycopg[binary]"]
+psycopg-asyncio-pool = ["SQLAlchemy[asyncio]>=2.0", "psycopg[bin,pool]"]
+psycopg-asyncio-pure = ["SQLAlchemy[asyncio]>=2.0", "psycopg"]
+psycopg-asyncio-pure-pool = ["SQLAlchemy[asyncio]>=2.0", "psycopg[pool]"]
+psycopg-pool = ["SQLAlchemy>=2.0", "psycopg[binary,pool]"]
+psycopg-pure = ["SQLAlchemy>=2.0", "psycopg"]
+psycopg-pure-pool = ["SQLAlchemy>=2.0", "psycopg[pool]"]
 
 # Project links
 [project.urls]

@@ -125,37 +125,34 @@ pip install sqlalchemy-dlock
 
   > ℹ️ **Note**:
   >
-  > [aiomysql] and [asyncpg] are tested asynchronous engine
+  > [aiomysql][], [asyncpg][] and [psycopg][] are tested asynchronous engine
   >
-  > `asyncio` optional dependency it's required.
-  > We shall install the asynchronous engines like any of blows:
+  > We can install asynchronous DB libraries like one of blows:
   >
   > - ```bash
   >   pip install sqlalchemy-dlock[asyncpg]
   >   ```
   >
   > - ```bash
-  >   pip install sqlalchemy-dlock[asyncio] asyncpg
+  >   pip install sqlalchemy-dlock[asyncio] aiomysql
   >   ```
   >
   > - ```bash
-  >   pip install SQLALchemy[asyncio] sqlalchemy-dlock asyncpg
+  >   pip install SQLALchemy[asyncio] sqlalchemy-dlock psycopg
   >   ```
 
 ## Test
 
-Following [SQLAlchemy][] engines are tested:
+Following [SQLAlchemy][] dialects are tested:
 
 - MySQL:
-
-  - mysqlclient
-  - PyMySQL
-  - [aiomysql][] ([asyncio][])
-
+  - [mysqlclient][] (asynchronous)
+  - [pymysql][] (asynchronous)
+  - [aiomysql][] (asynchronous)
 - Postgres:
-
-  - [psycopg2][]
-  - [asyncpg][] ([asyncio][])
+  - [psycopg2][] (asynchronous)
+  - [asyncpg][] (asynchronous)
+  - [psycopg][] (synchronous and asynchronous)
 
 You can run unit-tests:
 
@@ -208,9 +205,10 @@ You can run unit-tests:
      ```
 
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
-[asyncio]: https://docs.python.org/library/asyncio.html "asyncio is a library to write concurrent code using the async/await syntax."
 [venv]: https://docs.python.org/library/venv.html "The venv module supports creating lightweight “virtual environments”, each with their own independent set of Python packages installed in their site directories. "
-[aiomysql]: https://pypi.org/project/aiomysql/ "aiomysql is a “driver” for accessing a MySQL database from the asyncio (PEP-3156/tulip) framework."
-[asyncpg]: https://pypi.org/project/asyncpg/ "asyncpg is a database interface library designed specifically for PostgreSQL and Python/asyncio. "
+[mysqlclient]: https://pypi.org/project/mysqlclient/ "Python interface to MySQL"
 [psycopg2]: https://pypi.org/project/psycopg2/ "PostgreSQL database adapter for Python"
 [psycopg]: https://pypi.org/project/psycopg/ "Psycopg 3 is a modern implementation of a PostgreSQL adapter for Python."
+[aiomysql]: https://pypi.org/project/aiomysql/ "aiomysql is a “driver” for accessing a MySQL database from the asyncio (PEP-3156/tulip) framework."
+[asyncpg]: https://pypi.org/project/asyncpg/ "asyncpg is a database interface library designed specifically for PostgreSQL and Python/asyncio. "
+[pymysql]: https://pypi.org/project/pymysql/ "Pure Python MySQL Driver"
