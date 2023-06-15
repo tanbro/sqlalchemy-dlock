@@ -2,5 +2,5 @@
 Distributed lock based on Database and SQLAlchemy
 """
 
-from .functions import *  # noqa
-from .version import version as __version__  # noqa
+from .functions import *
+from .version import version as __version__

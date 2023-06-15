@@ -1,18 +1,12 @@
 from typing import Any, Union
 
-from sqlalchemy.ext.asyncio import (AsyncConnection, AsyncSession,
-                                    async_scoped_session)
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_scoped_session
 
-TAsyncConnectionOrSession = Union[AsyncConnection,
-                                  AsyncSession, async_scoped_session]
+TAsyncConnectionOrSession = Union[AsyncConnection, AsyncSession, async_scoped_session]
 
 
 class BaseAsyncSadLock:
-    def __init__(self,
-                 connection_or_session: TAsyncConnectionOrSession,
-                 key: Any,
-                 *args, **kwargs
-                 ):
+    def __init__(self, connection_or_session: TAsyncConnectionOrSession, key: Any, *args, **kwargs):
         self._acquired = False
         self._connection_or_session = connection_or_session
         self._key = key
@@ -25,10 +19,8 @@ class BaseAsyncSadLock:
         await self.close()
 
     def __str__(self):  # pragma: no cover
-        return '<{} {} key={} at 0x{:x}>'.format(
-            'locked' if self._acquired else 'unlocked',
-            self.__class__.__name__,
-            self._key, id(self)
+        return "<{} {} key={} at 0x{:x}>".format(
+            "locked" if self._acquired else "unlocked", self.__class__.__name__, self._key, id(self)
         )
 
     @property
@@ -47,11 +39,7 @@ class BaseAsyncSadLock:
     def locked(self) -> bool:
         return self.acquired
 
-    async def acquire(self,
-                      block: bool = True,
-                      timeout: Union[float, int, None] = None,
-                      *args, **kwargs
-                      ) -> bool:
+    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         raise NotImplementedError()
 
     async def release(self, *args, **kwargs):

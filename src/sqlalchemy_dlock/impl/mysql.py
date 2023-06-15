@@ -3,9 +3,8 @@ from typing import Any, Callable, Optional, Union
 
 from sqlalchemy import text
 
-from ..types import BaseSadLock
 from ..exceptions import SqlAlchemyDLockDatabaseError
-from ..types import TConnectionOrSession
+from ..types import BaseSadLock, TConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 

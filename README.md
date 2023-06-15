@@ -14,6 +14,20 @@ It currently supports below locks:
 MySQL      | [named lock](https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html)
 PostgreSQL | [advisory lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)
 
+## Install
+
+```bash
+pip install sqlalchemy-dlock
+```
+
+or:
+
+```bash
+pip install sqlalchemy-dlock[asyncio]
+```
+
+if asynchronous I/O needed.
+
 ## Usages
 
 - Work with [SQLAlchemy][] `Connection`:
@@ -139,7 +153,7 @@ You can run unit-tests:
   1. Install the project (A virtual environment ([venv][]) is strongly advised):
 
      ```bash
-     pip install -e .
+     pip install -e .[asyncio]
      ```
 
   1. Start up your mysql and postgresql
