@@ -22,9 +22,9 @@ x-test-common: &test-common
       set -e
       if [ -n "${APT_SOURCES}" ]; then printenv APT_SOURCES | tee /etc/apt/sources.list; fi
       apt-get update && apt-get install -y default-mysql-client postgresql-client default-libmysqlclient-dev libpq-dev
+      python -m pip install --disable-pip-version-check --upgrade --find-links /work/dist --pre sqlalchemy-dlock $(printenv _PIP_ADDITIONAL_REQUIREMENTS) -r tests/requirements.txt
       /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
       /bin/bash -e scripts/wait-for-postgres.sh postgres test
-      python -m pip install --disable-pip-version-check --upgrade --find-links dist -r tests/requirements.txt sqlalchemy-dlock $(printenv _PIP_ADDITIONAL_REQUIREMENTS)
       python -B -m unittest -cfv
 
 services:
