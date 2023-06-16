@@ -1,9 +1,13 @@
+import asyncio
+import platform
 from os import getenv
 
 from dotenv import load_dotenv
 
 __all__ = ["create_engines", "dispose_engines", "get_engines"]
 
+if platform.system() == "Windows":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 _ENGINES = []
 
@@ -12,9 +16,6 @@ def create_engines():
     global _ENGINES
 
     load_dotenv()
-
-    if getenv("NO_ASYNCIO"):
-        return []
 
     from sqlalchemy.ext.asyncio import create_async_engine
 

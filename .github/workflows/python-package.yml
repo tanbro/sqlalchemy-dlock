@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
     steps:
       - uses: actions/checkout@v2
@@ -111,7 +111,7 @@ jobs:
         with:
           name: sqlalchemy_dlock-dist-${{needs.check-pep440.outputs.version}}
           path: dist
-      - name: Publish package
+      - name: Publish package distributions PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
