@@ -26,6 +26,7 @@ jobs:
           then
             PEP440_VERSION="${BRANCH_OR_TAG#$VERSION_PREFIX}"
           fi
+          echo "PEP440_VERSION: ${PEP440_VERSION}"
           echo "version=${PEP440_VERSION}" >> $GITHUB_OUTPUT
 
   test:
@@ -33,28 +34,26 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        sqlalchemy-requires: ["SQLAlchemy<2.0", "SQLAlchemy>=2.0"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Startup databases
         shell: bash
         run: |
           (cd .github && docker-compose up -d)
-          sh scripts/wait-for-mysql.sh 127.0.0.1 test test test
           sh scripts/wait-for-postgres.sh 127.0.0.1 test
+          sh scripts/wait-for-mysql.sh 127.0.0.1 test test test
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
       - name: Install Python project
-        run: pip install -e .[asyncio]
-
-      - name: Install Python testing requires
-        run: pip install flake8 pytest pytest-cov python-dotenv[cli] -r tests/requirements.txt
+        run: pip install -e .[asyncio] "${{ matrix.sqlalchemy-requires }}"
 
       - name: Lint with flake8
         run: |
@@ -62,6 +61,9 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Install Python testing requires
+        run: pip install flake8 pytest pytest-cov python-dotenv[cli] -r tests/requirements.txt
 
       - name: Test with PyTest
         shell: bash
@@ -75,7 +77,7 @@ jobs:
         run: (cd .github && docker-compose down -v)
 
       - name: Upload coverage reports to CodeCov with GitHub Action
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
 
   build:
     runs-on: ubuntu-latest
@@ -83,16 +85,16 @@ jobs:
     if: needs.check-pep440.outputs.version != ''
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Set up Python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
-          cache: "pip"
+          cache: pip
       - name: Install builder
         run: pip install build
-      - name: Build Python distribution
+      - name: Build package distributions
         run: pyproject-build
-      - name: Upload dist to artifact
+      - name: Upload package distributions to artifact
         uses: actions/upload-artifact@v3
         with:
           name: sqlalchemy_dlock-dist-${{ needs.check-pep440.outputs.version }}
@@ -106,12 +108,12 @@ jobs:
     if: needs.check-pep440.outputs.version != ''
 
     steps:
-      - name: Download dist from artifact
+      - name: Download package distributions from artifact
         uses: actions/download-artifact@v3
         with:
           name: sqlalchemy_dlock-dist-${{needs.check-pep440.outputs.version}}
           path: dist
-      - name: Publish package distributions PyPI
+      - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
