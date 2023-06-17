@@ -77,7 +77,7 @@ class BaseSadLock(local):
         """
         return self._acquired
 
-    def acquire(self, blocking: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         """
         Acquire a lock, blocking or non-blocking.
 

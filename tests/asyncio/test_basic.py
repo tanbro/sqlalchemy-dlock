@@ -171,7 +171,7 @@ if version_info >= (3, 8):
 
                     lock1 = create_async_sadlock(conn1, key)
                     self.assertFalse(lock1.locked)
-                    r = await lock1.acquire(blocking=False)
+                    r = await lock1.acquire(block=False)
                     self.assertFalse(r)
                     self.assertFalse(lock1.locked)
 
