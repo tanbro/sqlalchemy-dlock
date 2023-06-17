@@ -19,9 +19,9 @@ Contents
    :caption: Documentations
    :titlesonly:
 
-   README <README.md>
-   AUTHORS <AUTHORS.md>
-   CHANGELOG <CHANGELOG.md>
+   README.md
+   AUTHORS.md
+   CHANGELOG.md
 
 .. toctree::
    :caption: API References
