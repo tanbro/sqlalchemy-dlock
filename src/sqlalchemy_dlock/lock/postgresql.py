@@ -1,88 +1,13 @@
 from collections import deque
-from textwrap import dedent
 from time import sleep, time
 from typing import Any, Callable, Optional, Union
 
-from sqlalchemy import text
-
 from ..exceptions import SqlAlchemyDLockDatabaseError
-from ..types import BaseSadLock, TConnectionOrSession
+from ..statement.postgresql import STATEMENTS
+from ..basesadlock import BaseSadLock, TConnectionOrSession
 from ..utils import ensure_int64, to_int64_key
 
 SLEEP_INTERVAL_DEFAULT = 1
-
-STATEMENTS = {
-    "session": {
-        "lock": text(
-            dedent(
-                """
-                SELECT pg_advisory_lock(:key)
-                """
-            ).strip()
-        ),
-        "trylock": text(
-            dedent(
-                """
-                SELECT pg_try_advisory_lock(:key)
-                """
-            ).strip()
-        ),
-        "unlock": text(
-            dedent(
-                """
-                SELECT pg_advisory_unlock(:key)
-                """
-            ).strip()
-        ),
-    },
-    "shared": {
-        "lock": text(
-            dedent(
-                """
-                SELECT pg_advisory_lock_shared(:key)
-                """
-            ).strip()
-        ),
-        "trylock": text(
-            dedent(
-                """
-                SELECT pg_try_advisory_lock_shared(:key)
-                """
-            ).strip()
-        ),
-        "unlock": text(
-            dedent(
-                """
-                SELECT pg_advisory_unlock_shared(:key)
-                """
-            ).strip()
-        ),
-    },
-    "transaction": {
-        "lock": text(
-            dedent(
-                """
-                SELECT pg_advisory_xact_lock(:key)
-                """
-            ).strip()
-        ),
-        "trylock": text(
-            dedent(
-                """
-                SELECT pg_try_advisory_xact_lock(:key)
-                """
-            ).strip()
-        ),
-        "unlock": text(
-            dedent(
-                """
-                SELECT pg_advisory_xact_unlock(:key)
-                """
-            ).strip()
-        ),
-    },
-}
-
 
 TConvertFunction = Callable[[Any], int]
 

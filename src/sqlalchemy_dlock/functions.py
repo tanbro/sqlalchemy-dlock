@@ -2,7 +2,7 @@ from importlib import import_module
 
 from sqlalchemy.engine import Connection
 
-from .types import BaseSadLock, TConnectionOrSession
+from .basesadlock import BaseSadLock, TConnectionOrSession
 from .utils import safe_name
 
 __all__ = ["create_sadlock"]

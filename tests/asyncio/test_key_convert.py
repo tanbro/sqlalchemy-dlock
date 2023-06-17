@@ -8,7 +8,7 @@ if version_info >= (3, 8):
     from zlib import crc32
 
     from sqlalchemy_dlock.asyncio import create_async_sadlock
-    from sqlalchemy_dlock.impl.mysql import MYSQL_LOCK_NAME_MAX_LENGTH
+    from sqlalchemy_dlock.lock.mysql import MYSQL_LOCK_NAME_MAX_LENGTH
 
     from .engines import create_engines, dispose_engines, get_engines
 
