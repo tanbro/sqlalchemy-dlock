@@ -1,3 +1,4 @@
 {
-    "code-block-style": false
+    "code-block-style": false,
+    "line-length": false
 }
