@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## v0.4
+
+Date: 2023-06-17
+
+- Remove:
+  - remove `acquired` property, it's alias of `locked`
+  - remove setter of `locked` property
+
+- Optimize:
+  - re-arrange package's structure
+  - Many optimizations
+
+- CI/Test:
+  - Github action: Python 3.8~3.11 x SQLAlchemy 1.x/2.x matrix testing
+  - Local compose: Python 3.7~3.11 x SQLAlchemy 1.x/2.x matrix testing
+
+- Doc: Update to Sphinx 7.x, and Furo theme
+
 ## v0.3.1
 
 Date: 2023-06-13
