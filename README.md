@@ -158,7 +158,7 @@ You can run unit-tests
 
 - on local environment:
 
-  1. Install the project with connection engines and asyncio extra requires, a virtual environment ([venv][]) is strongly advised:
+  1. Install the project with drivers and `asyncio` extra requires, a virtual environment ([venv][]) is strongly advised:
 
      ```bash
      pip install -e .[mysqlclient psycopg2-binary aiomysql asyncpg]
@@ -166,7 +166,8 @@ You can run unit-tests
 
   1. start up mysql and postgresql
 
-     a docker-compose file `db.docker-compose.yml` in the project dir could be used to run mysql and postgresql conveniently:
+     There is a docker [compose][] file `db.docker-compose.yml` in the project dir,
+     which can be used to run mysql and postgresql development environment conveniently:
 
      ```bash
      docker compose -f db.docker-compose.yml up
@@ -199,9 +200,24 @@ You can run unit-tests
 
   1. run unit-test
 
+     Name of services for Python and [SQLAlchemy][] version matrix in the [compose][] file has such format:
+
+     ```_
+     python{{X.Y}}-sqlalchemy{{X}}
+     ```
+
+     For example, if want to take a test for Python `3.9` and [SQLAlchemy][] `2.x`, we shall up to run unit-tests as below:
+
      ```bash
      cd tests
-     docker compose up
+     docker compose up python3.9-sqlalchemy2
+     ```
+
+     For Python `3.8` and [SQLAlchemy][] `1.x`:
+
+     ```bash
+     cd tests
+     docker compose up python3.8-sqlalchemy1
      ```
 
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
@@ -212,3 +228,4 @@ You can run unit-tests
 [aiomysql]: https://pypi.org/project/aiomysql/ "aiomysql is a “driver” for accessing a MySQL database from the asyncio (PEP-3156/tulip) framework."
 [asyncpg]: https://pypi.org/project/asyncpg/ "asyncpg is a database interface library designed specifically for PostgreSQL and Python/asyncio. "
 [pymysql]: https://pypi.org/project/pymysql/ "Pure Python MySQL Driver"
+[compose]: https://docs.docker.com/compose/ "Compose is a tool for defining and running multi-container Docker applications."
