@@ -12,19 +12,21 @@ x-test-common: &test-common
     - .env
   environment: &test-common-env
     PIP_ROOT_USER_ACTION: ignore
-    _PIP_ADDITIONAL_REQUIREMENTS: ""
+    PIP_DISABLE_PIP_VERSION_CHECK: true
     TEST_URLS: mysql://test:test@mysql/test postgresql://postgres:test@postgres/
     TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql/test postgresql+asyncpg://postgres:test@postgres/
+  build: &test-common-build
+    context: .
+    args: &test-common-build-args
+      APT_SOURCES: ${APT_SOURCES}
   command:
     - /bin/bash
     - -c
     - |
       set -e
-      if [ -n "${APT_SOURCES}" ]; then printenv APT_SOURCES | tee /etc/apt/sources.list; fi
-      apt-get update && apt-get install -y default-mysql-client postgresql-client default-libmysqlclient-dev libpq-dev
-      python -m pip install --disable-pip-version-check --upgrade --find-links /work/dist --pre sqlalchemy-dlock[asyncio] $(printenv _PIP_ADDITIONAL_REQUIREMENTS) -r tests/requirements.txt
-      /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
+      python -m pip install --upgrade --find-links /work/dist --pre sqlalchemy-dlock $(printenv SQLALCHEMY_REQUIRES) -r /work/tests/requirements.txt
       /bin/bash -e scripts/wait-for-postgres.sh postgres test
+      /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
       python -B -m unittest -cfv
 
 services:
@@ -47,71 +49,111 @@ services:
       POSTGRES_PASSWORD: test
 
   python3.7-sqlalchemy1:
-    image: python:3.7
     <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.7"
     environment:
       <<: *test-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy<2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy>=1.4.3,<2.0" # no asynio tests for py37
 
   python3.7-sqlalchemy2:
-    image: python:3.7
     <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.7"
     environment:
       <<: *test-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy>=2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy>=2.0" # no asynio tests for py37
 
   python3.8-sqlalchemy1:
-    image: python:3.8
     <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.8"
     environment:
       <<: *test-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy<2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=1.4.3,<2.0"
 
   python3.8-sqlalchemy2:
-    image: python:3.8
     <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.8"
     environment:
       <<: *test-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy>=2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0"
 
   python3.9-sqlalchemy1:
-    image: python:3.9
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.9"
     <<: *test-common
     environment:
       <<: *test-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy<2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=1.4.3,<2.0"
 
   python3.9-sqlalchemy2:
-    image: python:3.9
     <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.9"
     environment:
       <<: *test-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy>=2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0"
 
   python3.10-sqlalchemy1:
-    image: python:3.10
     <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.10"
     environment:
       <<: *test-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy<2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=1.4.3,<2.0"
 
   python3.10-sqlalchemy2:
-    image: python:3.10
     <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.10"
     environment:
       <<: *test-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy>=2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0"
 
   python3.11-sqlalchemy1:
-    image: python:3.11
     <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.11"
     environment:
       <<: *test-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy<2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=1.4.3,<2.0"
 
   python3.11-sqlalchemy2:
-    image: python:3.11
     <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.11"
     environment:
       <<: *test-common-env
-      _PIP_ADDITIONAL_REQUIREMENTS: "sqlalchemy>=2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0"

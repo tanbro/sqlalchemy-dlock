@@ -156,7 +156,7 @@ Following [SQLAlchemy][] dialects are tested:
 
 You can run unit-tests
 
-- directly:
+- on local environment:
 
   1. Install the project with connection engines and asyncio extra requires, a virtual environment ([venv][]) is strongly advised:
 
@@ -189,7 +189,7 @@ You can run unit-tests
      python -m unittest
      ```
 
-- or in docker-compose:
+- or on docker-compose:
 
   1. build the project
 

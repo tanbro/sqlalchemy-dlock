@@ -19,8 +19,8 @@ def create_engines():
 
     from sqlalchemy.ext.asyncio import create_async_engine
 
-    urls = getenv(
-        "TEST_ASYNC_URLS", "mysql+aiomysql://test:test@127.0.0.1/test postgresql+asyncpg://postgres:test@127.0.0.1/"
+    urls = (
+        getenv("TEST_ASYNC_URLS") or "mysql+aiomysql://test:test@127.0.0.1/test postgresql+asyncpg://postgres:test@127.0.0.1/"
     ).split()
 
     for url in urls:
