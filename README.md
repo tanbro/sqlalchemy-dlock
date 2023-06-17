@@ -167,7 +167,7 @@ You can run unit-tests
   1. start up mysql and postgresql
 
      There is a docker [compose][] file `db.docker-compose.yml` in the project dir,
-     which can be used to run mysql and postgresql development environment conveniently:
+     which can be used to run mysql and postgresql develop environment conveniently:
 
      ```bash
      docker compose -f db.docker-compose.yml up
@@ -202,9 +202,7 @@ You can run unit-tests
 
      Name of services for Python and [SQLAlchemy][] version matrix in the [compose][] file has such format:
 
-     ```_
-     python{{X.Y}}-sqlalchemy{{X}}
-     ```
+         python{{X.Y}}-sqlalchemy{{X}}
 
      For example, if want to take a test for Python `3.9` and [SQLAlchemy][] `2.x`, we shall up to run unit-tests as below:
 
