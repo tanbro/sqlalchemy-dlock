@@ -6,7 +6,7 @@ from typing import Any, Callable, Optional, Union
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...statement.postgresql import STATEMENTS
 from ...utils import ensure_int64, to_int64_key
-from ..types import BaseAsyncSadLock, TAsyncConnectionOrSession
+from ..baseasyncsadlock import BaseAsyncSadLock, TAsyncConnectionOrSession
 
 SLEEP_INTERVAL_DEFAULT = 1
 
