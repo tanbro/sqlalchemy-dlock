@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, Union
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.postgresql import STATEMENTS
-from ..basesadlock import BaseSadLock, TConnectionOrSession
+from ..baselock import BaseSadLock, TConnectionOrSession
 from ..utils import ensure_int64, to_int64_key
 
 SLEEP_INTERVAL_DEFAULT = 1

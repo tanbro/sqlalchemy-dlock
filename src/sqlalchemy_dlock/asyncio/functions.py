@@ -4,7 +4,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from ..utils import safe_name
-from .baseasyncsadlock import BaseAsyncSadLock, TAsyncConnectionOrSession
+from .baselock import BaseAsyncSadLock, TAsyncConnectionOrSession
 
 __all__ = ["create_async_sadlock"]
 

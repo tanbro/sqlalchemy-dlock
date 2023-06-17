@@ -2,7 +2,7 @@ from typing import Any, Callable, Optional, Union
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...statement.mysql import STATEMENTS
-from ..baseasyncsadlock import BaseAsyncSadLock, TAsyncConnectionOrSession
+from ..baselock import BaseAsyncSadLock, TAsyncConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
