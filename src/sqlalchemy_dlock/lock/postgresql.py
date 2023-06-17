@@ -29,14 +29,14 @@ class SadLock(BaseSadLock):
         """
         PostgreSQL advisory lock requires the key given by ``INT64``.
 
-        - When `key` is :class:`int`, the constructor ensures it to be ``INT64``.
+        - When `key` is :class:`int`, the constructor tries to ensure it to be ``INT64``.
           :class:`OverflowError` is raised if too big or too small for an ``INT64``.
 
-        - When `key` is :class:`str` or :class:`bytes`,
-          the constructor calculates its checksum using :func:`hashlib.blake2b`,
+        - When `key` is :class:`str` or :class:`bytes` or alike,
+          the constructor calculates its checksum by :func:`hashlib.blake2b`,
           and takes the hash result integer value as actual key.
 
-        - Or you can specify a `convert` function to that argument.
+        - Or you can specify a ``convert`` function to that argument.
           The function is like::
 
             def convert(val: Any) -> int:
@@ -54,11 +54,15 @@ class SadLock(BaseSadLock):
 
         - ``"transaction"``: works the same as session level lock, except the lock is automatically released at the end of the current transaction and cannot be released explicitly.
 
-        .. tip::
+        .. attention::
 
             PostgreSQL's advisory lock has no timeout mechanism in itself.
-            When `timeout` is a non-negative number, we simulate it by looping and sleeping.
-            The `interval` argument specifies the sleep seconds, whose default is ``1``.
+            When ``timeout`` is a non-negative number, we simulate it by **looping** and **sleeping**.
+
+            The ``interval`` argument specifies the sleep seconds, whose default is ``1``.
+
+            That is: actual timeout won't be precise when ``interval`` is big,
+            while small ``interval`` will cause high CPU usage and frequent SQL execution.
         """
         if convert:
             key = ensure_int64(convert(key))

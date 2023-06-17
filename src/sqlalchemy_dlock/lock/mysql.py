@@ -31,21 +31,19 @@ class SadLock(BaseSadLock):
 
         If `key` is not a :class:`str`:
 
-        - When :class:`int` or :class:`float`,
-          the constructor will force convert it to :class:`str`::
-
-            key = str(key)
-
-        - When :class:`bytes`,
-          the constructor tries to decode it with default encoding::
+        - When :class:`bytes` or alike, the constructor tries to decode it with default encoding::
 
             key = key.decode()
 
-        - Or you can specify a `convert` function to that argument.
+        - Otherwise the constructor force convert it to :class:`str`::
+
+            key = str(key)
+
+        - Or you can specify a ``convert`` function to that argument.
           The function is like::
 
             def convert(val: Any) -> str:
-                # do something ...
+                # do something with `val`...
                 return string
         """
         if convert:
