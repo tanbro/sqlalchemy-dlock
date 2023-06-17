@@ -73,32 +73,14 @@ class BaseSadLock(local):
     def acquired(self) -> bool:
         """locked/unlocked state property
 
-        As a `Getter`:
-
-        - It returns ``True`` if the lock has been acquired, ``False`` otherwise.
-
-        As a `Setter`:
-
-        - Set to ``True`` is equivalent to call :meth:`acquire`
-        - Set to ``False`` is equivalent to call :meth:`release`
+        Return ``True`` if the lock is acquired.
         """
         return self._acquired
-
-    @acquired.setter
-    def acquired(self, value: bool):
-        if value:
-            self.acquire()
-        else:
-            self.release()
 
     @property
     def locked(self) -> bool:
         """Alias of :data:`acquired`"""
         return self.acquired
-
-    @locked.setter
-    def locked(self, value: bool):
-        self.acquired = value
 
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         """
