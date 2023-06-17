@@ -25,5 +25,5 @@ if version_info >= (3, 8):
                 session = AsyncSession(engine)
                 async with session.begin():
                     async with create_async_sadlock(session, key) as lock:
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)

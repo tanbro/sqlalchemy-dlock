@@ -32,14 +32,10 @@ class BaseAsyncSadLock:
         return self._key
 
     @property
-    def acquired(self) -> bool:
+    def locked(self) -> bool:
         return self._acquired
 
-    @property
-    def locked(self) -> bool:
-        return self.acquired
-
-    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    async def acquire(self, blocking: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         raise NotImplementedError()
 
     async def release(self, *args, **kwargs):

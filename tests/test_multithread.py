@@ -22,8 +22,8 @@ class MutliThreadTestCase(TestCase):
             def fn1(b):
                 with engine.connect() as conn:
                     with create_sadlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
                     b.wait()
 
             def fn2(b):
@@ -51,11 +51,11 @@ class MutliThreadTestCase(TestCase):
             def fn1(b):
                 with engine.connect() as conn:
                     with create_sadlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
+                        self.assertTrue(lock.locked)
                         b.wait()
                         sleep(delay)
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
 
             def fn2(b):
                 with engine.connect() as conn:
@@ -82,12 +82,12 @@ class MutliThreadTestCase(TestCase):
             def fn1(b):
                 with engine.connect() as conn:
                     with create_sadlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
+                        self.assertTrue(lock.locked)
                         b.wait()
-                        self.assertTrue(lock.acquired)
+                        self.assertTrue(lock.locked)
                         sleep(delay)
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
 
             def fn2(b):
                 with engine.connect() as conn:
@@ -96,7 +96,7 @@ class MutliThreadTestCase(TestCase):
                         ts = time()
                         self.assertFalse(lock.acquire(timeout=timeout))
                         self.assertGreaterEqual(round(time() - ts), timeout)
-                        self.assertFalse(lock.acquired)
+                        self.assertFalse(lock.locked)
 
             trd1 = Thread(target=fn1, args=(bar,))
             trd2 = Thread(target=fn2, args=(bar,))
@@ -118,11 +118,11 @@ class MutliThreadTestCase(TestCase):
             def fn1(b):
                 with engine.connect() as conn:
                     with create_sadlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
+                        self.assertTrue(lock.locked)
                         b.wait()
                         sleep(delay)
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
 
             def fn2(b):
                 with engine.connect() as conn:
@@ -132,7 +132,7 @@ class MutliThreadTestCase(TestCase):
                         self.assertTrue(lock.acquire(timeout=timeout))
                         self.assertGreaterEqual(time() - ts, delay)
                         self.assertGreaterEqual(timeout, time() - ts)
-                        self.assertTrue(lock.acquired)
+                        self.assertTrue(lock.locked)
 
             trd1 = Thread(target=fn1, args=(bar,))
             trd2 = Thread(target=fn2, args=(bar,))

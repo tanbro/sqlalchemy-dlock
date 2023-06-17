@@ -28,16 +28,16 @@ class ScopedSessionTestCase(TestCase):
         key = uuid4().hex
         for session in self.sessions:
             with create_sadlock(session, key) as lock:
-                self.assertTrue(lock.acquired)
-            self.assertFalse(lock.acquired)
+                self.assertTrue(lock.locked)
+            self.assertFalse(lock.locked)
 
     def test_twice(self):
         key = uuid4().hex
         for session in self.sessions:
             for _ in range(2):
                 with create_sadlock(session, key) as lock:
-                    self.assertTrue(lock.acquired)
-                self.assertFalse(lock.acquired)
+                    self.assertTrue(lock.locked)
+                self.assertFalse(lock.locked)
 
     def test_separated_connection(self):
         key = uuid4().hex
@@ -48,4 +48,4 @@ class ScopedSessionTestCase(TestCase):
             self.assertTrue(lock.acquire())
             session.close()
             lock.release()
-            self.assertFalse(lock.acquired)
+            self.assertFalse(lock.locked)

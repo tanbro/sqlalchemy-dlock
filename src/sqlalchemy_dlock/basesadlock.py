@@ -70,19 +70,14 @@ class BaseSadLock(local):
         return self._key
 
     @property
-    def acquired(self) -> bool:
+    def locked(self) -> bool:
         """locked/unlocked state property
 
         Return ``True`` if the lock is acquired.
         """
         return self._acquired
 
-    @property
-    def locked(self) -> bool:
-        """Alias of :data:`acquired`"""
-        return self.acquired
-
-    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    def acquire(self, blocking: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         """
         Acquire a lock, blocking or non-blocking.
 
@@ -128,7 +123,7 @@ class BaseSadLock(local):
 
         An invocation of this method is equivalent to::
 
-            if not some_lock.acquired:
+            if not some_lock.locked:
                 some_lock.release()
 
         This method maybe useful together with :func:`contextlib.closing`,
@@ -145,14 +140,14 @@ class BaseSadLock(local):
 
             with closing(create_sadlock(some_connection, some_key)) as lock:
                 # will not acquire at the begin of with-block
-                assert not lock.acquired
+                assert not lock.locked
                 # ...
                 # lock when need
                 lock.acquire()
-                assert lock.acquired
+                assert lock.locked
                 # ...
             # `close` will be called at the end with-block
-            assert not lock.acquired
+            assert not lock.locked
         """
         if self._acquired:
             self.release(*args, **kwargs)

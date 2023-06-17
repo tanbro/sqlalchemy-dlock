@@ -26,8 +26,8 @@ class SessionTestCase(TestCase):
         for Session in self.Sessions:
             with Session() as session:
                 with create_sadlock(session, key) as lock:
-                    self.assertTrue(lock.acquired)
-                self.assertFalse(lock.acquired)
+                    self.assertTrue(lock.locked)
+                self.assertFalse(lock.locked)
 
     def test_cross_transaction(self):
         key = uuid1().hex
@@ -39,4 +39,4 @@ class SessionTestCase(TestCase):
                 self.assertTrue(lock.acquire())
                 session.close()
                 lock.release()
-                self.assertFalse(lock.acquired)
+                self.assertFalse(lock.locked)

@@ -40,8 +40,8 @@ if version_info >= (3, 8):
 
                 async with engine.connect() as conn:
                     async with create_async_sadlock(conn, key, convert=_convert) as lock:
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
 
         async def test_mysql_key_max_length(self):
             for engine in get_engines():
@@ -50,8 +50,8 @@ if version_info >= (3, 8):
                 key = "".join(choice([chr(n) for n in range(0x20, 0x7F)]) for _ in range(MYSQL_LOCK_NAME_MAX_LENGTH))
                 async with engine.connect() as conn:
                     async with create_async_sadlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
 
         async def test_mysql_key_gt_max_length(self):
             for engine in get_engines():
@@ -69,8 +69,8 @@ if version_info >= (3, 8):
                 key = 2**64 - 1
                 async with engine.connect() as conn:
                     async with create_async_sadlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
 
         async def test_postgresql_key_over_max(self):
             for engine in get_engines():
@@ -88,8 +88,8 @@ if version_info >= (3, 8):
                 key = -(2**63)
                 async with engine.connect() as conn:
                     async with create_async_sadlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
 
         async def test_postgresql_key_over_min(self):
             for engine in get_engines():

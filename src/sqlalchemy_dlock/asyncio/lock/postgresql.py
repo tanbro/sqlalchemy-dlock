@@ -41,13 +41,13 @@ class AsyncSadLock(BaseAsyncSadLock):
 
     async def acquire(
         self,
-        block: bool = True,
+        blocking: bool = True,
         timeout: Union[float, int, None] = None,
         interval: Union[float, int, None] = None,
     ) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
-        if block:
+        if blocking:
             if timeout is None:
                 # None: set the timeout period to infinite.
                 stmt = self._stmt_dict["lock"].params(key=self._key)

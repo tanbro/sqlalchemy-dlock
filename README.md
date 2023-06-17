@@ -37,15 +37,15 @@ pip install sqlalchemy-dlock
   lock = create_sadlock(conn, key)
 
   # it's not lock when constructed
-  assert not lock.acquired
+  assert not lock.locked
 
   # lock
   lock.acquire()
-  assert lock.acquired
+  assert lock.locked
 
   # un-lock
   lock.release()
-  assert not lock.acquired
+  assert not lock.locked
   ```
 
 - `with` statement
@@ -64,21 +64,21 @@ pip install sqlalchemy-dlock
       # Create the D-Lock on the connection
       with create_sadlock(conn, key) as lock:
           # It's locked
-          assert lock.acquired
+          assert lock.locked
 
       # Auto un-locked
-      assert not lock.acquired
+      assert not lock.locked
 
       # If do not want to be locked in `with`, a `closing` wrapper may help
       with closing(create_sadlock(conn, key)) as lock2:
           # It's NOT locked here !!!
-          assert not lock2.acquired
+          assert not lock2.locked
           # lock it now:
           lock2.acquire()
-          assert lock2.acquired
+          assert lock2.locked
 
       # Auto un-locked
-      assert not lock2.acquired
+      assert not lock2.locked
   ```
 
 - Work with [SQLAlchemy][] `ORM` session:
@@ -95,8 +95,8 @@ pip install sqlalchemy-dlock
 
   with Session() as session:
     with create_sadlock(session, key) as lock:
-        assert lock.acquired
-    assert not lock.acquired
+        assert lock.locked
+    assert not lock.locked
   ```
 
 - Asynchronous I/O Support

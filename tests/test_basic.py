@@ -22,19 +22,19 @@ class BasicTestCase(TestCase):
             key = uuid4().hex
             with engine.connect() as conn:
                 lock = create_sadlock(conn, key)
-                self.assertFalse(lock.acquired)
+                self.assertFalse(lock.locked)
                 lock.acquire()
-                self.assertTrue(lock.acquired)
+                self.assertTrue(lock.locked)
                 lock.release()
-                self.assertFalse(lock.acquired)
+                self.assertFalse(lock.locked)
 
     def test_with_statement(self):
         for engine in ENGINES:
             key = uuid4().hex
             with engine.connect() as conn:
                 with create_sadlock(conn, key) as lock:
-                    self.assertTrue(lock.acquired)
-                self.assertFalse(lock.acquired)
+                    self.assertTrue(lock.locked)
+                self.assertFalse(lock.locked)
 
     def test_many_str_key(self):
         for engine in ENGINES:
@@ -42,8 +42,8 @@ class BasicTestCase(TestCase):
                 with engine.connect() as conn:
                     key = uuid4().hex + uuid4().hex
                     with create_sadlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
 
     def test_many_int_key(self):
         for engine in ENGINES:
@@ -51,8 +51,8 @@ class BasicTestCase(TestCase):
                 with engine.connect() as conn:
                     key = randint(-0x8000_0000_0000_0000, 0x7FFF_FFFF_FFFF_FFFF)
                     with create_sadlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
 
     def test_many_bytes_key(self):
         for engine in ENGINES:
@@ -65,29 +65,29 @@ class BasicTestCase(TestCase):
                     else:
                         raise NotImplementedError()
                     with create_sadlock(conn, key) as lock:
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                        self.assertTrue(lock.locked)
+                    self.assertFalse(lock.locked)
 
     def test_closing(self):
         for engine in ENGINES:
             key = uuid4().hex
             with engine.connect() as conn:
                 with closing(create_sadlock(conn, key)) as lock:
-                    self.assertFalse(lock.acquired)
+                    self.assertFalse(lock.locked)
                     self.assertTrue(lock.acquire())
-                    self.assertTrue(lock.acquired)
-                self.assertFalse(lock.acquired)
+                    self.assertTrue(lock.locked)
+                self.assertFalse(lock.locked)
 
     def test_no_blocking(self):
         for engine in ENGINES:
             key = uuid4().hex
             with engine.connect() as conn:
                 with closing(create_sadlock(conn, key)) as lock:
-                    self.assertFalse(lock.acquired)
+                    self.assertFalse(lock.locked)
                     acquired = lock.acquire(False)
                     self.assertTrue(acquired)
-                    self.assertTrue(lock.acquired)
-                self.assertFalse(lock.acquired)
+                    self.assertTrue(lock.locked)
+                self.assertFalse(lock.locked)
 
     def test_invoke_locked_lock(self):
         for engine in ENGINES:
@@ -96,7 +96,7 @@ class BasicTestCase(TestCase):
                 with create_sadlock(conn, key) as lock:
                     self.assertTrue(lock.locked)
                     self.assertRaisesRegex(ValueError, "invoked on a locked lock", lock.acquire)
-                self.assertFalse(lock.acquired)
+                self.assertFalse(lock.locked)
 
     def test_invoke_unlocked_lock(self):
         for engine in ENGINES:
@@ -105,7 +105,7 @@ class BasicTestCase(TestCase):
                 with closing(create_sadlock(conn, key)) as lock:
                     self.assertFalse(lock.locked)
                     self.assertRaisesRegex(ValueError, "invoked on an unlocked lock", lock.release)
-                self.assertFalse(lock.acquired)
+                self.assertFalse(lock.locked)
 
     def test_timeout_positive(self):
         for engine in ENGINES:
@@ -114,7 +114,7 @@ class BasicTestCase(TestCase):
                 with engine.connect() as conn:
                     with closing(create_sadlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(timeout=randint(1, 1024)))
-                    self.assertFalse(lock.acquired)
+                    self.assertFalse(lock.locked)
 
     def test_timeout_zero(self):
         for engine in ENGINES:
@@ -122,7 +122,7 @@ class BasicTestCase(TestCase):
             with engine.connect() as conn:
                 with closing(create_sadlock(conn, key)) as lock:
                     self.assertTrue(lock.acquire(timeout=0))
-                self.assertFalse(lock.acquired)
+                self.assertFalse(lock.locked)
 
     def test_timeout_negative(self):
         for engine in ENGINES:
@@ -131,7 +131,7 @@ class BasicTestCase(TestCase):
                 with engine.connect() as conn:
                     with closing(create_sadlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(timeout=-1 * randint(1, 1024)))
-                    self.assertFalse(lock.acquired)
+                    self.assertFalse(lock.locked)
 
     def test_timeout_none(self):
         for engine in ENGINES:
@@ -140,22 +140,7 @@ class BasicTestCase(TestCase):
                 with engine.connect() as conn:
                     with closing(create_sadlock(conn, key)) as lock:
                         self.assertTrue(lock.acquire(timeout=None))
-                    self.assertFalse(lock.acquired)
-
-    def test_acquired_property(self):
-        for engine in ENGINES:
-            key = uuid4().hex
-            for i in range(CPU_COUNT + 1):
-                with engine.connect() as conn:
-                    with closing(create_sadlock(conn, key)) as lock:
-                        self.assertFalse(lock.acquired)
-                        lock.acquired = True
-                        self.assertTrue(lock.acquired)
-                        lock.acquired = False
-                        self.assertFalse(lock.acquired)
-                        lock.acquired = True
-                        self.assertTrue(lock.acquired)
-                    self.assertFalse(lock.acquired)
+                    self.assertFalse(lock.locked)
 
     def test_enter_locked(self):
         for engine in ENGINES:
@@ -167,10 +152,10 @@ class BasicTestCase(TestCase):
                 lock1 = create_sadlock(conn1, key)
                 self.assertFalse(lock1.acquire(False))
                 lock0.release()
-                self.assertFalse(lock0.acquired)
+                self.assertFalse(lock0.locked)
                 self.assertTrue(lock1.acquire(False))
                 lock1.release()
-                self.assertFalse(lock1.acquired)
+                self.assertFalse(lock1.locked)
 
     def test_release_unlocked_error(self):
         for engine in ENGINES:

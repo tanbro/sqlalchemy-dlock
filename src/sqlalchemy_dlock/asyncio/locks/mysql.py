@@ -39,10 +39,10 @@ class AsyncSadLock(BaseAsyncSadLock):
         #
         super().__init__(connection_or_session, key)
 
-    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
+    async def acquire(self, blocking: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
-        if block:
+        if blocking:
             # None: set the timeout period to infinite.
             if timeout is None:
                 timeout = -1

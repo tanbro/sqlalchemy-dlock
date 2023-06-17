@@ -36,8 +36,8 @@ class KeyConvertTestCase(TestCase):
 
             with engine.connect() as conn:
                 with create_sadlock(conn, key, convert=_convert) as lock:
-                    self.assertTrue(lock.acquired)
-                self.assertFalse(lock.acquired)
+                    self.assertTrue(lock.locked)
+                self.assertFalse(lock.locked)
 
     def test_mysql_key_max_length(self):
         for engine in ENGINES:
@@ -46,8 +46,8 @@ class KeyConvertTestCase(TestCase):
             key = "".join(choice([chr(n) for n in range(0x20, 0x7F)]) for _ in range(MYSQL_LOCK_NAME_MAX_LENGTH))
             with engine.connect() as conn:
                 with create_sadlock(conn, key) as lock:
-                    self.assertTrue(lock.acquired)
-                self.assertFalse(lock.acquired)
+                    self.assertTrue(lock.locked)
+                self.assertFalse(lock.locked)
 
     def test_mysql_key_gt_max_length(self):
         for engine in ENGINES:
@@ -65,8 +65,8 @@ class KeyConvertTestCase(TestCase):
             key = 2**64 - 1
             with engine.connect() as conn:
                 with create_sadlock(conn, key) as lock:
-                    self.assertTrue(lock.acquired)
-                self.assertFalse(lock.acquired)
+                    self.assertTrue(lock.locked)
+                self.assertFalse(lock.locked)
 
     def test_postgresql_key_over_max(self):
         for engine in ENGINES:
@@ -84,8 +84,8 @@ class KeyConvertTestCase(TestCase):
             key = -(2**63)
             with engine.connect() as conn:
                 with create_sadlock(conn, key) as lock:
-                    self.assertTrue(lock.acquired)
-                self.assertFalse(lock.acquired)
+                    self.assertTrue(lock.locked)
+                self.assertFalse(lock.locked)
 
     def test_postgresql_key_over_min(self):
         for engine in ENGINES:

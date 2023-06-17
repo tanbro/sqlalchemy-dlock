@@ -17,8 +17,8 @@ class MpNonBlockingSuccessTestCase(TestCase):
         engine = create_engine(url)
         with engine.connect() as conn:
             with create_sadlock(conn, k) as lock:
-                assert lock.acquired
-            assert not lock.acquired
+                assert lock.locked
+            assert not lock.locked
             b.wait()
 
     @staticmethod
@@ -53,11 +53,11 @@ class MpNonBlockingFailTestCase(TestCase):
         engine = create_engine(url)
         with engine.connect() as conn:
             with create_sadlock(conn, k) as lock:
-                assert lock.acquired
+                assert lock.locked
                 b.wait()
                 sleep(delay)
-                assert lock.acquired
-            assert not lock.acquired
+                assert lock.locked
+            assert not lock.locked
 
     @staticmethod
     def fn2(url, k, b):
@@ -93,11 +93,11 @@ class MpTimeoutSuccessTestCase(TestCase):
         engine = create_engine(url)
         with engine.connect() as conn:
             with create_sadlock(conn, k) as lock:
-                assert lock.acquired
+                assert lock.locked
                 b.wait()
                 sleep(delay)
-                assert lock.acquired
-            assert not lock.acquired
+                assert lock.locked
+            assert not lock.locked
 
     @staticmethod
     def fn2(url, k, b, delay, timeout):
@@ -109,7 +109,7 @@ class MpTimeoutSuccessTestCase(TestCase):
                 assert lock.acquire(timeout=timeout)
                 assert time() - ts >= delay
                 assert timeout >= time() - ts
-                assert lock.acquired
+                assert lock.locked
 
     def test(self):
         key = uuid4().hex
@@ -139,11 +139,11 @@ class MpTimtoutFailTestCase(TestCase):
         engine = create_engine(url)
         with engine.connect() as conn:
             with create_sadlock(conn, k) as lock:
-                assert lock.acquired
+                assert lock.locked
                 b.wait()
                 sleep(delay)
-                assert lock.acquired
-            assert not lock.acquired
+                assert lock.locked
+            assert not lock.locked
 
     @staticmethod
     def fn2(url, k, b, timeout):
@@ -154,7 +154,7 @@ class MpTimtoutFailTestCase(TestCase):
                 ts = time()
                 assert not lock.acquire(timeout=timeout)
                 assert round(time() - ts) >= timeout
-                assert not lock.acquired
+                assert not lock.locked
 
     def test(self):
         cls = self.__class__
