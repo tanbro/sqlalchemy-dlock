@@ -24,7 +24,7 @@ class KeyConvertTestCase(TestCase):
             if engine.name == "mysql":
 
                 def _convert(k):
-                    return 'key is "{}"'.format(k)
+                    return f"key is {k!r}"
 
             elif engine.name == "postgresql":
 

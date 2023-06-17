@@ -20,8 +20,8 @@ def create_async_sadlock(connection_or_session: TAsyncConnectionOrSession, key, 
             sync_engine = bind
     engine_name = safe_name(sync_engine.name)
     try:
-        mod = import_module("..lock.{}".format(engine_name), __name__)
+        mod = import_module(f"..lock.{engine_name}", __name__)
     except ImportError as exception:  # pragma: no cover
-        raise NotImplementedError("{}: {}".format(engine_name, exception))
+        raise NotImplementedError(f"{engine_name}: {exception}")
     lock_cls = getattr(mod, "AsyncSadLock")
     return lock_cls(connection_or_session, key, *args, **kwargs)

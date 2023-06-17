@@ -17,7 +17,7 @@ def to_int64_key(k: Union[bytearray, bytes, memoryview, str, int]) -> int:
         return int.from_bytes(blake2b(k, digest_size=8).digest(), byteorder, signed=True)
     elif isinstance(k, int):
         return ensure_int64(k)
-    raise TypeError("{}".format(type(k)))
+    raise TypeError(f"{type(k)}")
 
 
 INT64_MAX = 2**63 - 1  # max of signed int64: 2**63-1(+0x7fff_ffff_ffff_ffff)

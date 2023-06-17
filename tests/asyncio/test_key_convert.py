@@ -28,7 +28,7 @@ if version_info >= (3, 8):
                 if engine.name == "mysql":
 
                     def _convert(k):  # type: ignore
-                        return 'key is "{}"'.format(k)
+                        return f"key is {k!r}"
 
                 elif engine.name == "postgresql":
 

@@ -1,7 +1,7 @@
-sqlalchemy\_dlock.impl.postgresql module
+sqlalchemy\_dlock.statement.mysql module
 ========================================
 
-.. automodule:: sqlalchemy_dlock.impl.postgresql
+.. automodule:: sqlalchemy_dlock.statement.mysql
    :members:
    :undoc-members:
    :show-inheritance:

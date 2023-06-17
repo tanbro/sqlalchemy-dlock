@@ -1,7 +1,7 @@
-sqlalchemy\_dlock.asyncio.impl.mysql module
+sqlalchemy\_dlock.asyncio.lock.mysql module
 ===========================================
 
-.. automodule:: sqlalchemy_dlock.asyncio.impl.mysql
+.. automodule:: sqlalchemy_dlock.asyncio.lock.mysql
    :members:
    :undoc-members:
    :show-inheritance:

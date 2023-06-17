@@ -15,7 +15,7 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
     elif isinstance(key, (int, float)):
         result = str(key)
     else:
-        raise TypeError("{}".format(type(key)))
+        raise TypeError(f"{type(key)}")
     return result
 
 
@@ -55,9 +55,7 @@ class SadLock(BaseSadLock):
         if not isinstance(key, str):
             raise TypeError("MySQL named lock requires the key given by string")
         if len(key) > MYSQL_LOCK_NAME_MAX_LENGTH:
-            raise ValueError(
-                "MySQL enforces a maximum length on lock names of {} characters.".format(MYSQL_LOCK_NAME_MAX_LENGTH)
-            )
+            raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
         #
         super().__init__(connection_or_session, key)
 
@@ -80,9 +78,9 @@ class SadLock(BaseSadLock):
         elif ret_val == 0:
             pass  # 直到超时也没有成功锁定
         elif ret_val is None:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError('An error occurred while attempting to obtain the lock "{}"'.format(self._key))
+            raise SqlAlchemyDLockDatabaseError(f"An error occurred while attempting to obtain the lock {self._key!r}")
         else:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError('GET_LOCK("{}", {}) returns {}'.format(self._key, timeout, ret_val))
+            raise SqlAlchemyDLockDatabaseError(f"GET_LOCK({self._key!r}, {timeout}) returns {ret_val}")
         return self._acquired
 
     def release(self):
@@ -95,14 +93,14 @@ class SadLock(BaseSadLock):
         elif ret_val == 0:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                'The named lock "{}" was not established by this thread, ' "and the lock is not released.".format(self._key)
+                f"The named lock {self._key!r} was not established by this thread, and the lock is not released."
             )
         elif ret_val is None:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                'The named lock "{}" did not exist, '
+                f"The named lock {self._key!r} did not exist, "
                 "was never obtained by a call to GET_LOCK(), "
-                "or has previously been released.".format(self._key)
+                "or has previously been released."
             )
         else:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError('RELEASE_LOCK("{}") returns {}'.format(self._key, ret_val))
+            raise SqlAlchemyDLockDatabaseError(f"RELEASE_LOCK({self._key!r}) returns {ret_val}")

@@ -126,7 +126,7 @@ class SadLock(BaseSadLock):
             self._acquired = False
         else:
             self._acquired = False
-            raise SqlAlchemyDLockDatabaseError('The advisory lock "{}" was not held.'.format(self._key))
+            raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self._key!r} was not held.")
 
     @property
     def level(self) -> str:
