@@ -1,13 +1,13 @@
-import asyncio
-import platform
 from os import getenv
+from typing import List
 
 from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 __all__ = ["create_engines", "dispose_engines", "get_engines"]
 
 
-_ENGINES = []
+_ENGINES: List[AsyncEngine] = []
 
 
 def create_engines():

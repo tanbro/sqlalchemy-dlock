@@ -24,7 +24,7 @@ if version_info >= (3, 8):
         async def test_enter_exit(self):
             for engine in get_engines():
                 key = uuid4().hex
-                async with engine.begin() as conn:
+                async with engine.connect() as conn:
                     assert conn is not None
                     lock = create_async_sadlock(conn, key)
                     self.assertFalse(lock.locked)
@@ -35,7 +35,7 @@ if version_info >= (3, 8):
 
         async def test_with_statement(self):
             for engine in get_engines():
-                async with engine.begin() as conn:
+                async with engine.connect() as conn:
                     assert conn is not None
                     key = uuid4().hex
                     async with create_async_sadlock(conn, key) as lock:
@@ -44,7 +44,7 @@ if version_info >= (3, 8):
 
         async def test_many_str_key(self):
             for engine in get_engines():
-                async with engine.begin() as conn:
+                async with engine.connect() as conn:
                     assert conn is not None
                     for _ in range(100):
                         key = uuid4().hex + uuid4().hex
@@ -54,7 +54,7 @@ if version_info >= (3, 8):
 
         async def test_many_int_key(self):
             for engine in get_engines():
-                async with engine.begin() as conn:
+                async with engine.connect() as conn:
                     assert conn is not None
                     for _ in range(100):
                         key = randint(-0x8000_0000_0000_0000, 0x7FFF_FFFF_FFFF_FFFF)
@@ -78,7 +78,7 @@ if version_info >= (3, 8):
 
         async def test_invoke_locked_lock(self):
             for engine in get_engines():
-                async with engine.begin() as conn:
+                async with engine.connect() as conn:
                     assert conn is not None
                     key = uuid4().hex
                     async with create_async_sadlock(conn, key) as lock:
@@ -89,7 +89,7 @@ if version_info >= (3, 8):
 
         async def test_invoke_unlocked_lock(self):
             for engine in get_engines():
-                async with engine.begin() as conn:
+                async with engine.connect() as conn:
                     assert conn is not None
                     key = uuid4().hex
                     lock = create_async_sadlock(conn, key)
@@ -102,7 +102,7 @@ if version_info >= (3, 8):
             for engine in get_engines():
                 key = uuid4().hex
                 for _ in range(CPU_COUNT + 1):
-                    async with engine.begin() as conn:
+                    async with engine.connect() as conn:
                         assert conn is not None
                         lock = create_async_sadlock(conn, key)
                         try:
@@ -116,7 +116,7 @@ if version_info >= (3, 8):
 
         async def test_timeout_zero(self):
             for engine in get_engines():
-                async with engine.begin() as conn:
+                async with engine.connect() as conn:
                     assert conn is not None
                     key = uuid4().hex
                     lock = create_async_sadlock(conn, key)
@@ -132,7 +132,7 @@ if version_info >= (3, 8):
         async def test_timeout_negative(self):
             for engine in get_engines():
                 for _ in range(CPU_COUNT + 1):
-                    async with engine.begin() as conn:
+                    async with engine.connect() as conn:
                         assert conn is not None
                         key = uuid4().hex
                         lock = create_async_sadlock(conn, key)
@@ -146,7 +146,7 @@ if version_info >= (3, 8):
         async def test_timeout_none(self):
             for engine in get_engines():
                 for _ in range(CPU_COUNT + 1):
-                    async with engine.begin() as conn:
+                    async with engine.connect() as conn:
                         assert conn is not None
                         key = uuid4().hex
                         lock = create_async_sadlock(conn, key)
@@ -161,7 +161,7 @@ if version_info >= (3, 8):
             for engine in get_engines():
                 key = uuid4().hex
                 async with AsyncExitStack() as stack:
-                    conn0, conn1 = [await stack.enter_async_context(engine.begin()) for _ in range(2)]
+                    conn0, conn1 = [await stack.enter_async_context(engine.connect()) for _ in range(2)]
 
                     lock0 = create_async_sadlock(conn0, key)
                     self.assertFalse(lock0.locked)
@@ -189,7 +189,7 @@ if version_info >= (3, 8):
             for engine in get_engines():
                 key = uuid4().hex
                 async with AsyncExitStack() as stack:
-                    conn0, conn1 = [await stack.enter_async_context(engine.begin()) for _ in range(2)]
+                    conn0, conn1 = [await stack.enter_async_context(engine.connect()) for _ in range(2)]
 
                     lock0 = create_async_sadlock(conn0, key)
                     r = await lock0.acquire(False)
@@ -206,7 +206,7 @@ if version_info >= (3, 8):
                 if engine.name != "postgresql":
                     continue
                 key = uuid4().hex
-                async with engine.begin() as conn:
+                async with engine.connect() as conn:
                     for level in levels:
                         lck = create_async_sadlock(conn, key, level=level)
                         self.assertEqual(lck.level, level)  # type: ignore
@@ -218,7 +218,7 @@ if version_info >= (3, 8):
                 if engine.name != "postgresql":
                     continue
                 key = uuid4().hex
-                async with engine.begin() as conn:
+                async with engine.connect() as conn:
                     lck0 = create_async_sadlock(conn, key, interval=-1)
                     with self.assertRaises(ValueError):
                         await lck0.acquire(timeout=0)
