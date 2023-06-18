@@ -77,7 +77,9 @@ class BaseSadLock(local):
         """
         return self._acquired
 
-    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    def acquire(
+        self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs
+    ) -> bool:  # pragma: no coverF
         """
         Acquire a lock, blocking or non-blocking.
 
@@ -100,7 +102,7 @@ class BaseSadLock(local):
         """
         raise NotImplementedError()
 
-    def release(self, *args, **kwargs):
+    def release(self, *args, **kwargs):  # pragma: no cover
         """Release a lock.
 
         Since the class is thread-local, this cannot be called from other thread or process,

@@ -199,3 +199,29 @@ if version_info >= (3, 8):
                     lock1 = create_async_sadlock(conn1, key)
                     with self.assertRaisesRegex(ValueError, "invoked on an unlocked lock"):
                         await lock1.release()
+
+        async def test_pg_level_name(self):
+            levels = "session", "shared", "transaction"
+            for engine in get_engines():
+                if engine.name != "postgresql":
+                    continue
+                key = uuid4().hex
+                async with engine.begin() as conn:
+                    for level in levels:
+                        lck = create_async_sadlock(conn, key, level=level)
+                        self.assertEqual(lck.level, level)  # type: ignore
+                    with self.assertRaises(ValueError):
+                        create_async_sadlock(conn, key, level="invalid_level_name")
+
+        async def test_pg_invalid_interval(self):
+            for engine in get_engines():
+                if engine.name != "postgresql":
+                    continue
+                key = uuid4().hex
+                async with engine.begin() as conn:
+                    lck0 = create_async_sadlock(conn, key, interval=-1)
+                    with self.assertRaises(ValueError):
+                        await lck0.acquire(timeout=0)
+                    lck1 = create_async_sadlock(conn, key)
+                    with self.assertRaises(ValueError):
+                        await lck1.acquire(timeout=0, interval=-1)

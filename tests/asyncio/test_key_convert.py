@@ -62,6 +62,31 @@ if version_info >= (3, 8):
                     with self.assertRaises(ValueError):
                         create_async_sadlock(conn, key)
 
+        async def test_mysql_key_not_a_string(self):
+            keys = (
+                None,
+                1,
+                0,
+                -1,
+                0.1,
+                True,
+                False,
+                tuple(),
+                list(),
+                set(),
+                dict(),
+                object(),
+            )
+
+            for engine in get_engines():
+                if engine.name != "mysql":
+                    continue
+
+                async with engine.connect() as conn:
+                    for k in keys:
+                        with self.assertRaises(TypeError):
+                            create_async_sadlock(conn, k, convert=lambda x: x)
+
         async def test_postgresql_key_max(self):
             for engine in get_engines():
                 if engine.name != "postgresql":

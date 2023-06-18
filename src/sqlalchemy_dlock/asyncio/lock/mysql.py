@@ -52,7 +52,6 @@ class AsyncSadLock(BaseAsyncSadLock):
         stmt = STATEMENTS["lock"].params(str=self._key, timeout=timeout)
         r = await self.connection_or_session.stream(stmt)
         ret_val = (await r.one())[0]
-
         if ret_val == 1:
             self._acquired = True
         elif ret_val == 0:
@@ -83,5 +82,5 @@ class AsyncSadLock(BaseAsyncSadLock):
                 "was never obtained by a call to GET_LOCK(), "
                 "or has previously been released."
             )
-        else:
+        else:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(f"RELEASE_LOCK({self._key!r}) returns {ret_val}")

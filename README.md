@@ -150,7 +150,7 @@ Following drivers are tested:
   - [pymysql][] (synchronous)
   - [aiomysql][] (asynchronous)
 - Postgres:
-  - [psycopg2][] (asynchronous)
+  - [psycopg2][] (synchronous)
   - [asyncpg][] (asynchronous)
   - [psycopg][] (synchronous and asynchronous)
 

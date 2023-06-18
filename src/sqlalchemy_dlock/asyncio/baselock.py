@@ -35,10 +35,12 @@ class BaseAsyncSadLock:
     def locked(self) -> bool:
         return self._acquired
 
-    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    async def acquire(
+        self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs
+    ) -> bool:  # pragma: no cover
         raise NotImplementedError()
 
-    async def release(self, *args, **kwargs):
+    async def release(self, *args, **kwargs):  # pragma: no cover
         raise NotImplementedError()
 
     async def close(self, *args, **kwargs):

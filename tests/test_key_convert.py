@@ -1,4 +1,4 @@
-from os import cpu_count
+from multiprocessing import cpu_count
 from random import choice
 from unittest import TestCase
 from uuid import uuid4
@@ -9,7 +9,7 @@ from sqlalchemy_dlock.lock.mysql import MYSQL_LOCK_NAME_MAX_LENGTH
 
 from .engines import ENGINES
 
-CPU_COUNT = cpu_count() or 1
+CPU_COUNT = cpu_count()
 
 
 class KeyConvertTestCase(TestCase):
@@ -23,12 +23,12 @@ class KeyConvertTestCase(TestCase):
 
             if engine.name == "mysql":
 
-                def _convert(k):
+                def _convert(k):  # type: ignore
                     return f"key is {k!r}"
 
             elif engine.name == "postgresql":
 
-                def _convert(k):
+                def _convert(k):  # type: ignore
                     return crc32(str(k).encode())
 
             else:
@@ -57,6 +57,31 @@ class KeyConvertTestCase(TestCase):
             with engine.connect() as conn:
                 with self.assertRaises(ValueError):
                     create_sadlock(conn, key)
+
+    def test_mysql_key_not_a_string(self):
+        keys = (
+            None,
+            1,
+            0,
+            -1,
+            0.1,
+            True,
+            False,
+            tuple(),
+            list(),
+            set(),
+            dict(),
+            object(),
+        )
+
+        for engine in ENGINES:
+            if engine.name != "mysql":
+                continue
+
+            with engine.connect() as conn:
+                for k in keys:
+                    with self.assertRaises(TypeError):
+                        create_sadlock(conn, k, convert=lambda x: x)
 
     def test_postgresql_key_max(self):
         for engine in ENGINES:

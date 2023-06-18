@@ -128,7 +128,7 @@ class SadLock(BaseSadLock):
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val:
             self._acquired = False
-        else:
+        else:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self._key!r} was not held.")
 

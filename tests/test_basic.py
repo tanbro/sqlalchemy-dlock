@@ -1,7 +1,7 @@
 from contextlib import ExitStack, closing
-from os import cpu_count
-from secrets import token_bytes, token_hex
+from multiprocessing import cpu_count
 from random import randint
+from secrets import token_bytes, token_hex
 from unittest import TestCase
 from uuid import uuid4
 
@@ -9,7 +9,7 @@ from sqlalchemy_dlock import create_sadlock
 
 from .engines import ENGINES
 
-CPU_COUNT = cpu_count() or 1
+CPU_COUNT = cpu_count()
 
 
 class BasicTestCase(TestCase):
@@ -167,3 +167,16 @@ class BasicTestCase(TestCase):
                 lock1 = create_sadlock(conn1, key)
                 with self.assertRaisesRegex(ValueError, "invoked on an unlocked lock"):
                     lock1.release()
+
+    def test_pg_level_name(self):
+        levels = "session", "shared", "transaction"
+        for engine in ENGINES:
+            if engine.name != "postgresql":
+                continue
+            key = uuid4().hex
+            with engine.connect() as conn:
+                for level in levels:
+                    lck = create_sadlock(conn, key, level=level)
+                    self.assertEqual(lck.level, level)
+                with self.assertRaises(ValueError):
+                    create_sadlock(conn, key, level="invalid_level_name")

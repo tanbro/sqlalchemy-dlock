@@ -6,8 +6,6 @@ from dotenv import load_dotenv
 
 __all__ = ["create_engines", "dispose_engines", "get_engines"]
 
-if platform.system() == "Windows":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 _ENGINES = []
 
