@@ -43,7 +43,7 @@ psycopg3 = ["SQLAlchemy>=2.0", "psycopg"] # psycopg3 dynamik link to libpq
 psycopg3-binary = ["SQLAlchemy>=2.0", "psycopg[binary]"] # psycopg3 with pre-compiled C library
 psycopg3-c = ["SQLAlchemy>=2.0", "psycopg[c]"] # psycopg3 compiling needed when install
 # Postgres asyncio
-asyncpg3 = ["SQLAlchemy[asyncio]", "asyncpg"]
+asyncpg = ["SQLAlchemy[asyncio]", "asyncpg"]
 
 # Project links
 [project.urls]

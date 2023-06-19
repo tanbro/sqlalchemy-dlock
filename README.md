@@ -158,10 +158,10 @@ You can run unit-tests
 
 - on local environment:
 
-  1. Install the project with drivers and `asyncio` extra requires, a virtual environment ([venv][]) is strongly advised:
+  1. Install the project with `asyncio` extra requires, and drivers needed in test. A virtual environment ([venv][]) is strongly advised:
 
      ```bash
-     pip install -e .[mysqlclient psycopg2-binary aiomysql asyncpg]
+     pip install -e .[asyncio] -r tests/requirements.txt
      ```
 
   1. start up mysql and postgresql

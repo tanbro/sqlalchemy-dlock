@@ -3,5 +3,5 @@ python-dotenv
 mysqlclient
 aiomysql
 
-psycopg2
+psycopg2-binary
 asyncpg
