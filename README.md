@@ -127,7 +127,7 @@ pip install sqlalchemy-dlock
   >
   > [aiomysql][], [asyncpg][] and [psycopg][] are tested asynchronous drivers
   >
-  > We can install asynchronous DB libraries like one of blows:
+  > We can install asynchronous DB libraries like one of belows:
   >
   > - ```bash
   >   pip install sqlalchemy-dlock[asyncpg]
@@ -158,15 +158,15 @@ You can run unit-tests
 
 - on local environment:
 
-  1. Install the project with `asyncio` extra requires, and drivers needed in test. A virtual environment ([venv][]) is strongly advised:
+  1. Install the project in editable mode with `asyncio` optional dependencies, and libraries/drivers needed in test. A virtual environment ([venv][]) is strongly advised:
 
      ```bash
      pip install -e .[asyncio] -r tests/requirements.txt
      ```
 
-  1. start up mysql and postgresql
+  1. start up mysql and postgresql service
 
-     There is a docker [compose][] file `db.docker-compose.yml` in the project dir,
+     There is a docker [compose][] file `db.docker-compose.yml` in project's top directory,
      which can be used to run mysql and postgresql develop environment conveniently:
 
      ```bash

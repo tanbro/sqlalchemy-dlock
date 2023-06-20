@@ -1,5 +1,6 @@
 exclude .*
 exclude *.docker-compose.yml
+exclude *.requirements.txt
 exclude codecov.yml
 
 prune .*
