@@ -16,9 +16,9 @@ PyPI package `toml` is required for Python version smaller then 3.11, to install
 
 import argparse
 import json
+import shlex
 import subprocess
 import sys
-import shlex
 from pathlib import Path
 from textwrap import dedent
 
