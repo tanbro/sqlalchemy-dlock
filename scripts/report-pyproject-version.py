@@ -11,7 +11,7 @@ Environment `PYTHONUTF8` may be needed on non-western language Windows.
 
 PyPI package `toml` is required for Python version smaller then 3.11, to install:
 
-    pip install "toml;python_version<3.11"
+    pip install "toml;python_version<'3.11'"
 """
 
 import argparse
