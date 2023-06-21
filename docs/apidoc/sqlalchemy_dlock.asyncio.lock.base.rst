@@ -1,7 +1,7 @@
-sqlalchemy\_dlock.asyncio.functions module
+sqlalchemy\_dlock.asyncio.lock.base module
 ==========================================
 
-.. automodule:: sqlalchemy_dlock.asyncio.functions
+.. automodule:: sqlalchemy_dlock.asyncio.lock.base
    :members:
    :undoc-members:
    :show-inheritance:

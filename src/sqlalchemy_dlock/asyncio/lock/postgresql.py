@@ -6,7 +6,7 @@ from typing import Any, Callable, Optional, Union
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...statement.postgresql import STATEMENTS
 from ...utils import ensure_int64, to_int64_key
-from ..baselock import BaseAsyncSadLock, TAsyncConnectionOrSession
+from .base import BaseAsyncSadLock, TAsyncConnectionOrSession
 
 SLEEP_INTERVAL_DEFAULT = 1
 
@@ -14,7 +14,7 @@ SLEEP_INTERVAL_DEFAULT = 1
 TConvertFunction = Callable[[Any], int]
 
 
-class AsyncSadLock(BaseAsyncSadLock):
+class PostgresqlAsyncSadLock(BaseAsyncSadLock):
     def __init__(
         self,
         connection_or_session: TAsyncConnectionOrSession,

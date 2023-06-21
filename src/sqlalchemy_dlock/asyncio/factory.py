@@ -3,8 +3,8 @@ from importlib import import_module
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncConnection
 
-from ..utils import safe_name
-from .baselock import BaseAsyncSadLock, TAsyncConnectionOrSession
+from ..utils import pascal_case, safe_name
+from .lock.base import BaseAsyncSadLock, TAsyncConnectionOrSession
 
 __all__ = ["create_async_sadlock"]
 
@@ -23,5 +23,5 @@ def create_async_sadlock(connection_or_session: TAsyncConnectionOrSession, key, 
         mod = import_module(f"..lock.{engine_name}", __name__)
     except ImportError as exception:  # pragma: no cover
         raise NotImplementedError(f"{engine_name}: {exception}")
-    lock_cls = getattr(mod, "AsyncSadLock")
-    return lock_cls(connection_or_session, key, *args, **kwargs)
+    clz = getattr(mod, f"{pascal_case(engine_name)}AsyncSadLock")
+    return clz(connection_or_session, key, *args, **kwargs)

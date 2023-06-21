@@ -20,5 +20,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   sqlalchemy_dlock.asyncio.baselock
-   sqlalchemy_dlock.asyncio.functions
+   sqlalchemy_dlock.asyncio.factory

@@ -1,7 +1,7 @@
-sqlalchemy\_dlock.functions module
+sqlalchemy\_dlock.lock.base module
 ==================================
 
-.. automodule:: sqlalchemy_dlock.functions
+.. automodule:: sqlalchemy_dlock.lock.base
    :members:
    :undoc-members:
    :show-inheritance:

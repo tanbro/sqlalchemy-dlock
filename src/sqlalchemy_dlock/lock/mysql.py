@@ -2,7 +2,7 @@ from typing import Any, Callable, Optional, Union
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.mysql import STATEMENTS
-from ..baselock import BaseSadLock, TConnectionOrSession
+from .base import BaseSadLock, TConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
@@ -19,7 +19,7 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
     return result
 
 
-class SadLock(BaseSadLock):
+class MysqlSadLock(BaseSadLock):
     """MySQL named-lock
 
     .. seealso:: https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html

@@ -22,8 +22,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   sqlalchemy_dlock.baselock
    sqlalchemy_dlock.exceptions
-   sqlalchemy_dlock.functions
+   sqlalchemy_dlock.factory
    sqlalchemy_dlock.utils
    sqlalchemy_dlock.version

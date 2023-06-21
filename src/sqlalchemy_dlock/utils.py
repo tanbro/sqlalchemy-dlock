@@ -3,11 +3,10 @@ from hashlib import blake2b
 from sys import byteorder
 from typing import Union
 
-SAFE_NAME_PATTERN = re.compile(r"[^A-Za-z0-9_]+")
-
 
 def safe_name(s):
-    return SAFE_NAME_PATTERN.sub("_", s).strip().lower()
+    pat = re.compile(r"[^A-Za-z0-9_]+")
+    return pat.sub("_", s).strip().lower()
 
 
 def to_int64_key(k: Union[bytearray, bytes, memoryview, str, int]) -> int:
@@ -30,3 +29,72 @@ def ensure_int64(i: int) -> int:
     elif i < INT64_MIN:
         raise OverflowError("int too small to convert")
     return i
+
+
+def camel_case(string: str) -> str:
+    """Convert string into camel case.
+
+    Args:
+        string: String to convert.
+
+    Returns:
+        string: Camel case string.
+    """
+    pat_non_word = re.compile(r"\w[\s\W]+\w")
+    pat_underscore = re.compile(r"[\-_\.\s]([a-z])")
+    string = re.sub(pat_non_word, "", str(string))
+    if not string:
+        return string
+    return lower_case(string[0]) + re.sub(pat_underscore, lambda matched: upper_case(matched.group(1)), string[1:])
+
+
+def lower_case(string: str) -> str:
+    """Convert string into lower case.
+
+    Args:
+        string: String to convert.
+
+    Returns:
+        string: Lowercase case string.
+    """
+    return str(string).lower()
+
+
+def upper_case(string: str) -> str:
+    """Convert string into upper case.
+
+    Args:
+        string: String to convert.
+
+    Returns:
+        string: Uppercase case string.
+    """
+    return str(string).upper()
+
+
+def capital_case(string: str) -> str:
+    """Convert string into capital case.
+    First letters will be uppercase.
+
+    Args:
+        string: String to convert.
+
+    Returns:
+        string: Capital case string.
+    """
+    string = str(string)
+    if not string:
+        return string
+    return upper_case(string[0]) + string[1:]
+
+
+def pascal_case(string: str) -> str:
+    """Convert string into pascal case.
+
+    Args:
+        string: String to convert.
+
+    Returns:
+        string: Pascal case string.
+    """
+    return capital_case(camel_case(string))

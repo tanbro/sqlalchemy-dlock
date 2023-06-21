@@ -4,7 +4,7 @@ from typing import Any, Callable, Optional, Union
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.postgresql import STATEMENTS
-from ..baselock import BaseSadLock, TConnectionOrSession
+from .base import BaseSadLock, TConnectionOrSession
 from ..utils import ensure_int64, to_int64_key
 
 SLEEP_INTERVAL_DEFAULT = 1
@@ -12,7 +12,7 @@ SLEEP_INTERVAL_DEFAULT = 1
 TConvertFunction = Callable[[Any], int]
 
 
-class SadLock(BaseSadLock):
+class PostgresqlSadLock(BaseSadLock):
     """PostgreSQL advisory lock
 
     .. seealso:: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS

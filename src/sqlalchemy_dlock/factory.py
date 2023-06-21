@@ -2,8 +2,8 @@ from importlib import import_module
 
 from sqlalchemy.engine import Connection
 
-from .baselock import BaseSadLock, TConnectionOrSession
-from .utils import safe_name
+from .lock.base import BaseSadLock, TConnectionOrSession
+from .utils import pascal_case, safe_name
 
 __all__ = ["create_sadlock"]
 
@@ -42,5 +42,5 @@ def create_sadlock(connection_or_session: TConnectionOrSession, key, *args, **kw
         mod = import_module(f"..lock.{engine_name}", __name__)
     except ImportError as exception:  # pragma: no cover
         raise NotImplementedError(f"{engine_name}: {exception}")
-    lock_cls = getattr(mod, "SadLock")
-    return lock_cls(connection_or_session, key, *args, **kwargs)
+    clz = getattr(mod, f"{pascal_case(engine_name)}SadLock")
+    return clz(connection_or_session, key, *args, **kwargs)
