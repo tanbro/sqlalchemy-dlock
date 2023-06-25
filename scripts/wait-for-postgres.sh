@@ -6,6 +6,8 @@ POSTGRES_HOST="$1"
 POSTGRES_PASSWORD="$2"
 shift
 
+psql --version
+
 until PGPASSWORD=$POSTGRES_PASSWORD psql -h "$POSTGRES_HOST" -U "postgres" -c '\q'
 do
   >&2 echo "Postgres is unavailable - sleeping"

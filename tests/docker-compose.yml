@@ -3,13 +3,10 @@ x-test-common: &test-common
   volumes:
     - type: bind
       source: ..
-      target: /work
-  working_dir: /work
-  depends_on:
-    - mysql
-    - postgres
-  env_file:
-    - .env
+      target: /workspace
+  working_dir: /workspace
+  depends_on: [mysql, postgres]
+  env_file: .env
   environment: &test-common-env
     PIP_ROOT_USER_ACTION: ignore
     PIP_DISABLE_PIP_VERSION_CHECK: true
@@ -19,15 +16,7 @@ x-test-common: &test-common
     context: .
     args: &test-common-build-args
       APT_SOURCES: ${APT_SOURCES}
-  command:
-    - /bin/bash
-    - -c
-    - |
-      set -e
-      python -m pip install --upgrade -r /work/tests/requirements.txt -e /work $(printenv SQLALCHEMY_REQUIRES)
-      /bin/bash -e scripts/wait-for-postgres.sh postgres test
-      /bin/bash -e scripts/wait-for-mysql.sh mysql test test test
-      python -B -m unittest -cfv
+  command: [/bin/bash, -eux, /workspace/scripts/run-test.sh]
 
 services:
   mysql:

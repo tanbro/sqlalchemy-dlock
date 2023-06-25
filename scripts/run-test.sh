@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
+# Python unittest running script for the docker-compose tests.
+# DO NOT run it alone.
+
 set -e
 
-ENV_DIR="$(mktemp -d)"
-trap "{ echo 'Remove virtual Python environment ${ENV_DIR}'; rm -fr ${ENV_DIR}; }" EXIT
+python -m pip install -U -e /workspace -r /workspace/tests/requirements.txt $(printenv SQLALCHEMY_REQUIRES)
 
-echo "Create virtual Python environment ${ENV_DIR}"
-python -m venv ${ENV_DIR}
+/bin/bash scripts/wait-for-postgres.sh postgres test
+/bin/bash scripts/wait-for-mysql.sh mysql test test test
 
-${ENV_DIR}/bin/pip install -U --no-cache-dir .[asyncio] pytest pytest-cov -r tests/requirements.txt
-
-${ENV_DIR}/bin/pytest -o cache_dir=/tmp/pytest_cache --no-cov-on-fail --cov=sqlalchemy_dlock
+python -B -m unittest -cfv $(printenv TEST_TESTS)

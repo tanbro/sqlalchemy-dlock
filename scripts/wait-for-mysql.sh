@@ -8,6 +8,8 @@ MYSQL_USER="$3"
 MYSQL_PASSWORD="$4"
 shift
 
+mysql --version
+
 until mysql -u "$MYSQL_USER" --password="$MYSQL_PASSWORD" -h "$MYSQL_HOST" -e "use $MYSQL_DATABASE"
 do
   >&2 echo "MySQL is unavailable - sleeping"
