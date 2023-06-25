@@ -68,7 +68,7 @@ services:
         PYTHON_VERSION: "3.7"
     environment:
       <<: *test-common-env
-      SQLALCHEMY_REQUIRES: "SQLAlchemy>=2.0" # no asynio tests for py37
+      SQLALCHEMY_REQUIRES: "SQLAlchemy>=2.0,<3.0" # no asynio tests for py37
 
   python3.8-sqlalchemy1:
     <<: *test-common
@@ -90,7 +90,7 @@ services:
         PYTHON_VERSION: "3.8"
     environment:
       <<: *test-common-env
-      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0,<3.0"
 
   python3.9-sqlalchemy1:
     build:
@@ -112,7 +112,7 @@ services:
         PYTHON_VERSION: "3.9"
     environment:
       <<: *test-common-env
-      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0,<3.0"
 
   python3.10-sqlalchemy1:
     <<: *test-common
@@ -134,7 +134,7 @@ services:
         PYTHON_VERSION: "3.10"
     environment:
       <<: *test-common-env
-      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0,<3.0"
 
   python3.11-sqlalchemy1:
     <<: *test-common
@@ -156,4 +156,4 @@ services:
         PYTHON_VERSION: "3.11"
     environment:
       <<: *test-common-env
-      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0"
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0,<3.0"
