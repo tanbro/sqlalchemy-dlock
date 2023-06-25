@@ -101,7 +101,7 @@ pip install sqlalchemy-dlock
 
 - Asynchronous I/O Support
 
-  > **Note**:
+  > **NOTE**
   >
   > - [SQLAlchemy][] `1.x`: <https://docs.sqlalchemy.org/14/orm/extensions/asyncio.html>
   > - [SQLAlchemy][] `2.x`: <https://docs.sqlalchemy.org/20/orm/extensions/asyncio.html>
@@ -123,7 +123,7 @@ pip install sqlalchemy-dlock
       assert not lock.locked
   ```
 
-  > **Note**:
+  > **NOTE**
   >
   > [aiomysql][], [asyncpg][] and [psycopg][] are tested asynchronous drivers
   >
@@ -175,14 +175,17 @@ You can run unit-tests
 
   1. set environment variables `TEST_URLS` and `TEST_ASYNC_URLS` for sync and async database connection url.
      Multiple connections separated by space.
-     The test cases load environment variables in `tests/.env`.
 
-     eg (and also the defaults):
+     eg: (following values are also the defaults, and can be omitted)
 
      ```ini
      TEST_URLS=mysql://test:test@127.0.0.1/test postgresql://postgres:test@127.0.0.1/
      TEST_ASYNC_URLS=mysql+aiomysql://test:test@127.0.0.1/test postgresql+asyncpg://postgres:test@127.0.0.1/
      ```
+
+     > **NOTE**
+     >
+     > The test cases would load environment variables from dot-env file `tests/.env`.
 
   1. run unit-test
 
@@ -190,33 +193,25 @@ You can run unit-tests
      python -m unittest
      ```
 
-- or on docker-compose:
+- or on docker [compose][]:
 
-  1. build the project
+  Name of [compose][] services for Python and [SQLAlchemy][] version matrix defined in [compose][] file `docker-compose.yml` has such format:
 
-     ```bash
-     python -m pip install build && python -m build -w
-     ```
+      python{{X.Y}}-sqlalchemy{{X}}
 
-  1. run unit-test
+  For example, if want to run tests for Python `3.8` and [SQLAlchemy][] `1.x`, we shall up to run unit-tests as below:
 
-     Name of services for Python and [SQLAlchemy][] version matrix in the [compose][] file has such format:
+  ```bash
+  cd tests
+  docker compose up python3.8-sqlalchemy1
+  ```
 
-         python{{X.Y}}-sqlalchemy{{X}}
+  For Python `3.10` and [SQLAlchemy][] `2.x`:
 
-     For example, if want to take a test for Python `3.9` and [SQLAlchemy][] `2.x`, we shall up to run unit-tests as below:
-
-     ```bash
-     cd tests
-     docker compose up python3.9-sqlalchemy2
-     ```
-
-     For Python `3.8` and [SQLAlchemy][] `1.x`:
-
-     ```bash
-     cd tests
-     docker compose up python3.8-sqlalchemy1
-     ```
+  ```bash
+  cd tests
+  docker compose up python3.10-sqlalchemy2
+  ```
 
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
 [venv]: https://docs.python.org/library/venv.html "The venv module supports creating lightweight “virtual environments”, each with their own independent set of Python packages installed in their site directories. "
