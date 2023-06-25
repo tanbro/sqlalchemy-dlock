@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_scoped_s
 TAsyncConnectionOrSession = Union[AsyncConnection, AsyncSession, async_scoped_session]
 
 
-class BaseAsyncSadLock:
+class AsyncBaseSadLock:
     def __init__(self, connection_or_session: TAsyncConnectionOrSession, key: Any, *args, **kwargs):
         self._acquired = False
         self._connection_or_session = connection_or_session
