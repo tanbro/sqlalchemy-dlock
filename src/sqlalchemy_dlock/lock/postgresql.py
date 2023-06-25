@@ -2,11 +2,13 @@ from time import sleep, time
 from typing import Any, Callable, Optional, Union
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
-from ..statement.postgresql import make_lock_stmt_mapping
-from .base import BaseSadLock, TConnectionOrSession
+from ..statement.postgresql import (
+    SLEEP_INTERVAL_DEFAULT,
+    SLEEP_INTERVAL_MIN,
+    make_lock_stmt_mapping,
+)
 from ..utils import ensure_int64, to_int64_key
-
-SLEEP_INTERVAL_DEFAULT = 1
+from .base import BaseSadLock, TConnectionOrSession
 
 TConvertFunction = Callable[[Any], int]
 
@@ -22,7 +24,6 @@ class PostgresqlSadLock(BaseSadLock):
         connection_or_session: TConnectionOrSession,
         key,
         level: Optional[str] = None,
-        interval: Union[float, int, None] = None,
         convert: Optional[TConvertFunction] = None,
     ):
         """
@@ -52,6 +53,28 @@ class PostgresqlSadLock(BaseSadLock):
             Only would-be exclusive lockers are locked out.
 
         - ``"transaction"``: works the same as session level lock, except the lock is automatically released at the end of the current transaction and cannot be released explicitly.
+        """
+        if convert:
+            key = ensure_int64(convert(key))
+        elif isinstance(key, int):
+            key = ensure_int64(key)
+        else:
+            key = to_int64_key(key)
+        #
+        level = (level or "session").strip().lower()
+        self._lock_stmt_mapping = make_lock_stmt_mapping(level)
+        self._level = level
+        #
+        super().__init__(connection_or_session, key)
+
+    def acquire(
+        self,
+        block: bool = True,
+        timeout: Union[float, int, None] = None,
+        interval: Union[float, int, None] = None,
+    ) -> bool:
+        """
+        .. seealso:: :meth:`.BaseSadLock.acquire`
 
         .. attention::
 
@@ -63,25 +86,6 @@ class PostgresqlSadLock(BaseSadLock):
             That is: actual timeout won't be precise when ``interval`` is big,
             while small ``interval`` will cause high CPU usage and frequent SQL execution.
         """
-        if convert:
-            key = ensure_int64(convert(key))
-        elif isinstance(key, int):
-            key = ensure_int64(key)
-        else:
-            key = to_int64_key(key)
-        #
-        self._interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
-        self._level = (level or "session").strip().lower()
-        self._lock_stmt_mapping = make_lock_stmt_mapping(self._level)
-        #
-        super().__init__(connection_or_session, key)
-
-    def acquire(
-        self,
-        block: bool = True,
-        timeout: Union[float, int, None] = None,
-        interval: Union[float, int, None] = None,
-    ) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
         if block:
@@ -94,9 +98,9 @@ class PostgresqlSadLock(BaseSadLock):
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
                 if timeout < 0:
                     timeout = 0
-                interval = self._interval if interval is None else interval
-                if interval < 0:  # pragma: no cover
-                    raise ValueError("interval must not be smaller than 0")
+                interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
+                if interval < SLEEP_INTERVAL_MIN:  # pragma: no cover
+                    raise ValueError("interval too small")
                 stmt = self._lock_stmt_mapping["try_lock"].params(key=self._key)
                 ts_begin = time()
                 while True:

@@ -180,3 +180,13 @@ class BasicTestCase(TestCase):
                     self.assertEqual(lck.level, level)
                 with self.assertRaises(ValueError):
                     create_sadlock(conn, key, level="invalid_level_name")
+
+    def test_pg_invalid_interval(self):
+        for engine in ENGINES:
+            if engine.name != "postgresql":
+                continue
+            key = uuid4().hex
+            with engine.connect() as conn:
+                lck = create_sadlock(conn, key)
+                with self.assertRaises(ValueError):
+                    lck.acquire(timeout=0, interval=-1)

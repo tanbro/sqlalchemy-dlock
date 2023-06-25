@@ -11,6 +11,10 @@ UNLOCK_SHARED = text("SELECT pg_advisory_unlock_shared(:key)")
 UNLOCK_XACT = text("SELECT pg_advisory_xact_unlock(:key)")
 
 
+SLEEP_INTERVAL_DEFAULT = 1
+SLEEP_INTERVAL_MIN = 0.1
+
+
 def make_lock_stmt_mapping(level: str):
     if level in ("", "session"):
         return {

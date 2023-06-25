@@ -219,9 +219,6 @@ if version_info >= (3, 8):
                     continue
                 key = uuid4().hex
                 async with engine.connect() as conn:
-                    lck0 = create_async_sadlock(conn, key, interval=-1)
+                    lck = create_async_sadlock(conn, key)
                     with self.assertRaises(ValueError):
-                        await lck0.acquire(timeout=0)
-                    lck1 = create_async_sadlock(conn, key)
-                    with self.assertRaises(ValueError):
-                        await lck1.acquire(timeout=0, interval=-1)
+                        await lck.acquire(timeout=0, interval=-1)

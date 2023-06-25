@@ -3,7 +3,11 @@ from time import time
 from typing import Any, Callable, Optional, Union
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
-from ...statement.postgresql import make_lock_stmt_mapping
+from ...statement.postgresql import (
+    SLEEP_INTERVAL_DEFAULT,
+    SLEEP_INTERVAL_MIN,
+    make_lock_stmt_mapping,
+)
 from ...utils import ensure_int64, to_int64_key
 from .base import AsyncBaseSadLock, TAsyncConnectionOrSession
 
@@ -19,7 +23,6 @@ class AsyncPostgresqlSadLock(AsyncBaseSadLock):
         connection_or_session: TAsyncConnectionOrSession,
         key,
         level: Optional[str] = None,
-        interval: Union[float, int, None] = None,
         convert: Optional[TConvertFunction] = None,
     ):
         if convert:
@@ -29,9 +32,9 @@ class AsyncPostgresqlSadLock(AsyncBaseSadLock):
         else:
             key = to_int64_key(key)
         #
-        self._interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
-        self._level = (level or "session").strip().lower()
-        self._lock_stmt_mapping = make_lock_stmt_mapping(self._level)
+        level = (level or "session").strip().lower()
+        self._lock_stmt_mapping = make_lock_stmt_mapping(level)
+        self._level = level
         #
         super().__init__(connection_or_session, key)
 
@@ -53,9 +56,9 @@ class AsyncPostgresqlSadLock(AsyncBaseSadLock):
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
                 if timeout < 0:
                     timeout = 0
-                interval = self._interval if interval is None else interval
-                if interval < 0:
-                    raise ValueError("interval must not be smaller than 0")
+                interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
+                if interval < SLEEP_INTERVAL_MIN:  # pragma: no cover
+                    raise ValueError("interval too small")
                 stmt = self._lock_stmt_mapping["try_lock"].params(key=self._key)
                 ts_begin = time()
                 while True:
