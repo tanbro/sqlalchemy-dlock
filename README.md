@@ -22,7 +22,7 @@ pip install sqlalchemy-dlock
 
 ## Usage
 
-- Work with [SQLAlchemy][] `Connection`:
+- Work with [SQLAlchemy][] [`Connection`](https://docs.sqlalchemy.org/20/core/connections.html):
 
   ```python
   from sqlalchemy import create_engine
@@ -81,7 +81,7 @@ pip install sqlalchemy-dlock
       assert not lock2.locked
   ```
 
-- Work with [SQLAlchemy][] `ORM` session:
+- Work with [SQLAlchemy][] [`ORM` `Session`](https://docs.sqlalchemy.org/en/20/orm/session.html):
 
   ```python
   from sqlalchemy import create_engine
@@ -103,8 +103,8 @@ pip install sqlalchemy-dlock
 
   > **NOTE**
   >
-  > - [SQLAlchemy][] `1.x`: <https://docs.sqlalchemy.org/14/orm/extensions/asyncio.html>
-  > - [SQLAlchemy][] `2.x`: <https://docs.sqlalchemy.org/20/orm/extensions/asyncio.html>
+  > - [SQLAlchemy][] `1.x`'s asynchronous I/O: <https://docs.sqlalchemy.org/14/orm/extensions/asyncio.html>
+  > - [SQLAlchemy][] `2.x`'s asynchronous I/O: <https://docs.sqlalchemy.org/20/orm/extensions/asyncio.html>
 
   ```python
   from sqlalchemy.ext.asyncio import create_async_engine
@@ -125,20 +125,18 @@ pip install sqlalchemy-dlock
 
   > **NOTE**
   >
-  > [aiomysql][], [asyncpg][] and [psycopg][] are tested asynchronous drivers
+  > [aiomysql][], [asyncpg][] and [psycopg][] are tested asynchronous drivers.
   >
-  > We can install asynchronous DB libraries like one of belows:
+  > We can install it with asynchronous DB libraries:
   >
   > - ```bash
-  >   pip install sqlalchemy-dlock[asyncpg]
+  >   pip install SQLAlchemy[asyncio] aiomysql sqlalchemy-dlock
   >   ```
   >
-  > - ```bash
-  >   pip install sqlalchemy-dlock[asyncio] aiomysql
-  >   ```
+  > or
   >
   > - ```bash
-  >   pip install SQLALchemy[asyncio] sqlalchemy-dlock psycopg
+  >   pip install SQLAlchemy[asyncio] asyncpg sqlalchemy-dlock
   >   ```
 
 ## Test
