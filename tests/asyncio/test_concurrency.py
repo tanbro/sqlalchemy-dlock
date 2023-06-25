@@ -1,16 +1,17 @@
 # https://github.com/sqlalchemy/sqlalchemy/issues/5581
 #
-# Disable the test temporary
+# Multiple Co-routines of SQL executions on a same Engine's Connection/Session will case a dead-lock.
+# So we shall do that on different Engine objects!
 
 from sys import version_info
 
-# if version_info >= (3, 8):
-if False:
+if version_info >= (3, 8):
     import asyncio
-    from logging import getLogger
     from time import time
     from unittest import IsolatedAsyncioTestCase
     from uuid import uuid4
+
+    from sqlalchemy.ext.asyncio import create_async_engine
 
     from sqlalchemy_dlock.asyncio import create_async_sadlock
 
@@ -18,52 +19,47 @@ if False:
 
     class ConcurrencyTestCase(IsolatedAsyncioTestCase):
         def setUp(self):
-            self.logger = getLogger(self.__class__.__name__)
             create_engines()
 
         async def asyncTearDown(self):
             await dispose_engines()
 
         async def test_timeout(self):
-            self.logger.warning(">>>")
-
             key = uuid4().hex
             for engine in get_engines():
+                delay = 3
+                timeout = 1
                 event = asyncio.Event()
+                engine1 = create_async_engine(engine.url)
+                engine2 = create_async_engine(engine.url)
+                try:
 
-                async def coro1():
-                    self.logger.info("coro1: %s connect() %s ...", engine, engine.url)
-                    async with engine.connect() as conn:
-                        self.logger.info("coro1: create_async_sadlock then lock ...")
-                        async with create_async_sadlock(conn, key) as lck:
-                            self.logger.info("coro1: acquired")
-                            self.assertTrue(lck.locked)
-                            self.logger.info("coro1: event.set()")
-                            event.set()
-                            self.logger.info("coro1: sleep")
-                            await asyncio.sleep(3)
-                        self.assertFalse(lck.locked)
-                        self.logger.debug("coro1: end")
+                    async def coro1():
+                        async with engine1.connect() as conn:
+                            async with create_async_sadlock(conn, key) as lck:
+                                self.assertTrue(lck.locked)
+                                event.set()
+                                await asyncio.sleep(delay)
+                            self.assertFalse(lck.locked)
 
-                async def coro2():
-                    self.logger.info("coro2: %s connect() %s ...", engine, engine.url)
-                    async with engine.connect() as conn:
-                        timeout = 1
-                        self.logger.info("coro2: create_async_sadlock()")
-                        l1 = create_async_sadlock(conn, key)
-                        self.logger.info("coro2: event.wait()")
-                        await event.wait()
-                        t0 = time()
-                        self.logger.info("coro2: acquire ...")
-                        is_ok = await l1.acquire(timeout=timeout)
-                        self.logger.info("coro2: acquire -> %s", is_ok)
-                        self.assertFalse(is_ok)
-                        self.assertFalse(l1.locked)
-                        self.assertGreaterEqual(time() - t0, timeout)
+                    async def coro2():
+                        async with engine2.connect() as conn:
+                            lck = create_async_sadlock(conn, key)
+                            await event.wait()
+                            t0 = time()
+                            is_ok = await lck.acquire(timeout=timeout)
+                            self.assertFalse(is_ok)
+                            self.assertFalse(lck.locked)
+                            self.assertGreaterEqual(time() - t0, timeout)
 
-                aws = (
-                    asyncio.create_task(coro1()),
-                    asyncio.create_task(coro2()),
-                )
-                self.logger.warning("wait ...")
-                await asyncio.wait(aws)
+                    aws = (
+                        asyncio.create_task(coro1()),
+                        asyncio.create_task(coro2()),
+                    )
+                    await asyncio.wait(aws, timeout=delay * 2)
+                finally:
+                    aws = (
+                        asyncio.create_task(engine1.dispose()),
+                        asyncio.create_task(engine2.dispose()),
+                    )
+                    await asyncio.wait(aws, timeout=delay * 2)
