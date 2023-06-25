@@ -114,7 +114,7 @@ pip install sqlalchemy-dlock
 
   engine = create_async_engine('postgresql+asyncpg://scott:tiger@127.0.0.1/')
 
-  async with engine.begin() as conn:
+  async with engine.connect() as conn:
       async with create_async_sadlock(conn, key) as lock:
           assert lock.locked
           await lock.release()
