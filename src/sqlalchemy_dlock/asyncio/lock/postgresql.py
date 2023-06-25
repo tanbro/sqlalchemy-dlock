@@ -47,8 +47,7 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
             if timeout is None:
                 # None: set the timeout period to infinite.
                 stmt = self._lock_stmt_mapping["lock"].params(key=self._key)
-                r = await self.connection_or_session.stream(stmt)
-                await r.all()
+                _ = (await self.connection_or_session.execute(stmt)).all()
                 self._acquired = True
             else:
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
@@ -60,8 +59,7 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
                 stmt = self._lock_stmt_mapping["try_lock"].params(key=self._key)
                 ts_begin = time()
                 while True:
-                    r = await self.connection_or_session.stream(stmt)
-                    ret_val = (await r.one())[0]
+                    ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
                     if ret_val:  # succeed
                         self._acquired = True
                         break
@@ -72,8 +70,7 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
             # This will either obtain the lock immediately and return true,
             # or return false without waiting if the lock cannot be acquired immediately.
             stmt = self._lock_stmt_mapping["try_lock"].params(key=self._key)
-            r = await self.connection_or_session.stream(stmt)
-            ret_val = (await r.one())[0]
+            ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
             self._acquired = bool(ret_val)
         #
         return self._acquired
@@ -82,8 +79,7 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
         stmt = self._lock_stmt_mapping["unlock"].params(key=self._key)
-        r = await self.connection_or_session.stream(stmt)
-        ret_val = (await r.one())[0]
+        ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
         if ret_val:
             self._acquired = False
         else:  # pragma: no cover

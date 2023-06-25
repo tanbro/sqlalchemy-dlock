@@ -88,7 +88,7 @@ class PostgresqlSadLock(BaseSadLock):
             if timeout is None:
                 # None: set the timeout period to infinite.
                 stmt = self._lock_stmt_mapping["lock"].params(key=self._key)
-                self.connection_or_session.execute(stmt).all()
+                _ = self.connection_or_session.execute(stmt).all()
                 self._acquired = True
             else:
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
@@ -100,8 +100,8 @@ class PostgresqlSadLock(BaseSadLock):
                 stmt = self._lock_stmt_mapping["try_lock"].params(key=self._key)
                 ts_begin = time()
                 while True:
-                    r = self.connection_or_session.execute(stmt)
-                    if r.scalar_one():  # succeed
+                    ret_val = self.connection_or_session.execute(stmt).scalar_one()
+                    if ret_val:  # succeed
                         self._acquired = True
                         break
                     if time() - ts_begin > timeout:  # expired

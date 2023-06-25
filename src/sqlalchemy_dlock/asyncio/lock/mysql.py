@@ -50,8 +50,7 @@ class MysqlAsyncSadLock(BaseAsyncSadLock):
         else:
             timeout = 0
         stmt = LOCK.params(str=self._key, timeout=timeout)
-        r = await self.connection_or_session.stream(stmt)
-        ret_val = (await r.one())[0]
+        ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
         if ret_val == 1:
             self._acquired = True
         elif ret_val == 0:
@@ -66,8 +65,7 @@ class MysqlAsyncSadLock(BaseAsyncSadLock):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
         stmt = UNLOCK.params(str=self._key)
-        r = await self.connection_or_session.stream(stmt)
-        ret_val = (await r.one())[0]
+        ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
         if ret_val == 1:
             self._acquired = False
         elif ret_val == 0:  # pragma: no cover
