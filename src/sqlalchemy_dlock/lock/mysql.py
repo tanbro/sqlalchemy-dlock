@@ -1,7 +1,7 @@
 from typing import Any, Callable, Optional, Union
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
-from ..statement.mysql import STATEMENTS
+from ..statement.mysql import LOCK, UNLOCK
 from .base import BaseSadLock, TConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
@@ -69,7 +69,7 @@ class MysqlSadLock(BaseSadLock):
                 timeout = 0
         else:
             timeout = 0
-        stmt = STATEMENTS["lock"].params(str=self._key, timeout=timeout)
+        stmt = LOCK.params(str=self._key, timeout=timeout)
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:
             self._acquired = True
@@ -84,7 +84,7 @@ class MysqlSadLock(BaseSadLock):
     def release(self):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
-        stmt = STATEMENTS["unlock"].params(str=self._key)
+        stmt = UNLOCK.params(str=self._key)
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:
             self._acquired = False

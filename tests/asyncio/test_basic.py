@@ -201,7 +201,7 @@ if version_info >= (3, 8):
                         await lock1.release()
 
         async def test_pg_level_name(self):
-            levels = "session", "shared", "transaction"
+            levels = "session", "shared", "xact"
             for engine in get_engines():
                 if engine.name != "postgresql":
                     continue

@@ -1,9 +1,8 @@
-from collections import deque
 from time import sleep, time
 from typing import Any, Callable, Optional, Union
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
-from ..statement.postgresql import STATEMENTS
+from ..statement.postgresql import make_lock_stmt_mapping
 from .base import BaseSadLock, TConnectionOrSession
 from ..utils import ensure_int64, to_int64_key
 
@@ -72,11 +71,8 @@ class PostgresqlSadLock(BaseSadLock):
             key = to_int64_key(key)
         #
         self._interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
-        self._level = level or "session"
-        try:
-            self._stmt_dict = STATEMENTS[self._level]
-        except KeyError:
-            raise ValueError(f"Value of `level` must be in {list(STATEMENTS.keys())}")
+        self._level = (level or "session").strip().lower()
+        self._lock_stmt_mapping = make_lock_stmt_mapping(self._level)
         #
         super().__init__(connection_or_session, key)
 
@@ -91,9 +87,8 @@ class PostgresqlSadLock(BaseSadLock):
         if block:
             if timeout is None:
                 # None: set the timeout period to infinite.
-                stmt = self._stmt_dict["lock"].params(key=self._key)
-                r = self.connection_or_session.execute(stmt)
-                deque(r, maxlen=0)
+                stmt = self._lock_stmt_mapping["lock"].params(key=self._key)
+                self.connection_or_session.execute(stmt).all()
                 self._acquired = True
             else:
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
@@ -102,7 +97,7 @@ class PostgresqlSadLock(BaseSadLock):
                 interval = self._interval if interval is None else interval
                 if interval < 0:  # pragma: no cover
                     raise ValueError("interval must not be smaller than 0")
-                stmt = self._stmt_dict["trylock"].params(key=self._key)
+                stmt = self._lock_stmt_mapping["try_lock"].params(key=self._key)
                 ts_begin = time()
                 while True:
                     r = self.connection_or_session.execute(stmt)
@@ -115,7 +110,7 @@ class PostgresqlSadLock(BaseSadLock):
         else:
             # This will either obtain the lock immediately and return true,
             # or return false without waiting if the lock cannot be acquired immediately.
-            stmt = self._stmt_dict["trylock"].params(key=self._key)
+            stmt = self._lock_stmt_mapping["try_lock"].params(key=self._key)
             ret_val = self.connection_or_session.execute(stmt).scalar_one()
             self._acquired = bool(ret_val)
         #
@@ -124,7 +119,7 @@ class PostgresqlSadLock(BaseSadLock):
     def release(self):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
-        stmt = self._stmt_dict["unlock"].params(key=self._key)
+        stmt = self._lock_stmt_mapping["unlock"].params(key=self._key)
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val:
             self._acquired = False

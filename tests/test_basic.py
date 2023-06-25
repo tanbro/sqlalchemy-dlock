@@ -169,7 +169,7 @@ class BasicTestCase(TestCase):
                     lock1.release()
 
     def test_pg_level_name(self):
-        levels = "session", "shared", "transaction"
+        levels = "session", "shared", "xact"
         for engine in ENGINES:
             if engine.name != "postgresql":
                 continue
