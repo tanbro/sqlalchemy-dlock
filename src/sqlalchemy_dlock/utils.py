@@ -5,8 +5,7 @@ from typing import Union
 
 
 def safe_name(s):
-    pat = re.compile(r"[^A-Za-z0-9_]+")
-    return pat.sub("_", s).strip().lower()
+    return re.sub(r"[^A-Za-z0-9_]+", "_", s).strip().lower()
 
 
 def to_int64_key(k: Union[bytearray, bytes, memoryview, str, int]) -> int:
@@ -40,12 +39,10 @@ def camel_case(string: str) -> str:
     Returns:
         string: Camel case string.
     """
-    pat_non_word = re.compile(r"\w[\s\W]+\w")
-    pat_underscore = re.compile(r"[\-_\.\s]([a-z])")
-    string = re.sub(pat_non_word, "", str(string))
+    string = re.sub(r"\w[\s\W]+\w", "", str(string))
     if not string:
         return string
-    return lower_case(string[0]) + re.sub(pat_underscore, lambda matched: upper_case(matched.group(1)), string[1:])
+    return lower_case(string[0]) + re.sub(r"[\-_\.\s]([a-z])", lambda matched: upper_case(matched.group(1)), string[1:])
 
 
 def lower_case(string: str) -> str:
