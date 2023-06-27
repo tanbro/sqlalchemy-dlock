@@ -37,8 +37,8 @@ def camel_case(s: str) -> str:
     Args:
         s: String to convert.
 
-    Returns:
-        s: Camel case string.
+    Return:
+        Camel case string.
     """
     s = re.sub(r"\w[\s\W]+\w", "", str(s))
     if not s:
@@ -52,8 +52,8 @@ def lower_case(s: str) -> str:
     Args:
         s: String to convert.
 
-    Returns:
-        s: Lowercase case string.
+    Return:
+        Lowercase case string.
     """
     return str(s).lower()
 
@@ -64,8 +64,8 @@ def upper_case(s: str) -> str:
     Args:
         s: s to convert.
 
-    Returns:
-        s: Uppercase case string.
+    Return:
+        Uppercase case string.
     """
     return str(s).upper()
 
@@ -77,8 +77,8 @@ def capital_case(s: str) -> str:
     Args:
         s: String to convert.
 
-    Returns:
-        s: Capital case string.
+    Return:
+        Capital case string.
     """
     s = str(s)
     if not s:
@@ -92,7 +92,7 @@ def pascal_case(s: str) -> str:
     Args:
         s: String to convert.
 
-    Returns:
-        s: Pascal case string.
+    Return:
+        Pascal case string.
     """
     return capital_case(camel_case(s))
