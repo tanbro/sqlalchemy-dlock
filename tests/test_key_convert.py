@@ -67,10 +67,10 @@ class KeyConvertTestCase(TestCase):
             0.1,
             True,
             False,
-            tuple(),
-            list(),
+            (),
+            [],
             set(),
-            dict(),
+            {},
             object(),
         )
 
@@ -124,6 +124,6 @@ class KeyConvertTestCase(TestCase):
     def test_key_wrong_type(self):
         for engine in ENGINES:
             with engine.connect() as conn:
-                for k in (tuple(), dict(), set(), list(), object()):
+                for k in ((), {}, set(), [], object()):
                     with self.assertRaises(TypeError):
                         create_sadlock(conn, k)

@@ -71,10 +71,10 @@ if version_info >= (3, 8):
                 0.1,
                 True,
                 False,
-                tuple(),
-                list(),
+                (),
+                [],
                 set(),
-                dict(),
+                {},
                 object(),
             )
 
@@ -128,6 +128,6 @@ if version_info >= (3, 8):
         async def test_key_wrong_type(self):
             for engine in get_engines():
                 async with engine.connect() as conn:
-                    for k in (tuple(), dict(), set(), list(), object()):
+                    for k in ((), {}, set(), [], object()):
                         with self.assertRaises(TypeError):
                             create_async_sadlock(conn, k)
