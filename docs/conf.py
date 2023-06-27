@@ -30,6 +30,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.githubpages",
     "sphinx.ext.intersphinx",
+    "sphinx_tippy",
     "sphinx_inline_tabs",
     "sphinx_copybutton",
 ]
