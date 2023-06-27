@@ -1,0 +1,22 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: check-case-conflict
+      - id: check-added-large-files
+      - id: check-symlinks
+      - id: detect-private-key
+      - id: mixed-line-ending
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-toml
+      - id: check-ast
+      - id: check-docstring-first
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Ruff version.
+    rev: v0.0.275
+    hooks:
+      - id: ruff

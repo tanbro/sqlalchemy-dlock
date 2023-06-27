@@ -45,7 +45,7 @@ class MysqlSadLock(BaseSadLock):
             def convert(val: Any) -> str:
                 # do something with `val`...
                 return string
-        """
+        """  # noqa: E501
         if convert:
             key = convert(key)
         elif not isinstance(key, str):

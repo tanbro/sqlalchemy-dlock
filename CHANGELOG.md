@@ -95,7 +95,7 @@ Date: 2021-03-09
 
     - `sadlock` -> `create_sadlock`
     - `asyncio.sadlock` -> `asyncio.create_async_sadlock`
-  
+
     and some other ...
 
 ## v0.2a1

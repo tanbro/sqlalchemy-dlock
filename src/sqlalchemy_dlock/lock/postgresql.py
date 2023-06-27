@@ -32,9 +32,7 @@ class PostgresqlSadLock(BaseSadLock):
         - When `key` is :class:`int`, the constructor tries to ensure it to be ``INT64``.
           :class:`OverflowError` is raised if too big or too small for an ``INT64``.
 
-        - When `key` is :class:`str` or :class:`bytes` or alike,
-          the constructor calculates its checksum by :func:`hashlib.blake2b`,
-          and takes the hash result integer value as actual key.
+        - When `key` is :class:`str` or :class:`bytes` or alike, the constructor calculates its checksum by :func:`hashlib.blake2b`, and takes the hash result integer value as actual key.
 
         - Or you can specify a ``convert`` function to that argument.
           The function is like::
@@ -53,7 +51,7 @@ class PostgresqlSadLock(BaseSadLock):
             Only would-be exclusive lockers are locked out.
 
         - ``"transaction"``: works the same as session level lock, except the lock is automatically released at the end of the current transaction and cannot be released explicitly.
-        """
+        """  # noqa: E501
         if convert:
             key = ensure_int64(convert(key))
         elif isinstance(key, int):

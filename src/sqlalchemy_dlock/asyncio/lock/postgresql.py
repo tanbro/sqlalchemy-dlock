@@ -11,9 +11,6 @@ from ...statement.postgresql import (
 from ...utils import ensure_int64, to_int64_key
 from .base import AsyncBaseSadLock, TAsyncConnectionOrSession
 
-SLEEP_INTERVAL_DEFAULT = 1
-
-
 TConvertFunction = Callable[[Any], int]
 
 

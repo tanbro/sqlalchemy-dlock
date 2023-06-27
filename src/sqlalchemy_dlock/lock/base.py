@@ -31,7 +31,7 @@ class BaseSadLock(local):
             pass
         finally:
             some_lock.release()
-    """
+    """  # noqa: E501
 
     def __init__(self, connection_or_session: TConnectionOrSession, key, *args, **kwargs):
         """
@@ -42,7 +42,7 @@ class BaseSadLock(local):
 
         key
             ID or name of the SQL locking function
-        """
+        """  # noqa: E501
         self._acquired = False
         self._connection_or_session = connection_or_session
         self._key = key
