@@ -18,80 +18,81 @@ def to_int64_key(k: Union[bytearray, bytes, memoryview, str, int]) -> int:
     raise TypeError(f"{type(k)}")
 
 
-INT64_MAX = 2**63 - 1  # max of signed int64: 2**63-1(+0x7fff_ffff_ffff_ffff)
-INT64_MIN = -(2**63)  # min of signed int64: -2**63(-0x8000_0000_0000_0000)
-
-
 def ensure_int64(i: int) -> int:
-    if i > INT64_MAX:
+    """ensure the integer in PostgreSQL advisory lock's range (Signed INT64)
+
+    max of signed int64: 2**63-1(+0x7fff_ffff_ffff_ffff)
+    min of signed int64: -2**63(-0x8000_0000_0000_0000)
+    """
+    if i > 0x7FFFFFFFFFFFFFFF:
         i = int.from_bytes(i.to_bytes(8, byteorder, signed=False), byteorder, signed=True)
-    elif i < INT64_MIN:
+    elif i < -0x8000000000000000:
         raise OverflowError("int too small to convert")
     return i
 
 
-def camel_case(string: str) -> str:
+def camel_case(s: str) -> str:
     """Convert string into camel case.
 
     Args:
-        string: String to convert.
+        s: String to convert.
 
     Returns:
-        string: Camel case string.
+        s: Camel case string.
     """
-    string = re.sub(r"\w[\s\W]+\w", "", str(string))
-    if not string:
-        return string
-    return lower_case(string[0]) + re.sub(r"[\-_\.\s]([a-z])", lambda matched: upper_case(matched.group(1)), string[1:])
+    s = re.sub(r"\w[\s\W]+\w", "", str(s))
+    if not s:
+        return s
+    return lower_case(s[0]) + re.sub(r"[\-_\.\s]([a-z])", lambda matched: upper_case(matched.group(1)), s[1:])
 
 
-def lower_case(string: str) -> str:
+def lower_case(s: str) -> str:
     """Convert string into lower case.
 
     Args:
-        string: String to convert.
+        s: String to convert.
 
     Returns:
-        string: Lowercase case string.
+        s: Lowercase case string.
     """
-    return str(string).lower()
+    return str(s).lower()
 
 
-def upper_case(string: str) -> str:
+def upper_case(s: str) -> str:
     """Convert string into upper case.
 
     Args:
-        string: String to convert.
+        s: s to convert.
 
     Returns:
-        string: Uppercase case string.
+        s: Uppercase case string.
     """
-    return str(string).upper()
+    return str(s).upper()
 
 
-def capital_case(string: str) -> str:
+def capital_case(s: str) -> str:
     """Convert string into capital case.
     First letters will be uppercase.
 
     Args:
-        string: String to convert.
+        s: String to convert.
 
     Returns:
-        string: Capital case string.
+        s: Capital case string.
     """
-    string = str(string)
-    if not string:
-        return string
-    return upper_case(string[0]) + string[1:]
+    s = str(s)
+    if not s:
+        return s
+    return upper_case(s[0]) + s[1:]
 
 
-def pascal_case(string: str) -> str:
+def pascal_case(s: str) -> str:
     """Convert string into pascal case.
 
     Args:
-        string: String to convert.
+        s: String to convert.
 
     Returns:
-        string: Pascal case string.
+        s: Pascal case string.
     """
-    return capital_case(camel_case(string))
+    return capital_case(camel_case(s))
