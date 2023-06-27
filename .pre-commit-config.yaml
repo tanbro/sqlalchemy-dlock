@@ -6,10 +6,12 @@ repos:
       - id: check-added-large-files
       - id: check-symlinks
       - id: detect-private-key
+      - id: fix-byte-order-marker
       - id: mixed-line-ending
       - id: check-merge-conflict
       - id: end-of-file-fixer
       - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
       - id: check-yaml
       - id: check-toml
       - id: check-ast
