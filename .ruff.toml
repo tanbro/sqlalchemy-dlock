@@ -1,5 +1,5 @@
 src = ["src"]
-extend-exclude = ["tests", "docs"]
+extend-exclude = ["docs"]
 # Always generate Python 3.7-compatible code.
 target-version = "py37"
 line-length = 128
