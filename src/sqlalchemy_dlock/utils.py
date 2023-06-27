@@ -21,8 +21,8 @@ def to_int64_key(k: Union[bytearray, bytes, memoryview, str, int]) -> int:
 def ensure_int64(i: int) -> int:
     """ensure the integer in PostgreSQL advisory lock's range (Signed INT64)
 
-    max of signed int64: 2**63-1(+0x7fff_ffff_ffff_ffff)
-    min of signed int64: -2**63(-0x8000_0000_0000_0000)
+    * max of signed int64: ``2**63-1`` (``+0x7FFF_FFFF_FFFF_FFFF``)
+    * min of signed int64: ``-2**63`` (``-0x8000_0000_0000_0000``)
     """
     if i > 0x7FFFFFFFFFFFFFFF:
         i = int.from_bytes(i.to_bytes(8, byteorder, signed=False), byteorder, signed=True)
