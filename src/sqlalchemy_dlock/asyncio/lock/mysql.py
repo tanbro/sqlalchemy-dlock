@@ -2,7 +2,7 @@ from typing import Any, Callable, Optional, Union
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...statement.mysql import LOCK, UNLOCK
-from .base import AsyncBaseSadLock, TAsyncConnectionOrSession
+from .base import BaseAsyncSadLock, TAsyncConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
@@ -19,7 +19,7 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
     return result
 
 
-class AsyncMysqlSadLock(AsyncBaseSadLock):
+class MysqlAsyncSadLock(BaseAsyncSadLock):
     def __init__(
         self,
         connection_or_session: TAsyncConnectionOrSession,

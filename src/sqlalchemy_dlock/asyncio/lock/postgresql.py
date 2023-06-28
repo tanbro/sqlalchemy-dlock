@@ -9,12 +9,12 @@ from ...statement.postgresql import (
     make_lock_stmt_mapping,
 )
 from ...utils import ensure_int64, to_int64_key
-from .base import AsyncBaseSadLock, TAsyncConnectionOrSession
+from .base import BaseAsyncSadLock, TAsyncConnectionOrSession
 
 TConvertFunction = Callable[[Any], int]
 
 
-class AsyncPostgresqlSadLock(AsyncBaseSadLock):
+class PostgresqlAsyncSadLock(BaseAsyncSadLock):
     def __init__(
         self,
         connection_or_session: TAsyncConnectionOrSession,

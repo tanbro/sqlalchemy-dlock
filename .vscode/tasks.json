@@ -6,7 +6,7 @@
         {
             "label": "python build",
             "type": "shell",
-            "command": "${command:python.interpreterPath} -m build -w",
+            "command": "${command:python.interpreterPath} -m build",
             "group": {
                 "kind": "build",
                 "isDefault": true

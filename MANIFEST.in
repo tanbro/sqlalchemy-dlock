@@ -5,5 +5,5 @@ exclude codecov.yml
 
 prune .*
 prune docs
-prune tests
 prune scripts
+prune tests
