@@ -11,7 +11,7 @@ It currently supports below locks:
 
  Database  |                                             Lock
 ---------- | ---------------------------------------------------------------------------------------------
-MySQL      | [named lock](https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html)
+MySQL      | [named lock](https://dev.mysql.com/doc/refman/en/locking-functions.html)
 PostgreSQL | [advisory lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)
 
 ## Install
