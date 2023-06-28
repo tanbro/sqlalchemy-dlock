@@ -10,3 +10,4 @@ sphinx-autodoc2
 sphinx-copybutton
 sphinx-inline-tabs
 sphinx_tippy
+sphinx-version-warning

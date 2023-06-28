@@ -33,6 +33,7 @@ extensions = [
     "sphinx_tippy",
     "sphinx_inline_tabs",
     "sphinx_copybutton",
+    "versionwarning.extension",
 ]
 source_suffix = {
     ".rst": "restructuredtext",

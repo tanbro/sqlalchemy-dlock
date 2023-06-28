@@ -1,11 +1,11 @@
-# SQLAlchemy-DLock
+# sqlalchemy-dlock
 
 [![Python package](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml/badge.svg)](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml)
 [![PyPI](https://img.shields.io/pypi/v/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
 [![Documentation Status](https://readthedocs.org/projects/sqlalchemy-dlock/badge/?version=latest)](https://sqlalchemy-dlock.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/tanbro/sqlalchemy-dlock/branch/main/graph/badge.svg?token=GfcDT1ckFX)](https://codecov.io/gh/tanbro/sqlalchemy-dlock)
 
-Distributed lock based on Database and [SQLAlchemy][].
+`sqlalchemy-dlock` is a distributed-lock library based on Database and [SQLAlchemy][].
 
 It currently supports below locks:
 
