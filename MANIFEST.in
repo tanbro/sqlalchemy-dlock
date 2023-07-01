@@ -2,8 +2,10 @@ exclude .*
 exclude *.docker-compose.yml
 exclude *.requirements.txt
 exclude codecov.yml
+exclude coverage.*
 
 prune .*
 prune docs
 prune scripts
 prune tests
+prune htmlcov

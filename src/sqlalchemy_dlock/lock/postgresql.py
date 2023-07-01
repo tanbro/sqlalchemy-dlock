@@ -16,7 +16,9 @@ TConvertFunction = Callable[[Any], int]
 class PostgresqlSadLock(BaseSadLock):
     """PostgreSQL advisory lock
 
-    .. seealso:: https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
+    See Also
+    --------
+    `<https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS>`_
     """
 
     def __init__(
@@ -29,28 +31,40 @@ class PostgresqlSadLock(BaseSadLock):
         """
         PostgreSQL advisory lock requires the key given by ``INT64``.
 
-        - When `key` is :class:`int`, the constructor tries to ensure it to be ``INT64``.
+        * When `key` is :class:`int`, the constructor tries to ensure it to be ``INT64``.
           :class:`OverflowError` is raised if too big or too small for an ``INT64``.
 
-        - When `key` is :class:`str` or :class:`bytes` or alike, the constructor calculates its checksum by :func:`hashlib.blake2b`, and takes the hash result integer value as actual key.
+        * When `key` is :class:`str` or :class:`bytes` or alike, the constructor calculates its checksum by :func:`hashlib.blake2b`, and takes the hash result integer value as actual key.
 
-        - Or you can specify a ``convert`` function to that argument.
+        * Or you can specify a ``convert`` function to that argument.
           The function is like::
 
             def convert(val: Any) -> int:
-                # do something ...
-                return integer
+                int64_key: int = do_sth(val)
+                return int64_key
 
         The ``level`` argument should be one of:
 
-        - ``"session"`` (Omitted): locks an application-defined resource.
+        * ``"session"`` (default):
+            locks an application-defined resource.
             If another session already holds a lock on the same resource identifier, this function will wait until the resource becomes available.
             The lock is exclusive. Multiple lock requests stack, so that if the same resource is locked three times it must then be unlocked three times to be released for other sessions' use.
 
-        - ``"shared"``: works the same as session level lock, except the lock can be shared with other sessions requesting shared locks.
+        * ``"shared"`` :
+            works the same as session level lock, except the lock can be shared with other sessions requesting shared locks.
             Only would-be exclusive lockers are locked out.
 
-        - ``"transaction"``: works the same as session level lock, except the lock is automatically released at the end of the current transaction and cannot be released explicitly.
+        * ``"transaction"`` :
+            works the same as session level lock, except the lock is automatically released at the end of the current transaction and cannot be released explicitly.
+
+        Caution
+        -------
+        Session-level advisory locks are reentrant, if you acquired the same lock twice in a session(SQLAlchemy's connection), you need to release it twice as well.
+
+        Which means:
+            When perform multiple :meth:`.acquire` for a key on the **same** SQLAlchemy connection, latter :meth:`.acquire` will success immediately no wait and never block, it causes cascade lock instead!
+
+        And it's similar to other levels.
         """  # noqa: E501
         if convert:
             key = ensure_int64(convert(key))
@@ -72,18 +86,21 @@ class PostgresqlSadLock(BaseSadLock):
         interval: Union[float, int, None] = None,
     ) -> bool:
         """
-        .. seealso:: :meth:`.BaseSadLock.acquire`
+        See Also
+        --------
+        :meth:`.BaseSadLock.acquire`
 
-        .. attention::
+        Attention
+        ---------
+        PostgreSQL's advisory lock has no timeout mechanism in itself.
+        When ``timeout`` is a non-negative number, we simulate it by **looping** and **sleeping**.
 
-            PostgreSQL's advisory lock has no timeout mechanism in itself.
-            When ``timeout`` is a non-negative number, we simulate it by **looping** and **sleeping**.
+        The ``interval`` argument specifies the sleep seconds(``1`` by default).
 
-            The ``interval`` argument specifies the sleep seconds, whose default is ``1``.
-
-            That is: actual timeout won't be precise when ``interval`` is big,
+        That is:
+            The actual timeout won't be precise when ``interval`` is big;
             while small ``interval`` will cause high CPU usage and frequent SQL execution.
-        """
+        """  # noqa: E501
         if self._acquired:
             raise ValueError("invoked on a locked lock")
         if block:

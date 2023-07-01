@@ -57,10 +57,7 @@ where = ["src"]
 [tool.setuptools_scm]
 write_to = "src/sqlalchemy_dlock/version.py"
 
-[options.packages.find]
-where = "src"
-
 [tool.black]
-line-length = 127
+line-length = 128
 [tool.isort]
 profile = "black"
