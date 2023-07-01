@@ -10,4 +10,4 @@ python -m pip install -U -e /workspace -r /workspace/tests/requirements.txt $(pr
 /bin/bash scripts/wait-for-postgres.sh postgres test
 /bin/bash scripts/wait-for-mysql.sh mysql test test test
 
-python -B -m unittest -cfv $(printenv TEST_TESTS)
+python -m unittest -cfv $(printenv TEST_TESTS)

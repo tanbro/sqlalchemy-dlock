@@ -4,7 +4,7 @@ from sys import byteorder
 from typing import Union
 
 
-def safe_name(s):
+def safe_name(s: str) -> str:
     return re.sub(r"[^A-Za-z0-9_]+", "_", s).strip().lower()
 
 
@@ -23,10 +23,15 @@ def ensure_int64(i: int) -> int:
 
     * max of signed int64: ``2**63-1`` (``+0x7FFF_FFFF_FFFF_FFFF``)
     * min of signed int64: ``-2**63`` (``-0x8000_0000_0000_0000``)
+
+    Returns
+    -------
+    int
+        signed int64 key
     """
-    if i > 0x7FFFFFFFFFFFFFFF:
+    if i > 0x7FFF_FFFF_FFFF_FFFF:
         i = int.from_bytes(i.to_bytes(8, byteorder, signed=False), byteorder, signed=True)
-    elif i < -0x8000000000000000:
+    elif i < -0x8000_0000_0000_0000:
         raise OverflowError("int too small to convert")
     return i
 
@@ -34,10 +39,14 @@ def ensure_int64(i: int) -> int:
 def camel_case(s: str) -> str:
     """Convert string into camel case.
 
-    Args:
-        s: String to convert.
+    Parameters
+    ----------
+    s
+        String to convert.
 
-    Return:
+    Returns
+    -------
+    str
         Camel case string.
     """
     s = re.sub(r"\w[\s\W]+\w", "", str(s))
@@ -49,10 +58,14 @@ def camel_case(s: str) -> str:
 def lower_case(s: str) -> str:
     """Convert string into lower case.
 
-    Args:
-        s: String to convert.
+    Parameters
+    ----------
+    s
+        String to convert.
 
-    Return:
+    Returns
+    -------
+    str
         Lowercase case string.
     """
     return str(s).lower()
@@ -61,10 +74,14 @@ def lower_case(s: str) -> str:
 def upper_case(s: str) -> str:
     """Convert string into upper case.
 
-    Args:
-        s: s to convert.
+    Parameters
+    ----------
+    s
+        String to convert.
 
-    Return:
+    Returns
+    -------
+    str
         Uppercase case string.
     """
     return str(s).upper()
@@ -74,10 +91,14 @@ def capital_case(s: str) -> str:
     """Convert string into capital case.
     First letters will be uppercase.
 
-    Args:
-        s: String to convert.
+    Parameters
+    ----------
+    s
+        String to convert.
 
-    Return:
+    Returns
+    -------
+    str
         Capital case string.
     """
     s = str(s)
@@ -89,10 +110,14 @@ def capital_case(s: str) -> str:
 def pascal_case(s: str) -> str:
     """Convert string into pascal case.
 
-    Args:
-        s: String to convert.
+    Parameters
+    ----------
+    s
+        String to convert.
 
-    Return:
+    Returns
+    -------
+    str
         Pascal case string.
     """
     return capital_case(camel_case(s))
