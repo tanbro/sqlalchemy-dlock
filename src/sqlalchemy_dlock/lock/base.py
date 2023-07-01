@@ -10,10 +10,9 @@ TConnectionOrSession = Union[Connection, Session, scoped_session]
 class BaseSadLock(local):
     """Base class of database lock implementation
 
-    Note
-    ----
-    * It's Thread-Local (:class:`threading.local`)
-    * It's an abstract class, do not manual instantiate
+    Note:
+        * It's Thread-Local (:class:`threading.local`)
+        * It's an abstract class, do not manual instantiate
 
 
     The :meth:`acquire` and :meth:`release` methods can be used as context managers for a :keyword:`with` statement.
@@ -36,13 +35,11 @@ class BaseSadLock(local):
 
     def __init__(self, connection_or_session: TConnectionOrSession, key, *args, **kwargs):
         """
-        Parameters
-        ----------
-        connection_or_session
-            Connection or Session object SQL locking functions will be invoked on it
-
-        key
-            ID or name of the SQL locking function
+        Args:
+            connection_or_session:
+                Connection or Session object SQL locking functions will be invoked on it
+            key:
+                ID or name of the SQL locking function
         """  # noqa: E501
         self._acquired = False
         self._connection_or_session = connection_or_session
@@ -72,7 +69,7 @@ class BaseSadLock(local):
     def key(self):
         """ID or name of the SQL locking function
 
-        It returns `key` parameter of the class's constructor"""
+        It returns ``key`` parameter of the class's constructor"""
         return self._key
 
     @property
@@ -127,28 +124,27 @@ class BaseSadLock(local):
 
         This method maybe useful together with :func:`contextlib.closing`, when we need a :keyword:`with` statement, but don't want it to acquire at the beginning of the block.
 
-        Example
-        -------
-        ::
+        Example:
+            ::
 
-            # ...
+                # ...
 
-            from contextlib import closing
-            from sqlalchemy_dlock import create_sadlock
+                from contextlib import closing
+                from sqlalchemy_dlock import create_sadlock
 
-            # ...
+                # ...
 
-            with closing(create_sadlock(some_connection, some_key)) as lock:
-                # will **NOT** acquire at the begin of with-block
+                with closing(create_sadlock(some_connection, some_key)) as lock:
+                    # will **NOT** acquire at the begin of with-block
+                    assert not lock.locked
+                    # ...
+                    # lock when need
+                    lock.acquire()
+                    assert lock.locked
+                    # ...
+
+                # `close` will be called at the end with-block
                 assert not lock.locked
-                # ...
-                # lock when need
-                lock.acquire()
-                assert lock.locked
-                # ...
-
-            # `close` will be called at the end with-block
-            assert not lock.locked
         """  # noqa: E501
         if self._acquired:
             self.release(*args, **kwargs)

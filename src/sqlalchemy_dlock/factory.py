@@ -11,21 +11,16 @@ __all__ = ["create_sadlock"]
 def create_sadlock(connection_or_session: TConnectionOrSession, key, *args, **kwargs) -> BaseSadLock:
     """Create a database distributed lock object
 
-    Parameters
-    ----------
-    connection_or_session
-        Connection or Session object SQL locking functions will be invoked on it.
+    Args:
+        connection_or_session:
+            Connection or Session object SQL locking functions will be invoked on it.
+        key:
+            ID or name of the SQL locking function
 
-    key
-        ID or name of the SQL locking function
-
-    Returns
-    -------
-    BaseSadLock
-        New created lock object.
+    Returns:
+        New created lock object
 
         Type of the lock object is sub-class of :class:`.BaseSadLock`, which depends on the passed-in SQLAlchemy ``Connection`` or ``session``.
-
         MySQL and PostgreSQL connection/session are supported til now.
     """  # noqa: E501
     if isinstance(connection_or_session, Connection):

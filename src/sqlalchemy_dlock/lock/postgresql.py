@@ -16,9 +16,8 @@ TConvertFunction = Callable[[Any], int]
 class PostgresqlSadLock(BaseSadLock):
     """PostgreSQL advisory lock
 
-    See Also
-    --------
-    `<https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS>`_
+    See Also:
+        https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
     """
 
     def __init__(
@@ -57,14 +56,13 @@ class PostgresqlSadLock(BaseSadLock):
         * ``"transaction"`` :
             works the same as session level lock, except the lock is automatically released at the end of the current transaction and cannot be released explicitly.
 
-        Caution
-        -------
-        Session-level advisory locks are reentrant, if you acquired the same lock twice in a session(SQLAlchemy's connection), you need to release it twice as well.
+        Caution:
+            Session-level advisory locks are reentrant, if you acquired the same lock twice in a session(SQLAlchemy's connection), you need to release it twice as well.
 
-        Which means:
-            When perform multiple :meth:`.acquire` for a key on the **same** SQLAlchemy connection, latter :meth:`.acquire` will success immediately no wait and never block, it causes cascade lock instead!
+            Which means:
+                When perform multiple :meth:`.acquire` for a key on the **same** SQLAlchemy connection, latter :meth:`.acquire` will success immediately no wait and never block, it causes cascade lock instead!
 
-        And it's similar to other levels.
+            And it's similar to other levels.
         """  # noqa: E501
         if convert:
             key = ensure_int64(convert(key))
@@ -86,20 +84,18 @@ class PostgresqlSadLock(BaseSadLock):
         interval: Union[float, int, None] = None,
     ) -> bool:
         """
-        See Also
-        --------
-        :meth:`.BaseSadLock.acquire`
+        See Also:
+            :meth:`.BaseSadLock.acquire`
 
-        Attention
-        ---------
-        PostgreSQL's advisory lock has no timeout mechanism in itself.
-        When ``timeout`` is a non-negative number, we simulate it by **looping** and **sleeping**.
+        Attention:
+            PostgreSQL's advisory lock has no timeout mechanism in itself.
+            When ``timeout`` is a non-negative number, we simulate it by **looping** and **sleeping**.
 
-        The ``interval`` argument specifies the sleep seconds(``1`` by default).
+            The ``interval`` argument specifies the sleep seconds(``1`` by default).
 
-        That is:
-            The actual timeout won't be precise when ``interval`` is big;
-            while small ``interval`` will cause high CPU usage and frequent SQL execution.
+            That is:
+                The actual timeout won't be precise when ``interval`` is big;
+                while small ``interval`` will cause high CPU usage and frequent SQL execution.
         """  # noqa: E501
         if self._acquired:
             raise ValueError("invoked on a locked lock")
@@ -148,4 +144,5 @@ class PostgresqlSadLock(BaseSadLock):
 
     @property
     def level(self) -> str:
+        """advisory lock's level"""
         return self._level

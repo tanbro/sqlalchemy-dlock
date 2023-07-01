@@ -24,10 +24,8 @@ def ensure_int64(i: int) -> int:
     * max of signed int64: ``2**63-1`` (``+0x7FFF_FFFF_FFFF_FFFF``)
     * min of signed int64: ``-2**63`` (``-0x8000_0000_0000_0000``)
 
-    Returns
-    -------
-    int
-        signed int64 key
+    Returns:
+        Signed int64 key
     """
     if i > 0x7FFF_FFFF_FFFF_FFFF:
         i = int.from_bytes(i.to_bytes(8, byteorder, signed=False), byteorder, signed=True)
@@ -39,14 +37,10 @@ def ensure_int64(i: int) -> int:
 def camel_case(s: str) -> str:
     """Convert string into camel case.
 
-    Parameters
-    ----------
-    s
-        String to convert.
+    Args:
+        s: String to convert
 
-    Returns
-    -------
-    str
+    Returns:
         Camel case string.
     """
     s = re.sub(r"\w[\s\W]+\w", "", str(s))
@@ -58,14 +52,10 @@ def camel_case(s: str) -> str:
 def lower_case(s: str) -> str:
     """Convert string into lower case.
 
-    Parameters
-    ----------
-    s
-        String to convert.
+    Args:
+        s: String to convert
 
-    Returns
-    -------
-    str
+    Returns:
         Lowercase case string.
     """
     return str(s).lower()
@@ -74,14 +64,10 @@ def lower_case(s: str) -> str:
 def upper_case(s: str) -> str:
     """Convert string into upper case.
 
-    Parameters
-    ----------
-    s
-        String to convert.
+    Args:
+        s: String to convert
 
-    Returns
-    -------
-    str
+    Returns:
         Uppercase case string.
     """
     return str(s).upper()
@@ -91,14 +77,10 @@ def capital_case(s: str) -> str:
     """Convert string into capital case.
     First letters will be uppercase.
 
-    Parameters
-    ----------
-    s
-        String to convert.
+    Args:
+        s: String to convert
 
-    Returns
-    -------
-    str
+    Returns:
         Capital case string.
     """
     s = str(s)
@@ -110,14 +92,10 @@ def capital_case(s: str) -> str:
 def pascal_case(s: str) -> str:
     """Convert string into pascal case.
 
-    Parameters
-    ----------
-    s
-        String to convert.
+    Args:
+        s: String to convert
 
-    Returns
-    -------
-    str
+    Returns:
         Pascal case string.
     """
     return capital_case(camel_case(s))

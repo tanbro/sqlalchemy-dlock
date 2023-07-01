@@ -22,17 +22,15 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
 class MysqlSadLock(BaseSadLock):
     """MySQL named-lock
 
-    See Also
-    --------
-    `<https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html>`_
+    See Also:
+        https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
 
-    Caution
-    -------
-    To MySQL locking function, it is even possible for a given session to acquire multiple locks for the same name.
-    Other sessions cannot acquire a lock with that name until the acquiring session releases all its locks for the name.
+    Caution:
+        To MySQL locking function, it is even possible for a given session to acquire multiple locks for the same name.
+        Other sessions cannot acquire a lock with that name until the acquiring session releases all its locks for the name.
 
-    Which means:
-        When perform multiple :meth:`.acquire` for a key on the **same** SQLAlchemy connection, latter :meth:`.acquire` will success immediately no wait and never block, it causes cascade lock instead!
+        Which means:
+            When perform multiple :meth:`.acquire` for a key on the **same** SQLAlchemy connection, latter :meth:`.acquire` will success immediately no wait and never block, it causes cascade lock instead!
     """  # noqa: E501
 
     def __init__(self, connection_or_session: TConnectionOrSession, key, convert: Optional[TConvertFunction] = None):
