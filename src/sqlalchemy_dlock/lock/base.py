@@ -33,20 +33,52 @@ class BaseSadLock(local):
             some_lock.release()
     """  # noqa: E501
 
-    def __init__(self, connection_or_session: TConnectionOrSession, key, *args, **kwargs):
+    def __init__(
+        self, connection_or_session: TConnectionOrSession, key, timeout: Union[float, int, None] = None, *args, **kwargs
+    ):
         """
         Args:
-            connection_or_session:
-                Connection or Session object SQL locking functions will be invoked on it
-            key:
-                ID or name of the SQL locking function
+            connection_or_session: Connection or Session object SQL locking functions will be invoked on it
+
+            key: ID or name of the SQL locking function
+
+            timeout: block for at most the number of seconds specified by timeout as long as the lock can not be acquired.
+
+                Same as that in :meth:`acquire`, but **ONLY** affects :keyword:`with` statement.
+
+                Note:
+                    When we specified the ``timeout``, and use it in a :keyword:`with` statement, it will invoke :meth:`acquire` in `block` mode with the specified ``timeout``.
+                    And if the lock can not acquire til ``timeout``, a :class:`TimeoutError` will be raised.
+
+                Attention:
+                    When :meth:`acquire` invoked, the implementation class SHOULD keep ``timeout`` default to :data:`None`.
+                    Even if we had specified a non-:data:`None` ``timeout`` previously in constructor.
+
+                Example:
+                    ::
+
+                        lck = create_sadlock(conn, k, timeout=5)
+                        try:
+                            with lck:
+                                # do something...
+                                pass
+                        except TimeoutError:
+                            # can not acquire after 5 seconds
+                            pass
+
+                        # Attention: timeout's default is still `None`, when invoking `acquire`
+                        lck.acquire()
         """  # noqa: E501
         self._acquired = False
         self._connection_or_session = connection_or_session
         self._key = key
+        self._timeout = timeout
 
     def __enter__(self):
-        self.acquire()
+        if self._timeout is None:  # timeout period is infinite
+            self.acquire()
+        elif not self.acquire(timeout=self._timeout):  # the timeout period has elapsed and not acquired
+            raise TimeoutError()
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
