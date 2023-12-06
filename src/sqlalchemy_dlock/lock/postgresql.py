@@ -24,8 +24,10 @@ class PostgresqlSadLock(BaseSadLock):
         self,
         connection_or_session: TConnectionOrSession,
         key,
+        /,
         level: Optional[str] = None,
         convert: Optional[TConvertFunction] = None,
+        **kwargs,
     ):
         """
         PostgreSQL advisory lock requires the key given by ``INT64``.
@@ -75,7 +77,7 @@ class PostgresqlSadLock(BaseSadLock):
         self._lock_stmt_mapping = make_lock_stmt_mapping(level)
         self._level = level
         #
-        super().__init__(connection_or_session, key)
+        super().__init__(connection_or_session, key, **kwargs)
 
     def acquire(
         self,

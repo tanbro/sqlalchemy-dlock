@@ -19,8 +19,10 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
         self,
         connection_or_session: TAsyncConnectionOrSession,
         key,
+        /,
         level: Optional[str] = None,
         convert: Optional[TConvertFunction] = None,
+        **kwargs,
     ):
         if convert:
             key = ensure_int64(convert(key))
@@ -33,7 +35,7 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
         self._lock_stmt_mapping = make_lock_stmt_mapping(level)
         self._level = level
         #
-        super().__init__(connection_or_session, key)
+        super().__init__(connection_or_session, key, **kwargs)
 
     async def acquire(
         self,

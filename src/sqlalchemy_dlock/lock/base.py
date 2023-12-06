@@ -14,7 +14,6 @@ class BaseSadLock(local):
         * It's Thread-Local (:class:`threading.local`)
         * It's an abstract class, do not manual instantiate
 
-
     The :meth:`acquire` and :meth:`release` methods can be used as context managers for a :keyword:`with` statement.
     :meth:`acquire` will be called when the block is entered, and :meth:`release` will be called when the block is exited.
     Hence, the following snippet::
@@ -31,22 +30,58 @@ class BaseSadLock(local):
             pass
         finally:
             some_lock.release()
+
+    Note:
+        A :exc:`TimeoutError` will be thrown if acquire timeout in :keyword:`with` statement.
     """  # noqa: E501
 
-    def __init__(self, connection_or_session: TConnectionOrSession, key, *args, **kwargs):
+    def __init__(
+        self,
+        connection_or_session: TConnectionOrSession,
+        key,
+        /,
+        contextual_timeout: Union[float, int, None] = None,
+        **kwargs,
+    ):
         """
         Args:
-            connection_or_session:
-                Connection or Session object SQL locking functions will be invoked on it
-            key:
-                ID or name of the SQL locking function
+
+            connection_or_session: Connection or Session object SQL locking functions will be invoked on it
+
+            key: ID or name of the SQL locking function
+
+            contextual_timeout: Timeout(seconds) for Context Managers.
+
+                When called in a :keyword:`with` statement, the new created lock object will pass it to ``timeout`` argument of :meth:`.BaseSadLock.acquire`.
+
+                Note:
+                    **ONLY** affects :keyword:`with` statements.
+
+                Example:
+                    ::
+
+                        lck = create_sadlock(conn, k, contextual_timeout=5)
+                        try:
+                            with lck:
+                                # do something...
+                                pass
+                        except TimeoutError:
+                            # can not acquire after 5 seconds
+                            pass
+
+                        # Attention: timeout's default is still `None`, when invoking `acquire`
+                        lck.acquire()
         """  # noqa: E501
         self._acquired = False
         self._connection_or_session = connection_or_session
         self._key = key
+        self._contextual_timeout = contextual_timeout
 
     def __enter__(self):
-        self.acquire()
+        if self._contextual_timeout is None:  # timeout period is infinite
+            self.acquire()
+        elif not self.acquire(timeout=self._contextual_timeout):  # the timeout period has elapsed and not acquired
+            raise TimeoutError()
         return self
 
     def __exit__(self, exc_type, exc_value, exc_tb):
@@ -76,23 +111,23 @@ class BaseSadLock(local):
     def locked(self) -> bool:
         """locked/unlocked state property
 
-        :data:`True` if the lock is acquired, else :data`False`
+        :data:`True` if the lock is acquired, else :data:`False`
         """
         return self._acquired
 
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:  # pragma: no cover
         """Acquire a lock, blocking or non-blocking.
 
-        * With the ``block`` argument set to :data`True` (the default), the method call will block until the lock is in an unlocked state, then set it to locked and return :data:`True`.
+        * With the ``block`` argument set to :data:`True` (the default), the method call will block until the lock is in an unlocked state, then set it to locked and return :data:`True`.
 
         * With the ``block`` argument set to :data:`False`, the method call does not block.
-          If the lock is currently in a locked state, return :data:`False`; otherwise set the lock to a locked state and return :data`True`.
+          If the lock is currently in a locked state, return :data:`False`; otherwise set the lock to a locked state and return :data:`True`.
 
         * When invoked with a positive, floating-point value for `timeout`, block for at most the number of seconds specified by timeout as long as the lock can not be acquired.
           Invocations with a negative value for `timeout` are equivalent to a `timeout` of zero.
           Invocations with a `timeout` value of ``None`` (the default) set the timeout period to infinite.
           The ``timeout`` parameter has no practical implications if the ``block`` argument is set to :data:`False` and is thus ignored.
-          Returns :data`True` if the lock has been acquired or :data:`False` if the timeout period has elapsed.
+          Returns :data:`True` if the lock has been acquired or :data:`False` if the timeout period has elapsed.
         """  # noqa: E501
         raise NotImplementedError()
 
