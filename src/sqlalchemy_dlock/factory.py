@@ -29,7 +29,7 @@ def create_sadlock(
 
             When called in a :keyword:`with` statement, the new created lock object will pass it to ``timeout`` argument of :meth:`.BaseSadLock.acquire`.
 
-            A :data:`TimeoutError` will be thrown if can not acquire after `contextual_timeout`
+            A :exc:`TimeoutError` will be thrown if can not acquire after ``contextual_timeout``
 
     Returns:
         New created lock object
