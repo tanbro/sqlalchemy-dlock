@@ -24,8 +24,10 @@ class PostgresqlSadLock(BaseSadLock):
         self,
         connection_or_session: TConnectionOrSession,
         key,
+        /,
         level: Optional[str] = None,
         convert: Optional[TConvertFunction] = None,
+        **kwargs,
     ):
         """
         PostgreSQL advisory lock requires the key given by ``INT64``.

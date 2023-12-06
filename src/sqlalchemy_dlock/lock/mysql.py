@@ -33,7 +33,14 @@ class MysqlSadLock(BaseSadLock):
             When perform multiple :meth:`.acquire` for a key on the **same** SQLAlchemy connection, latter :meth:`.acquire` will success immediately no wait and never block, it causes cascade lock instead!
     """  # noqa: E501
 
-    def __init__(self, connection_or_session: TConnectionOrSession, key, convert: Optional[TConvertFunction] = None):
+    def __init__(
+        self,
+        connection_or_session: TConnectionOrSession,
+        key,
+        /,
+        convert: Optional[TConvertFunction] = None,
+        **kwargs,
+    ):
         """
         MySQL named lock requires the key given by string.
 
