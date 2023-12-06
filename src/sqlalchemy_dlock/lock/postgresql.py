@@ -77,7 +77,7 @@ class PostgresqlSadLock(BaseSadLock):
         self._lock_stmt_mapping = make_lock_stmt_mapping(level)
         self._level = level
         #
-        super().__init__(connection_or_session, key)
+        super().__init__(connection_or_session, key, **kwargs)
 
     def acquire(
         self,

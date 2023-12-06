@@ -70,7 +70,7 @@ class MysqlSadLock(BaseSadLock):
         if len(key) > MYSQL_LOCK_NAME_MAX_LENGTH:
             raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
         #
-        super().__init__(connection_or_session, key)
+        super().__init__(connection_or_session, key, **kwargs)
 
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:
