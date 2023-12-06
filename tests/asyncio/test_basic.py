@@ -42,6 +42,23 @@ if version_info >= (3, 8):
                         self.assertTrue(lock.locked)
                     self.assertFalse(lock.locked)
 
+        async def test_timeout_in_with_statement(self):
+            for engine in get_engines():
+                async with AsyncExitStack() as stack:
+                    conn0, conn1 = [await stack.enter_async_context(engine.connect()) for _ in range(2)]
+                    key = uuid4().hex
+                    lock0 = create_async_sadlock(conn0, key)
+                    self.assertFalse(lock0.locked)
+                    r = await lock0.acquire(False)
+                    self.assertTrue(r)
+                    self.assertTrue(lock0.locked)
+                    with self.assertRaises(TimeoutError):
+                        async with create_async_sadlock(conn1, key, contextual_timeout=1):
+                            pass
+                    self.assertTrue(lock0.locked)
+                    await lock0.release()
+                    self.assertFalse(lock0.locked)
+
         async def test_many_str_key(self):
             for engine in get_engines():
                 async with engine.connect() as conn:
