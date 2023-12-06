@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.5
+
+Date: 2023-12-06
+
+- New:
+  - `contextual_timeout` parameter for “with” statement
+  - Support Python 3.12
+
 ## v0.4
 
 Date: 2023-06-17

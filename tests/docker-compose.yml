@@ -145,3 +145,25 @@ services:
     environment:
       <<: *test-common-env
       SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0,<3.0"
+
+  python3.12-sqlalchemy1:
+    <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.12"
+    environment:
+      <<: *test-common-env
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=1.4.3,<2.0"
+
+  python3.12-sqlalchemy2:
+    <<: *test-common
+    build:
+      <<: *test-common-build
+      args:
+        <<: *test-common-build-args
+        PYTHON_VERSION: "3.12"
+    environment:
+      <<: *test-common-env
+      SQLALCHEMY_REQUIRES: "SQLAlchemy[asyncio]>=2.0,<3.0"
