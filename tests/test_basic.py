@@ -36,6 +36,19 @@ class BasicTestCase(TestCase):
                     self.assertTrue(lock.locked)
                 self.assertFalse(lock.locked)
 
+    def test_timeout_with_statement(self):
+        for engine in ENGINES:
+            key = uuid4().hex
+            with ExitStack() as stack:
+                conn0, conn1 = [stack.enter_context(engine.connect()) for _ in range(2)]
+                lock0 = create_sadlock(conn0, key)
+                self.assertTrue(lock0.acquire(False))
+                with self.assertRaises(TimeoutError):
+                    with create_sadlock(conn1, key, contextual_timeout=1):
+                        pass
+                lock0.release()
+                self.assertFalse(lock0.locked)
+
     def test_many_str_key(self):
         for engine in ENGINES:
             for _ in range(100):

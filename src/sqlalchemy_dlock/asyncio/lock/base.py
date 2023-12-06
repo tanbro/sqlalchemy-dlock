@@ -6,13 +6,24 @@ TAsyncConnectionOrSession = Union[AsyncConnection, AsyncSession, async_scoped_se
 
 
 class BaseAsyncSadLock:
-    def __init__(self, connection_or_session: TAsyncConnectionOrSession, key: Any, *args, **kwargs):
+    def __init__(
+        self,
+        connection_or_session: TAsyncConnectionOrSession,
+        key: Any,
+        /,
+        contextual_timeout: Union[float, int, None] = None,
+        **kwargs,
+    ):
         self._acquired = False
         self._connection_or_session = connection_or_session
         self._key = key
+        self._contextual_timeout = contextual_timeout
 
     async def __aenter__(self):
-        await self.acquire()
+        if self._contextual_timeout is None:
+            await self.acquire()
+        elif not await self.acquire(timeout=self._contextual_timeout):  # the timeout period has elapsed and not acquired
+            raise TimeoutError()
         return self
 
     async def __aexit__(self, exc_type, exc_value, exc_tb):

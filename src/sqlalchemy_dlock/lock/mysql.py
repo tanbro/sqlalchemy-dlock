@@ -33,7 +33,14 @@ class MysqlSadLock(BaseSadLock):
             When perform multiple :meth:`.acquire` for a key on the **same** SQLAlchemy connection, latter :meth:`.acquire` will success immediately no wait and never block, it causes cascade lock instead!
     """  # noqa: E501
 
-    def __init__(self, connection_or_session: TConnectionOrSession, key, convert: Optional[TConvertFunction] = None):
+    def __init__(
+        self,
+        connection_or_session: TConnectionOrSession,
+        key,
+        /,
+        convert: Optional[TConvertFunction] = None,
+        **kwargs,
+    ):
         """
         MySQL named lock requires the key given by string.
 
@@ -63,7 +70,7 @@ class MysqlSadLock(BaseSadLock):
         if len(key) > MYSQL_LOCK_NAME_MAX_LENGTH:
             raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
         #
-        super().__init__(connection_or_session, key)
+        super().__init__(connection_or_session, key, **kwargs)
 
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:
