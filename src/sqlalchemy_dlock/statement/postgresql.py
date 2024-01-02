@@ -1,4 +1,7 @@
-from sqlalchemy import text
+from typing import Dict
+
+from sqlalchemy import text, TextClause
+
 
 LOCK = text("SELECT pg_advisory_lock(:key)")
 LOCK_SHARED = text("SELECT pg_advisory_lock_shared(:key)")
@@ -15,8 +18,8 @@ SLEEP_INTERVAL_DEFAULT = 1
 SLEEP_INTERVAL_MIN = 0.1
 
 
-def make_lock_stmt_mapping(level: str):
-    if level in ("", "session"):
+def make_lock_stmt_mapping(level: str) -> Dict[str, TextClause]:
+    if level in ("", "sess", "session"):
         return {
             "lock": LOCK,
             "try_lock": TRY_LOCK,
