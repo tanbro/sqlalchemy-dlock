@@ -1,6 +1,4 @@
-from typing import Dict
-
-from sqlalchemy import text, TextClause
+from sqlalchemy import text
 
 
 LOCK = text("SELECT pg_advisory_lock(:key)")
@@ -17,25 +15,20 @@ UNLOCK_XACT = text("SELECT pg_advisory_xact_unlock(:key)")
 SLEEP_INTERVAL_DEFAULT = 1
 SLEEP_INTERVAL_MIN = 0.1
 
-
-def make_lock_stmt_mapping(level: str) -> Dict[str, TextClause]:
-    if level in ("", "sess", "session"):
-        return {
-            "lock": LOCK,
-            "try_lock": TRY_LOCK,
-            "unlock": UNLOCK,
-        }
-    elif level in ("share", "shared"):
-        return {
-            "lock": LOCK_SHARED,
-            "try_lock": TRY_LOCK_SHARED,
-            "unlock": UNLOCK_SHARED,
-        }
-    elif level in ("tran", "trans", "transact", "transaction", "xact"):
-        return {
-            "lock": LOCK_XACT,
-            "try_lock": TRY_LOCK_XACT,
-            "unlock": UNLOCK_XACT,
-        }
-    else:
-        raise ValueError(f"Unknown postgresql advisory lock level {level!r}. It should be in ('session', 'shared', 'xact')")
+STATEMENT_DICT = {
+    "session": {
+        "lock": LOCK,
+        "try_lock": TRY_LOCK,
+        "unlock": UNLOCK,
+    },
+    "shared": {
+        "lock": LOCK_SHARED,
+        "try_lock": TRY_LOCK_SHARED,
+        "unlock": UNLOCK_SHARED,
+    },
+    "transaction": {
+        "lock": LOCK_XACT,
+        "try_lock": TRY_LOCK_XACT,
+        "unlock": UNLOCK_XACT,
+    },
+}
