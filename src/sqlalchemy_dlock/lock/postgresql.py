@@ -6,7 +6,7 @@ from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.postgresql import (
     SLEEP_INTERVAL_DEFAULT,
     SLEEP_INTERVAL_MIN,
-    make_lock_stmt_mapping,
+    STATEMENT_DICT,
 )
 from ..utils import ensure_int64, to_int64_key
 from .base import BaseSadLock
@@ -78,7 +78,7 @@ class PostgresqlSadLock(BaseSadLock):
             key = to_int64_key(key)
         #
         level = (level or "session").strip().lower()
-        self._lock_stmt_mapping = make_lock_stmt_mapping(level)
+        self._lock_stmt_mapping = STATEMENT_DICT[level]
         self._level = level
         #
         super().__init__(connection_or_session, key, **kwargs)
