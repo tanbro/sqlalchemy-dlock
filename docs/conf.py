@@ -58,9 +58,11 @@ html_theme_options = {
 # -- Options for autodoc ----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
 
+autodoc_mock_imports = ["typing", "jinja2", "sqlalchemy"]
+
 # Automatically extract typehints when specified and place them in
 # descriptions of the relevant function/method.
-autodoc_typehints = "description"
+autodoc_typehints = "both"
 
 # Don't show class signature with the class' name.
 # autodoc_class_signature = "separated"

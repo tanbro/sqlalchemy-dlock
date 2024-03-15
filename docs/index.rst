@@ -42,7 +42,7 @@ Contents
 --------
 
 .. toctree::
-   :caption: Documentations
+   :caption: Documentation
    :titlesonly:
 
    README
@@ -50,11 +50,11 @@ Contents
    CHANGELOG
 
 .. toctree::
-   :caption: API References
+   :caption: API Reference
    :titlesonly:
    :maxdepth: 1
 
-   apidoc/modules
+   apidocs/sqlalchemy_dlock
 
 ------------------
 Indices and tables

@@ -1,10 +1,11 @@
+import sys
 from threading import local
 from typing import Union
 
-from sqlalchemy.engine import Connection
-from sqlalchemy.orm import Session, scoped_session
-
-TConnectionOrSession = Union[Connection, Session, scoped_session]
+if sys.version_info < (3, 12):  # pragma: no cover
+    from .._sa_types_backward import TConnectionOrSession
+else:  # pragma: no cover
+    from .._sa_types import TConnectionOrSession
 
 
 class BaseSadLock(local):

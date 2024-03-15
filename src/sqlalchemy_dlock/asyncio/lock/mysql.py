@@ -1,8 +1,14 @@
+import sys
 from typing import Any, Callable, Optional, Union
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...statement.mysql import LOCK, UNLOCK
-from .base import BaseAsyncSadLock, TAsyncConnectionOrSession
+from .base import BaseAsyncSadLock
+
+if sys.version_info < (3, 12):  # pragma: no cover
+    from .._sa_types_backward import TAsyncConnectionOrSession
+else:  # pragma: no cover
+    from .._sa_types import TAsyncConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
@@ -21,7 +27,12 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
 
 class MysqlAsyncSadLock(BaseAsyncSadLock):
     def __init__(
-        self, connection_or_session: TAsyncConnectionOrSession, key, /, convert: Optional[TConvertFunction] = None, **kwargs
+        self,
+        connection_or_session: TAsyncConnectionOrSession,
+        key,
+        /,
+        convert: Optional[Callable[[Any], str]] = None,
+        **kwargs,
     ):
         if convert:
             key = convert(key)

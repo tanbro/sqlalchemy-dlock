@@ -9,7 +9,8 @@ x-test-common: &test-common
   env_file: .env
   environment: &test-common-env
     PIP_ROOT_USER_ACTION: ignore
-    PIP_DISABLE_PIP_VERSION_CHECK: true
+    SETUPTOOLS_SCM_PRETEND_VERSION: "0"
+    PIP_NO_WARN_SCRIPT_LOCATION: "1"
     TEST_URLS: mysql://test:test@mysql/test postgresql://postgres:test@postgres/
     TEST_ASYNC_URLS: mysql+aiomysql://test:test@mysql/test postgresql+asyncpg://postgres:test@postgres/
   build: &test-common-build
@@ -17,6 +18,8 @@ x-test-common: &test-common
     args: &test-common-build-args
       APT_SOURCES: ${APT_SOURCES}
   command: [/bin/bash, -eux, /workspace/scripts/run-test.sh]
+
+name: sqlalchemy-dlock-tests
 
 services:
   mysql:
@@ -35,28 +38,6 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: test
-
-  python3.7-sqlalchemy1:
-    <<: *test-common
-    build:
-      <<: *test-common-build
-      args:
-        <<: *test-common-build-args
-        PYTHON_VERSION: "3.7"
-    environment:
-      <<: *test-common-env
-      SQLALCHEMY_REQUIRES: "SQLAlchemy>=1.4.3,<2.0" # no asynio tests for py37
-
-  python3.7-sqlalchemy2:
-    <<: *test-common
-    build:
-      <<: *test-common-build
-      args:
-        <<: *test-common-build-args
-        PYTHON_VERSION: "3.7"
-    environment:
-      <<: *test-common-env
-      SQLALCHEMY_REQUIRES: "SQLAlchemy>=2.0,<3.0" # no asynio tests for py37
 
   python3.8-sqlalchemy1:
     <<: *test-common
