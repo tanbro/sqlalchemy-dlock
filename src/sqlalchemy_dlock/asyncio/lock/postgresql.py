@@ -1,4 +1,5 @@
 import asyncio
+import sys
 from time import time
 from typing import Any, Callable, Optional, Union
 
@@ -9,9 +10,12 @@ from ...statement.postgresql import (
     make_lock_stmt_mapping,
 )
 from ...utils import ensure_int64, to_int64_key
-from .base import BaseAsyncSadLock, TAsyncConnectionOrSession
+from .base import BaseAsyncSadLock
 
-TConvertFunction = Callable[[Any], int]
+if sys.version_info < (3, 12):  # pragma: no cover
+    from .._sa_types_backward import TAsyncConnectionOrSession
+else:  # pragma: no cover
+    from .._sa_types import TAsyncConnectionOrSession
 
 
 class PostgresqlAsyncSadLock(BaseAsyncSadLock):
@@ -21,7 +25,7 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
         key,
         /,
         level: Optional[str] = None,
-        convert: Optional[TConvertFunction] = None,
+        convert: Optional[Callable[[Any], int]] = None,
         **kwargs,
     ):
         if convert:

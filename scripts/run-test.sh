@@ -5,7 +5,7 @@
 
 set -e
 
-python -m pip install -U -e /workspace -r /workspace/tests/requirements.txt $(printenv SQLALCHEMY_REQUIRES)
+python -m pip install -U -e /workspace[asyncio] -r /workspace/tests/requirements.txt $(printenv SQLALCHEMY_REQUIRES)
 
 /bin/bash scripts/wait-for-postgres.sh postgres test
 /bin/bash scripts/wait-for-mysql.sh mysql test test test

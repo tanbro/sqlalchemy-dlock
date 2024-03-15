@@ -1,6 +1,8 @@
 # run mysql and posgres database service on local docker, for develop/test
-services:
 
+name: sqlalchemy-dlock-db
+
+services:
   mysql:
     image: mysql
     ports:

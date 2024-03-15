@@ -1,8 +1,10 @@
+import sys
 from typing import Any, Union
 
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_scoped_session
-
-TAsyncConnectionOrSession = Union[AsyncConnection, AsyncSession, async_scoped_session]
+if sys.version_info < (3, 12):  # pragma: no cover
+    from .._sa_types_backward import TAsyncConnectionOrSession
+else:  # pragma: no cover
+    from .._sa_types import TAsyncConnectionOrSession
 
 
 class BaseAsyncSadLock:
