@@ -69,7 +69,7 @@ class MpNonBlockingFailTestCase(TestCase):
 
     def test(self):
         key = uuid4().hex
-        delay = 1
+        delay = 1.0
         cls = self.__class__
         for url in URLS:
             bar = Barrier(2)
@@ -113,8 +113,8 @@ class MpTimeoutSuccessTestCase(TestCase):
 
     def test(self):
         key = uuid4().hex
-        delay = 1
-        timeout = 3
+        delay = 1.0
+        timeout = 3.0
         cls = self.__class__
 
         for url in URLS:
@@ -133,7 +133,7 @@ class MpTimeoutSuccessTestCase(TestCase):
             self.assertEqual(p2.exitcode, 0)
 
 
-class MpTimtoutFailTestCase(TestCase):
+class MpTimeoutFailTestCase(TestCase):
     @staticmethod
     def fn1(url, k, b, delay):
         engine = create_engine(url)
@@ -159,8 +159,8 @@ class MpTimtoutFailTestCase(TestCase):
     def test(self):
         cls = self.__class__
         key = uuid4().hex
-        delay = 3
-        timeout = 1
+        delay = 3.0
+        timeout = 1.0
 
         for url in URLS:
             bar = Barrier(2)

@@ -9,7 +9,7 @@ from sqlalchemy_dlock import create_sadlock
 from .engines import ENGINES
 
 
-class MutliThreadTestCase(TestCase):
+class MultiThreadTestCase(TestCase):
     def tearDown(self):
         for engine in ENGINES:
             engine.dispose()
@@ -43,7 +43,7 @@ class MutliThreadTestCase(TestCase):
 
     def test_non_blocking_fail(self):
         key = uuid4().hex
-        delay = 1
+        delay = 1.0
 
         for engine in ENGINES:
             bar = Barrier(2)
@@ -74,8 +74,8 @@ class MutliThreadTestCase(TestCase):
 
     def test_timeout_fail(self):
         key = uuid4().hex
-        delay = 3
-        timeout = 1
+        delay = 3.0
+        timeout = 1.0
         for engine in ENGINES:
             bar = Barrier(2)
 
@@ -109,8 +109,8 @@ class MutliThreadTestCase(TestCase):
 
     def test_timeout_success(self):
         key = uuid4().hex
-        delay = 1
-        timeout = 3
+        delay = 1.0
+        timeout = 3.0
 
         for engine in ENGINES:
             bar = Barrier(2)

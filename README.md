@@ -101,7 +101,7 @@ pip install sqlalchemy-dlock
 
 - Asynchronous I/O Support
 
-  > **NOTE**
+  > ℹ️ **NOTE**
   >
   > - [SQLAlchemy][] `1.x`'s asynchronous I/O: <https://docs.sqlalchemy.org/14/orm/extensions/asyncio.html>
   > - [SQLAlchemy][] `2.x`'s asynchronous I/O: <https://docs.sqlalchemy.org/20/orm/extensions/asyncio.html>
@@ -123,21 +123,20 @@ pip install sqlalchemy-dlock
       assert not lock.locked
   ```
 
-  > **NOTE**
-  >
+  > ℹ️ **NOTE** \
   > [aiomysql][], [asyncpg][] and [psycopg][] are tested asynchronous drivers.
   >
   > We can install it with asynchronous DB libraries:
   >
-  > - ```bash
-  >   pip install SQLAlchemy[asyncio] aiomysql sqlalchemy-dlock
-  >   ```
+  > ```bash
+  > pip install SQLAlchemy[asyncio] aiomysql sqlalchemy-dlock
+  > ```
   >
   > or
   >
-  > - ```bash
-  >   pip install SQLAlchemy[asyncio] asyncpg sqlalchemy-dlock
-  >   ```
+  > ```bash
+  > pip install SQLAlchemy[asyncio] asyncpg sqlalchemy-dlock
+  > ```
 
 ## Test
 
@@ -181,8 +180,7 @@ You can run unit-tests
      TEST_ASYNC_URLS=mysql+aiomysql://test:test@127.0.0.1/test postgresql+asyncpg://postgres:test@127.0.0.1/
      ```
 
-     > **NOTE**
-     >
+     > ℹ️ **NOTE** \
      > The test cases would load environment variables from dot-env file `tests/.env`.
 
   1. run unit-test
@@ -195,8 +193,10 @@ You can run unit-tests
 
   `tests/docker-compose.yml` defines a Python and [SQLAlchemy][] version matrix -- it combines Python `3.8` to `3.12` and [SQLAlchemy][] `v1`/`v2` for test cases. We can run it by:
 
-    cd tests
-    docker-compose up --abort-on-container-exit
+  ```bash
+  cd tests
+  docker-compose up --abort-on-container-exit
+  ```
 
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
 [venv]: https://docs.python.org/library/venv.html "The venv module supports creating lightweight “virtual environments”, each with their own independent set of Python packages installed in their site directories. "
