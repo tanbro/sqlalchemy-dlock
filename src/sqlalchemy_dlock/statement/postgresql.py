@@ -32,3 +32,12 @@ STATEMENT_DICT = {
         "unlock": UNLOCK_XACT,
     },
 }
+
+STATEMENT_DICT.update(  # Alias of the keys
+    {
+        "sess": STATEMENT_DICT["session"],
+        "share": STATEMENT_DICT["shared"],
+        "xact": STATEMENT_DICT["transaction"],
+        "trans": STATEMENT_DICT["transaction"],
+    }
+)

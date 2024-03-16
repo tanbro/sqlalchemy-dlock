@@ -227,7 +227,7 @@ if version_info >= (3, 8):
                     for level in levels:
                         lck = create_async_sadlock(conn, key, level=level)
                         self.assertEqual(lck.level, level)  # type: ignore
-                    with self.assertRaises(ValueError):
+                    with self.assertRaises(KeyError):
                         create_async_sadlock(conn, key, level="invalid_level_name")
 
         async def test_pg_invalid_interval(self):

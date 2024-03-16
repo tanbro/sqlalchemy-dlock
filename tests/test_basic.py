@@ -191,7 +191,7 @@ class BasicTestCase(TestCase):
                 for level in levels:
                     lck = create_sadlock(conn, key, level=level)
                     self.assertEqual(lck.level, level)
-                with self.assertRaises(ValueError):
+                with self.assertRaises(KeyError):
                     create_sadlock(conn, key, level="invalid_level_name")
 
     def test_pg_invalid_interval(self):
