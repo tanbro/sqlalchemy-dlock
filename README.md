@@ -193,23 +193,10 @@ You can run unit-tests
 
 - or on docker [compose][]:
 
-  Name of [compose][] services for Python and [SQLAlchemy][] version matrix defined in [compose][] file `docker-compose.yml` has such format:
+  `tests/docker-compose.yml` defines a Python and [SQLAlchemy][] version matrix -- it combines Python `3.8` to `3.12` and [SQLAlchemy][] `v1`/`v2` for test cases. We can run it by:
 
-      python{{X.Y}}-sqlalchemy{{X}}
-
-  For example, if want to run tests for Python `3.8` and [SQLAlchemy][] `1.x`, we shall up to run unit-tests as below:
-
-  ```bash
-  cd tests
-  docker compose up python3.8-sqlalchemy1
-  ```
-
-  For Python `3.10` and [SQLAlchemy][] `2.x`:
-
-  ```bash
-  cd tests
-  docker compose up python3.10-sqlalchemy2
-  ```
+    cd tests
+    docker-compose up --abort-on-container-exit
 
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
 [venv]: https://docs.python.org/library/venv.html "The venv module supports creating lightweight “virtual environments”, each with their own independent set of Python packages installed in their site directories. "

@@ -39,7 +39,7 @@ jobs:
           - SQLAlchemy[asyncio]>=2.0,<3.0
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Startup databases
         shell: bash

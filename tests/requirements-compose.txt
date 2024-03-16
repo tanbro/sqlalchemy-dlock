@@ -1,0 +1,8 @@
+coverage
+python-dotenv
+
+mysqlclient
+aiomysql
+
+psycopg2
+asyncpg
