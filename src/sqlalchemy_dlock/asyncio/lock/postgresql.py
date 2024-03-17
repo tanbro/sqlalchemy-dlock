@@ -2,12 +2,22 @@ import asyncio
 import sys
 from time import time
 from typing import Any, Callable, Optional, Union
+from warnings import warn
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...statement.postgresql import (
+    LOCK,
+    LOCK_SHARED,
+    LOCK_XACT,
+    LOCK_XACT_SHARED,
     SLEEP_INTERVAL_DEFAULT,
     SLEEP_INTERVAL_MIN,
-    STATEMENT_DICT,
+    TRY_LOCK,
+    TRY_LOCK_SHARED,
+    TRY_LOCK_XACT,
+    TRY_LOCK_XACT_SHARED,
+    UNLOCK,
+    UNLOCK_SHARED,
 )
 from ...utils import ensure_int64, to_int64_key
 from .base import BaseAsyncSadLock
@@ -24,7 +34,8 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
         connection_or_session: TAsyncConnectionOrSession,
         key,
         /,
-        level: Optional[str] = None,
+        shared: bool = False,
+        xact: bool = False,
         convert: Optional[Callable[[Any], int]] = None,
         **kwargs,
     ):
@@ -35,9 +46,25 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
         else:
             key = to_int64_key(key)
         #
-        level = (level or "session").strip().lower()
-        self._lock_stmt_mapping = STATEMENT_DICT[level]
-        self._level = level
+        self._shared = bool(shared)
+        self._xact = bool(xact)
+        #
+        if not shared and not xact:
+            self._stmt_lock = LOCK.params(key=key)
+            self._stmt_try_lock = TRY_LOCK.params(key=key)
+            self._stmt_unlock = UNLOCK.params(key=key)
+        elif shared and not xact:
+            self._stmt_lock = LOCK_SHARED.params(key=key)
+            self._stmt_try_lock = TRY_LOCK_SHARED.params(key=key)
+            self._stmt_unlock = UNLOCK_SHARED.params(key=key)
+        elif not shared and xact:
+            self._stmt_lock = LOCK_XACT.params(key=key)
+            self._stmt_try_lock = TRY_LOCK_XACT.params(key=key)
+            self._stmt_unlock = None
+        else:
+            self._stmt_lock = LOCK_XACT_SHARED.params(key=key)
+            self._stmt_try_lock = TRY_LOCK_XACT_SHARED.params(key=key)
+            self._stmt_unlock = None
         #
         super().__init__(connection_or_session, key, **kwargs)
 
@@ -52,8 +79,7 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
         if block:
             if timeout is None:
                 # None: set the timeout period to infinite.
-                stmt = self._lock_stmt_mapping["lock"].params(key=self._key)
-                _ = (await self.connection_or_session.execute(stmt)).all()
+                _ = (await self.connection_or_session.execute(self._stmt_lock)).all()
                 self._acquired = True
             else:
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
@@ -62,10 +88,9 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
                 interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
                 if interval < SLEEP_INTERVAL_MIN:  # pragma: no cover
                     raise ValueError("interval too small")
-                stmt = self._lock_stmt_mapping["try_lock"].params(key=self._key)
                 ts_begin = time()
                 while True:
-                    ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
+                    ret_val = (await self.connection_or_session.execute(self._stmt_try_lock)).scalar_one()
                     if ret_val:  # succeed
                         self._acquired = True
                         break
@@ -75,17 +100,21 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
         else:
             # This will either obtain the lock immediately and return true,
             # or return false without waiting if the lock cannot be acquired immediately.
-            stmt = self._lock_stmt_mapping["try_lock"].params(key=self._key)
-            ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
+            ret_val = (await self.connection_or_session.execute(self._stmt_try_lock)).scalar_one()
             self._acquired = bool(ret_val)
         #
         return self._acquired
 
     async def release(self):
+        if self._stmt_unlock is None:
+            warn(
+                "PostgreSQL transaction level advisory locks are held until the current transaction ends; there is no provision for manual release.",
+                RuntimeWarning,
+            )
+            return
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
-        stmt = self._lock_stmt_mapping["unlock"].params(key=self._key)
-        ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
+        ret_val = (await self.connection_or_session.execute(self._stmt_unlock)).scalar_one()
         if ret_val:
             self._acquired = False
         else:  # pragma: no cover
@@ -93,5 +122,11 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self._key!r} was not held.")
 
     @property
-    def level(self) -> str:
-        return self._level
+    def shared(self):
+        """Is the advisory lock shared or exclusive"""
+        return self._shared
+
+    @property
+    def xact(self):
+        """Is the advisory lock transaction level or session level"""
+        return self._xact

@@ -55,23 +55,22 @@ class BaseSadLock(local):
 
                 When called in a :keyword:`with` statement, the new created lock object will pass it to ``timeout`` argument of :meth:`.BaseSadLock.acquire`.
 
-                Note:
+                Attention:
                     **ONLY** affects :keyword:`with` statements.
 
                 Example:
                     ::
 
-                        lck = create_sadlock(conn, k, contextual_timeout=5)
                         try:
-                            with lck:
+                            with create_sadlock(conn, k, contextual_timeout=5) as lck:
                                 # do something...
                                 pass
                         except TimeoutError:
                             # can not acquire after 5 seconds
                             pass
 
-                        # Attention: timeout's default is still `None`, when invoking `acquire`
-                        lck.acquire()
+                Note:
+                    The default value of `timeout` is still :data:`None`, when invoking :meth:`.acquire`
         """  # noqa: E501
         self._acquired = False
         self._connection_or_session = connection_or_session
