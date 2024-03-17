@@ -12,7 +12,7 @@ except ImportError:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "sqlalchemy-dlock"
-copyright = "2023, liu xue yan"
+copyright = "2023-2024, liu xue yan"
 author = "liu xue yan"
 
 # full version
