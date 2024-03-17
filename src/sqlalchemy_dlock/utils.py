@@ -13,7 +13,7 @@ def to_int64_key(k: Union[bytearray, bytes, memoryview, str, int]) -> int:
         k = k.encode()
     if isinstance(k, (bytearray, bytes, memoryview)):
         return int.from_bytes(blake2b(k, digest_size=8).digest(), byteorder, signed=True)
-    elif isinstance(k, int):
+    if isinstance(k, int):
         return ensure_int64(k)
     raise TypeError(f"{type(k)}")
 
@@ -28,8 +28,8 @@ def ensure_int64(i: int) -> int:
         Signed int64 key
     """
     if i > 0x7FFF_FFFF_FFFF_FFFF:
-        i = int.from_bytes(i.to_bytes(8, byteorder, signed=False), byteorder, signed=True)
-    elif i < -0x8000_0000_0000_0000:
+        return int.from_bytes(i.to_bytes(8, byteorder, signed=False), byteorder, signed=True)
+    if i < -0x8000_0000_0000_0000:
         raise OverflowError("int too small to convert")
     return i
 

@@ -8,3 +8,4 @@ omit =
     ENV/*
     env.bak/*
     venv.bak/*
+    src/**/_version.py
