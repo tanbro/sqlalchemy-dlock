@@ -78,7 +78,7 @@ repository = "https://github.com/tanbro/sqlalchemy-dlock.git"
 where = ["src"]
 
 [tool.setuptools_scm]
-write_to = "src/sqlalchemy_dlock/version.py"
+write_to = "src/sqlalchemy_dlock/_version.py"
 
 [tool.black]
 line-length = 128
