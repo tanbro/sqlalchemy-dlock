@@ -27,10 +27,12 @@ def ensure_int64(i: int) -> int:
     Returns:
         Signed int64 key
     """
+    # if i > 0x7FFF_FFFF_FFFF_FFFF:
+    #     return int.from_bytes(i.to_bytes(8, byteorder, signed=False), byteorder, signed=True)
     if i > 0x7FFF_FFFF_FFFF_FFFF:
-        return int.from_bytes(i.to_bytes(8, byteorder, signed=False), byteorder, signed=True)
+        raise OverflowError("int too big")
     if i < -0x8000_0000_0000_0000:
-        raise OverflowError("int too small to convert")
+        raise OverflowError("int too small")
     return i
 
 

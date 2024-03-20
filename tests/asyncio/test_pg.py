@@ -1,13 +1,10 @@
 import asyncio
-from multiprocessing import cpu_count
 from unittest import IsolatedAsyncioTestCase
 from uuid import uuid4
 
 from sqlalchemy_dlock.asyncio import create_async_sadlock
 
 from .engines import create_engines, dispose_engines, get_engines
-
-CPU_COUNT = cpu_count()
 
 
 class PgTestCase(IsolatedAsyncioTestCase):

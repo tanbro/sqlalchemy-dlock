@@ -1,4 +1,3 @@
-from multiprocessing import cpu_count
 from threading import Barrier, Thread
 from time import sleep
 from unittest import TestCase
@@ -7,8 +6,6 @@ from uuid import uuid4
 from sqlalchemy_dlock import create_sadlock
 
 from .engines import ENGINES
-
-CPU_COUNT = cpu_count()
 
 
 class PgTestCase(TestCase):
