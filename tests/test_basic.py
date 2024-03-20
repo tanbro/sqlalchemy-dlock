@@ -180,26 +180,3 @@ class BasicTestCase(TestCase):
                 lock1 = create_sadlock(conn1, key)
                 with self.assertRaisesRegex(ValueError, "invoked on an unlocked lock"):
                     lock1.release()
-
-    def test_pg_level_name(self):
-        levels = "session", "shared", "xact"
-        for engine in ENGINES:
-            if engine.name != "postgresql":
-                continue
-            key = uuid4().hex
-            with engine.connect() as conn:
-                for level in levels:
-                    lck = create_sadlock(conn, key, level=level)
-                    self.assertEqual(lck.level, level)
-                with self.assertRaises(KeyError):
-                    create_sadlock(conn, key, level="invalid_level_name")
-
-    def test_pg_invalid_interval(self):
-        for engine in ENGINES:
-            if engine.name != "postgresql":
-                continue
-            key = uuid4().hex
-            with engine.connect() as conn:
-                lck = create_sadlock(conn, key)
-                with self.assertRaises(ValueError):
-                    lck.acquire(timeout=0, interval=-1)

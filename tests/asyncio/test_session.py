@@ -1,29 +1,27 @@
-from sys import version_info
+from unittest import IsolatedAsyncioTestCase
+from uuid import uuid1
 
-if version_info >= (3, 8):
-    from unittest import IsolatedAsyncioTestCase
-    from uuid import uuid1
+from sqlalchemy.ext.asyncio import AsyncSession
 
-    from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy_dlock.asyncio import create_async_sadlock
 
-    from sqlalchemy_dlock.asyncio import create_async_sadlock
+from .engines import create_engines, dispose_engines, get_engines
 
-    from .engines import create_engines, dispose_engines, get_engines
 
-    class SessionTestCase(IsolatedAsyncioTestCase):
-        sessions = []
+class SessionTestCase(IsolatedAsyncioTestCase):
+    sessions = []
 
-        def setUp(self):
-            create_engines()
+    def setUp(self):
+        create_engines()
 
-        async def asyncTearDown(self):
-            await dispose_engines()
+    async def asyncTearDown(self):
+        await dispose_engines()
 
-        async def test_once(self):
-            key = uuid1().hex
-            for engine in get_engines():
-                session = AsyncSession(engine)
-                async with session.begin():
-                    async with create_async_sadlock(session, key) as lock:
-                        self.assertTrue(lock.locked)
-                    self.assertFalse(lock.locked)
+    async def test_once(self):
+        key = uuid1().hex
+        for engine in get_engines():
+            session = AsyncSession(engine)
+            async with session.begin():
+                async with create_async_sadlock(session, key) as lock:
+                    self.assertTrue(lock.locked)
+                self.assertFalse(lock.locked)
