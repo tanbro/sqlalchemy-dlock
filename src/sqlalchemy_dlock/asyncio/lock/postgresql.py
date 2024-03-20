@@ -1,25 +1,12 @@
 import asyncio
 import sys
 from time import time
-from typing import Any, Callable, Optional, Union
+from typing import Union
 from warnings import warn
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
-from ...statement.postgresql import (
-    LOCK,
-    LOCK_SHARED,
-    LOCK_XACT,
-    LOCK_XACT_SHARED,
-    SLEEP_INTERVAL_DEFAULT,
-    SLEEP_INTERVAL_MIN,
-    TRY_LOCK,
-    TRY_LOCK_SHARED,
-    TRY_LOCK_XACT,
-    TRY_LOCK_XACT_SHARED,
-    UNLOCK,
-    UNLOCK_SHARED,
-)
-from ...utils import ensure_int64, to_int64_key
+from ...lock.postgresql import PostgresqlSadLockMixin
+from ...statement.postgresql import SLEEP_INTERVAL_DEFAULT, SLEEP_INTERVAL_MIN
 from .base import BaseAsyncSadLock
 
 if sys.version_info < (3, 12):  # pragma: no cover
@@ -28,45 +15,10 @@ else:  # pragma: no cover
     from .._sa_types import TAsyncConnectionOrSession
 
 
-class PostgresqlAsyncSadLock(BaseAsyncSadLock):
-    def __init__(
-        self,
-        connection_or_session: TAsyncConnectionOrSession,
-        key,
-        /,
-        shared: bool = False,
-        xact: bool = False,
-        convert: Optional[Callable[[Any], int]] = None,
-        **kwargs,
-    ):
-        if convert:
-            key = ensure_int64(convert(key))
-        elif isinstance(key, int):
-            key = ensure_int64(key)
-        else:
-            key = to_int64_key(key)
-        #
-        self._shared = bool(shared)
-        self._xact = bool(xact)
-        #
-        if not shared and not xact:
-            self._stmt_lock = LOCK.params(key=key)
-            self._stmt_try_lock = TRY_LOCK.params(key=key)
-            self._stmt_unlock = UNLOCK.params(key=key)
-        elif shared and not xact:
-            self._stmt_lock = LOCK_SHARED.params(key=key)
-            self._stmt_try_lock = TRY_LOCK_SHARED.params(key=key)
-            self._stmt_unlock = UNLOCK_SHARED.params(key=key)
-        elif not shared and xact:
-            self._stmt_lock = LOCK_XACT.params(key=key)
-            self._stmt_try_lock = TRY_LOCK_XACT.params(key=key)
-            self._stmt_unlock = None
-        else:
-            self._stmt_lock = LOCK_XACT_SHARED.params(key=key)
-            self._stmt_try_lock = TRY_LOCK_XACT_SHARED.params(key=key)
-            self._stmt_unlock = None
-        #
-        super().__init__(connection_or_session, key, **kwargs)
+class PostgresqlAsyncSadLock(BaseAsyncSadLock, PostgresqlSadLockMixin):
+    def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
+        BaseAsyncSadLock.__init__(self, connection_or_session, key, **kwargs)
+        PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
 
     async def acquire(
         self,
@@ -120,13 +72,3 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock):
         else:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self._key!r} was not held.")
-
-    @property
-    def shared(self):
-        """Is the advisory lock shared or exclusive"""
-        return self._shared
-
-    @property
-    def xact(self):
-        """Is the advisory lock transaction level or session level"""
-        return self._xact

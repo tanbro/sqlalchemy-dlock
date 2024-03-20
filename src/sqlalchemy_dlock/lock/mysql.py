@@ -23,28 +23,10 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
     return result
 
 
-class MysqlSadLock(BaseSadLock):
-    """MySQL named-lock
+class MysqlSadLockMixin:
+    """A Mix-in class for MySQL named lock"""
 
-    See Also:
-        https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
-
-    Caution:
-        To MySQL locking function, it is even possible for a given session to acquire multiple locks for the same name.
-        Other sessions cannot acquire a lock with that name until the acquiring session releases all its locks for the name.
-
-        Which means:
-            When perform multiple :meth:`.acquire` for a key on the **same** SQLAlchemy connection, latter :meth:`.acquire` will success immediately no wait and never block, it causes cascade lock instead!
-    """  # noqa: E501
-
-    def __init__(
-        self,
-        connection_or_session: TConnectionOrSession,
-        key,
-        /,
-        convert: Optional[Callable[[Any], str]] = None,
-        **kwargs,
-    ):
+    def __init__(self, *, key, convert: Optional[Callable[[Any], str]] = None, **kwargs):
         """
         MySQL named lock requires the key given by string.
 
@@ -73,8 +55,23 @@ class MysqlSadLock(BaseSadLock):
             raise TypeError("MySQL named lock requires the key given by string")
         if len(key) > MYSQL_LOCK_NAME_MAX_LENGTH:
             raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
-        #
-        super().__init__(connection_or_session, key, **kwargs)
+
+
+class MysqlSadLock(BaseSadLock, MysqlSadLockMixin):
+    """A distributed lock implemented by MySQL named-lock
+
+    See Also:
+        https://dev.mysql.com/doc/refman/8.0/en/locking-functions.html
+
+    Caution:
+        To MySQL locking function, it is even possible for a given session to acquire multiple locks for the same name.
+        Other sessions cannot acquire a lock with that name until the acquiring session releases all its locks for the name.
+        When perform multiple :meth:`.acquire` for a key on the **same** SQLAlchemy connection, latter :meth:`.acquire` will success immediately no wait and never block, it causes cascade lock instead!
+    """  # noqa: E501
+
+    def __init__(self, connection_or_session: TConnectionOrSession, key, **kwargs):
+        BaseSadLock.__init__(self, connection_or_session, key, **kwargs)
+        MysqlSadLockMixin.__init__(self, key=key, **kwargs)
 
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:

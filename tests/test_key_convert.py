@@ -87,7 +87,7 @@ class KeyConvertTestCase(TestCase):
         for engine in ENGINES:
             if engine.name != "postgresql":
                 continue
-            key = 2**64 - 1
+            key = 2**63 - 1
             with engine.connect() as conn:
                 with create_sadlock(conn, key) as lock:
                     self.assertTrue(lock.locked)
@@ -97,7 +97,7 @@ class KeyConvertTestCase(TestCase):
         for engine in ENGINES:
             if engine.name != "postgresql":
                 continue
-            key = 2**64
+            key = 2**63
             with engine.connect() as conn:
                 with self.assertRaises(OverflowError):
                     create_sadlock(conn, key)

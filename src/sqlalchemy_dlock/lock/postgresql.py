@@ -27,22 +27,11 @@ else:  # pragma: no cover
     from .._sa_types import TConnectionOrSession
 
 
-class PostgresqlSadLock(BaseSadLock):
-    """PostgreSQL advisory lock
-
-    See Also:
-        https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
-    """
+class PostgresqlSadLockMixin:
+    """A Mix-in class for PostgreSQL advisory lock"""
 
     def __init__(
-        self,
-        connection_or_session: TConnectionOrSession,
-        key,
-        /,
-        shared: bool = False,
-        xact: bool = False,
-        convert: Optional[Callable[[Any], int]] = None,
-        **kwargs,
+        self, *, key, shared: bool = False, xact: bool = False, convert: Optional[Callable[[Any], int]] = None, **kwargs
     ):
         """
         Args:
@@ -61,11 +50,6 @@ class PostgresqlSadLock(BaseSadLock):
 
             shared: Is the advisory lock shared or exclusive
             xact: Is the advisory lock transaction level or session level
-
-        Tip:
-            Locks can be either shared or exclusive: a shared lock does not conflict with other shared locks on the same resource, only with exclusive locks.
-            Locks can be taken at session level (so that they are held until released or the session ends) or at transaction level (so that they are held until the current transaction ends; there is no provision for manual release).
-            Multiple session-level lock requests stack, so that if the same resource identifier is locked three times there must then be three unlock requests to release the resource in advance of session end.
         """  # noqa: E501
         if convert:
             key = ensure_int64(convert(key))
@@ -93,8 +77,47 @@ class PostgresqlSadLock(BaseSadLock):
             self._stmt_lock = LOCK_XACT_SHARED.params(key=key)
             self._stmt_try_lock = TRY_LOCK_XACT_SHARED.params(key=key)
             self._stmt_unlock = None
-        #
-        super().__init__(connection_or_session, key, **kwargs)
+
+    @property
+    def shared(self):
+        """Is the advisory lock shared or exclusive"""
+        return self._shared
+
+    @property
+    def xact(self):
+        """Is the advisory lock transaction level or session level"""
+        return self._xact
+
+
+class PostgresqlSadLock(BaseSadLock, PostgresqlSadLockMixin):
+    """A distributed lock implemented by PostgreSQL advisory lock
+
+    See Also:
+        https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
+    """
+
+    def __init__(self, connection_or_session: TConnectionOrSession, key, **kwargs):
+        """
+        Positional arguments:
+
+        Args:
+            connection_or_session: `SQLAlchemy` connection or session object for the distributed lock
+            key: see :attr:`PostgresqlSadLockMixin.key`
+
+        Named arguments:
+
+        Args:
+            shared: see :attr:`PostgresqlSadLockMixin.shared`
+            xact: see :attr:`PostgresqlSadLockMixin.xact`
+            convert: see :class:`PostgresqlSadLockMixin`
+
+        Tip:
+            Locks can be either shared or exclusive: a shared lock does not conflict with other shared locks on the same resource, only with exclusive locks.
+            Locks can be taken at session level (so that they are held until released or the session ends) or at transaction level (so that they are held until the current transaction ends; there is no provision for manual release).
+            Multiple session-level lock requests stack, so that if the same resource identifier is locked three times there must then be three unlock requests to release the resource in advance of session end.
+        """  # noqa: E501
+        BaseSadLock.__init__(self, connection_or_session, key, **kwargs)
+        PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
 
     def acquire(
         self,
@@ -162,13 +185,3 @@ class PostgresqlSadLock(BaseSadLock):
         else:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self._key!r} was not held.")
-
-    @property
-    def shared(self):
-        """Is the advisory lock shared or exclusive"""
-        return self._shared
-
-    @property
-    def xact(self):
-        """Is the advisory lock transaction level or session level"""
-        return self._xact

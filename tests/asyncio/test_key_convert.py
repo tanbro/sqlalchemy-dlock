@@ -89,7 +89,7 @@ class KeyConvertTestCase(IsolatedAsyncioTestCase):
         for engine in get_engines():
             if engine.name != "postgresql":
                 continue
-            key = 2**64 - 1
+            key = 2**63 - 1
             async with engine.connect() as conn:
                 async with create_async_sadlock(conn, key) as lock:
                     self.assertTrue(lock.locked)
@@ -99,7 +99,7 @@ class KeyConvertTestCase(IsolatedAsyncioTestCase):
         for engine in get_engines():
             if engine.name != "postgresql":
                 continue
-            key = 2**64
+            key = 2**63
             async with engine.connect() as conn:
                 with self.assertRaises(OverflowError):
                     create_async_sadlock(conn, key)

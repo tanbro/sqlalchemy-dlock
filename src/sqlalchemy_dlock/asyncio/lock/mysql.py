@@ -1,7 +1,8 @@
 import sys
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Union
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
+from ...lock.mysql import MysqlSadLockMixin
 from ...statement.mysql import LOCK, UNLOCK
 from .base import BaseAsyncSadLock
 
@@ -25,25 +26,10 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
     return result
 
 
-class MysqlAsyncSadLock(BaseAsyncSadLock):
-    def __init__(
-        self,
-        connection_or_session: TAsyncConnectionOrSession,
-        key,
-        /,
-        convert: Optional[Callable[[Any], str]] = None,
-        **kwargs,
-    ):
-        if convert:
-            key = convert(key)
-        elif not isinstance(key, str):
-            key = default_convert(key)
-        if not isinstance(key, str):
-            raise TypeError("MySQL named lock requires the key given by string")
-        if len(key) > MYSQL_LOCK_NAME_MAX_LENGTH:
-            raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
-        #
-        super().__init__(connection_or_session, key, **kwargs)
+class MysqlAsyncSadLock(BaseAsyncSadLock, MysqlSadLockMixin):
+    def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
+        BaseAsyncSadLock.__init__(self, connection_or_session, key, **kwargs)
+        MysqlSadLockMixin.__init__(self, key=key, **kwargs)
 
     async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:
