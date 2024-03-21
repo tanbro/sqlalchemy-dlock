@@ -17,8 +17,8 @@ else:  # pragma: no cover
 
 class PostgresqlAsyncSadLock(BaseAsyncSadLock, PostgresqlSadLockMixin):
     def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
-        BaseAsyncSadLock.__init__(self, connection_or_session, key, **kwargs)
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
+        BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
     async def acquire(
         self,
@@ -71,4 +71,4 @@ class PostgresqlAsyncSadLock(BaseAsyncSadLock, PostgresqlSadLockMixin):
             self._acquired = False
         else:  # pragma: no cover
             self._acquired = False
-            raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self._key!r} was not held.")
+            raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")

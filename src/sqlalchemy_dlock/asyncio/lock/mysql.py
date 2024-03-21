@@ -28,8 +28,8 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
 
 class MysqlAsyncSadLock(BaseAsyncSadLock, MysqlSadLockMixin):
     def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
-        BaseAsyncSadLock.__init__(self, connection_or_session, key, **kwargs)
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
+        BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
     async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:
@@ -43,36 +43,36 @@ class MysqlAsyncSadLock(BaseAsyncSadLock, MysqlSadLockMixin):
                 timeout = 0
         else:
             timeout = 0
-        stmt = LOCK.params(str=self._key, timeout=timeout)
+        stmt = LOCK.params(str=self.key, timeout=timeout)
         ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
         if ret_val == 1:
             self._acquired = True
         elif ret_val == 0:
             pass  # 直到超时也没有成功锁定
         elif ret_val is None:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError(f"An error occurred while attempting to obtain the lock {self._key!r}")
+            raise SqlAlchemyDLockDatabaseError(f"An error occurred while attempting to obtain the lock {self.key!r}")
         else:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError(f"GET_LOCK({self._key!r}, {timeout}) returns {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"GET_LOCK({self.key!r}, {timeout}) returns {ret_val}")
         return self._acquired
 
     async def release(self):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
-        stmt = UNLOCK.params(str=self._key)
+        stmt = UNLOCK.params(str=self.key)
         ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
         if ret_val == 1:
             self._acquired = False
         elif ret_val == 0:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                f"The named lock {self._key!r} was not established by this thread, " "and the lock is not released."
+                f"The named lock {self.key!r} was not established by this thread, " "and the lock is not released."
             )
         elif ret_val is None:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                f"The named lock {self._key!r} did not exist, "
+                f"The named lock {self.key!r} did not exist, "
                 "was never obtained by a call to GET_LOCK(), "
                 "or has previously been released."
             )
         else:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError(f"RELEASE_LOCK({self._key!r}) returns {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"RELEASE_LOCK({self.key!r}) returns {ret_val}")

@@ -37,10 +37,10 @@ class PostgresqlSadLockMixin:
         Args:
             key: PostgreSQL advisory lock requires the key given by ``INT64``.
 
-                * When `key` is :class:`int`, the constructor tries to ensure it to be ``INT64``.
-                  :class:`OverflowError` is raised if too big or too small for an ``INT64``.
+                * When ``key`` is :class:`int`, the constructor tries to ensure it to be ``INT64``.
+                  :class:`OverflowError` is raised if too big or too small for that.
 
-                * When `key` is :class:`str` or :class:`bytes` or alike, the constructor calculates its checksum by :func:`hashlib.blake2b`, and takes the hash result integer value as actual key.
+                * When ``key`` is :class:`str` or :class:`bytes` or alike, the constructor calculates its checksum by :func:`hashlib.blake2b`, and takes the hash result integer value as actual key.
 
                 * Or you can specify a ``convert`` function to that argument::
 
@@ -48,8 +48,9 @@ class PostgresqlSadLockMixin:
                         int64_key: int = do_sth(val)
                         return int64_key
 
-            shared: Is the advisory lock shared or exclusive
-            xact: Is the advisory lock transaction level or session level
+            shared: for :attr:`.shared`
+            xact: for :attr:`.xact`
+            convert: Custom function to covert ``key`` to required data type.
         """  # noqa: E501
         if convert:
             key = ensure_int64(convert(key))
@@ -57,6 +58,7 @@ class PostgresqlSadLockMixin:
             key = ensure_int64(key)
         else:
             key = to_int64_key(key)
+        self._actual_key = key
         #
         self._shared = bool(shared)
         self._xact = bool(xact)
@@ -92,32 +94,27 @@ class PostgresqlSadLockMixin:
 class PostgresqlSadLock(BaseSadLock, PostgresqlSadLockMixin):
     """A distributed lock implemented by PostgreSQL advisory lock
 
-    See Also:
+    See also:
         https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS
+
+    Tip:
+        Locks can be either shared or exclusive: a shared lock does not conflict with other shared locks on the same resource, only with exclusive locks.
+        Locks can be taken at session level (so that they are held until released or the session ends) or at transaction level (so that they are held until the current transaction ends; there is no provision for manual release).
+        Multiple session-level lock requests stack, so that if the same resource identifier is locked three times there must then be three unlock requests to release the resource in advance of session end.
     """
 
     def __init__(self, connection_or_session: TConnectionOrSession, key, **kwargs):
         """
-        Positional arguments:
-
         Args:
-            connection_or_session: `SQLAlchemy` connection or session object for the distributed lock
-            key: see :attr:`PostgresqlSadLockMixin.key`
-
-        Named arguments:
-
-        Args:
-            shared: see :attr:`PostgresqlSadLockMixin.shared`
-            xact: see :attr:`PostgresqlSadLockMixin.xact`
-            convert: see :class:`PostgresqlSadLockMixin`
-
-        Tip:
-            Locks can be either shared or exclusive: a shared lock does not conflict with other shared locks on the same resource, only with exclusive locks.
-            Locks can be taken at session level (so that they are held until released or the session ends) or at transaction level (so that they are held until the current transaction ends; there is no provision for manual release).
-            Multiple session-level lock requests stack, so that if the same resource identifier is locked three times there must then be three unlock requests to release the resource in advance of session end.
+            connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
+            key: see :attr:`.BaseSadLock.key`
+            shared: see :attr:`.PostgresqlSadLockMixin.shared`
+            xact: see :attr:`.PostgresqlSadLockMixin.xact`
+            convert: see :class:`.PostgresqlSadLockMixin`
+            **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.PostgresqlSadLockMixin`
         """  # noqa: E501
-        BaseSadLock.__init__(self, connection_or_session, key, **kwargs)
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
     def acquire(
         self,
@@ -184,4 +181,4 @@ class PostgresqlSadLock(BaseSadLock, PostgresqlSadLockMixin):
             self._acquired = False
         else:  # pragma: no cover
             self._acquired = False
-            raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self._key!r} was not held.")
+            raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")

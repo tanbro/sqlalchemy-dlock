@@ -28,24 +28,29 @@ class MysqlSadLockMixin:
 
     def __init__(self, *, key, convert: Optional[Callable[[Any], str]] = None, **kwargs):
         """
-        MySQL named lock requires the key given by string.
+        Args:
+            key: MySQL named lock requires the key given by string.
 
-        If `key` is not a :class:`str`:
+                If ``key`` is not a :class:`str`:
 
-        - When :class:`bytes` or alike, the constructor tries to decode it with default encoding::
+                - When :class:`bytes` or alike, the constructor tries to decode it with default encoding::
 
-            key = key.decode()
+                    key = key.decode()
 
-        - Otherwise the constructor force convert it to :class:`str`::
+                - Otherwise the constructor force convert it to :class:`str`::
 
-            key = str(key)
+                    key = str(key)
 
-        - Or you can specify a ``convert`` function to that argument.
-          The function is like::
+                - Or you can specify a ``convert`` function to that argument
 
-            def convert(val: Any) -> str:
-                # do something with `val`...
-                return string
+            convert: Custom function to covert ``key`` to required data type.
+
+                Example:
+                    ::
+
+                        def convert(value) -> str:
+                            # get a string key by `value`
+                            return the_string_covert_from_value
         """  # noqa: E501
         if convert:
             key = convert(key)
@@ -55,6 +60,7 @@ class MysqlSadLockMixin:
             raise TypeError("MySQL named lock requires the key given by string")
         if len(key) > MYSQL_LOCK_NAME_MAX_LENGTH:
             raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
+        self._actual_key = key
 
 
 class MysqlSadLock(BaseSadLock, MysqlSadLockMixin):
@@ -70,8 +76,14 @@ class MysqlSadLock(BaseSadLock, MysqlSadLockMixin):
     """  # noqa: E501
 
     def __init__(self, connection_or_session: TConnectionOrSession, key, **kwargs):
-        BaseSadLock.__init__(self, connection_or_session, key, **kwargs)
+        """
+        Args:
+            connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
+            key: see :attr:`.BaseSadLock.key`
+            **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.MysqlSadLockMixin`
+        """
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:
@@ -85,36 +97,36 @@ class MysqlSadLock(BaseSadLock, MysqlSadLockMixin):
                 timeout = 0
         else:
             timeout = 0
-        stmt = LOCK.params(str=self._key, timeout=timeout)
+        stmt = LOCK.params(str=self.key, timeout=timeout)
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:
             self._acquired = True
         elif ret_val == 0:
             pass  # 直到超时也没有成功锁定
         elif ret_val is None:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError(f"An error occurred while attempting to obtain the lock {self._key!r}")
+            raise SqlAlchemyDLockDatabaseError(f"An error occurred while attempting to obtain the lock {self.key!r}")
         else:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError(f"GET_LOCK({self._key!r}, {timeout}) returns {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"GET_LOCK({self.key!r}, {timeout}) returns {ret_val}")
         return self._acquired
 
     def release(self):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
-        stmt = UNLOCK.params(str=self._key)
+        stmt = UNLOCK.params(str=self.key)
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:
             self._acquired = False
         elif ret_val == 0:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                f"The named lock {self._key!r} was not established by this thread, and the lock is not released."
+                f"The named lock {self.key!r} was not established by this thread, and the lock is not released."
             )
         elif ret_val is None:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                f"The named lock {self._key!r} did not exist, "
+                f"The named lock {self.key!r} did not exist, "
                 "was never obtained by a call to GET_LOCK(), "
                 "or has previously been released."
             )
         else:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError(f"RELEASE_LOCK({self._key!r}) returns {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"RELEASE_LOCK({self.key!r}) returns {ret_val}")
