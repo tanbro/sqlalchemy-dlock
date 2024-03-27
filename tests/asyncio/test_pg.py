@@ -1,5 +1,6 @@
 import asyncio
-from unittest import IsolatedAsyncioTestCase
+import sys
+from unittest import IsolatedAsyncioTestCase, skipIf
 from uuid import uuid4
 
 from sqlalchemy_dlock.asyncio import create_async_sadlock
@@ -34,6 +35,7 @@ class PgTestCase(IsolatedAsyncioTestCase):
                 async with conn.begin():
                     self.assertTrue(await lck.acquire())
 
+    @skipIf(sys.version_info < (3, 11), "‘asyncio.Barrier’: New in version 3.11")
     async def test_xact_coro(self):
         key = uuid4().hex
         for engine in get_engines():

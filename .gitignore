@@ -1,7 +1,6 @@
 # my ignores
 package-lock.json
 *.lock
-src/**/_version.py
 .env.*
 *.env
 

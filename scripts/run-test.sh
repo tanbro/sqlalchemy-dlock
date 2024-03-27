@@ -25,7 +25,8 @@ do
     do
         echo
         echo "---------------------------------------------------------------"
-        echo "Test of ${PYTHON} ${REQUIRES}"
+        echo "Begin of ${PYTHON} ${REQUIRES}"
+        echo "---------------------------------------------------------------"
         echo
         TMPDIR=$(mktemp -d)
         trap 'rm -rf $TMPDIR' EXIT
@@ -37,6 +38,9 @@ do
             $TMPDIR/bin/python -m coverage report
         )
         echo
+        echo "---------------------------------------------------------------"
+        echo "End of ${PYTHON} ${REQUIRES}"
+        echo "---------------------------------------------------------------"
         echo
     done
 done

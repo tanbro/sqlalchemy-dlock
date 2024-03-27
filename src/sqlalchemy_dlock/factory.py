@@ -1,10 +1,16 @@
+import sys
 from importlib import import_module
-from typing import Union, Type
+from typing import Type, Union
 
 from sqlalchemy.engine import Connection
 
-from .lock.base import BaseSadLock, TConnectionOrSession
+from .lock.base import BaseSadLock
 from .utils import pascal_case, safe_name
+
+if sys.version_info < (3, 12):  # pragma: no cover
+    from ._sa_types_backward import TConnectionOrSession
+else:  # pragma: no cover
+    from ._sa_types import TConnectionOrSession
 
 __all__ = ["create_sadlock"]
 

@@ -1,4 +1,4 @@
-exclude: ^.+_sa_types?+\.py$
+exclude: ^src/sqlalchemy_dlock(/asyncio)?/_sa_types(_backward)?\.py$
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -21,7 +21,7 @@ repos:
       - id: check-docstring-first
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.2
+    rev: v0.3.4
     hooks:
       # Run the linter.
       - id: ruff
