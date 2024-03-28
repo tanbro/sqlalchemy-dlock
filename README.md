@@ -101,7 +101,7 @@ pip install sqlalchemy-dlock
 
 - Asynchronous I/O Support
 
-  > ℹ️ **NOTE**
+  > 💡 **TIP**
   >
   > - [SQLAlchemy][] `1.x`'s asynchronous I/O: <https://docs.sqlalchemy.org/14/orm/extensions/asyncio.html>
   > - [SQLAlchemy][] `2.x`'s asynchronous I/O: <https://docs.sqlalchemy.org/20/orm/extensions/asyncio.html>
