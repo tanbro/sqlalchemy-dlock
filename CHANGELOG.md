@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## v0.6
+
+> 📅 **Date** 2024-3-28
+
+- ❎ Breaking Changes:
+  - Remove `level` arguments of PostgreSQL lock class' constructor.
+    `xact` and `shared` arguments were added.
+- 🆕 New Features:
+  - support `transaction` and `shared` advisory lock for PostgreSQL.
+- 🐛 Bug fix:
+  - PostgreSQL transaction level advisory locks are held until the current transaction ends.
+    Manual release for that is disabled, and a warning message will be printed.
+- 🕐 Optimize
+  - Reduce duplicated codes
+  - Better unit tests
+
 ## v0.5.3
 
 > 📅 **Date** 2024-3-15
