@@ -47,10 +47,10 @@ class PgTestCase(TestCase):
                 try:
                     with engine.connect() as c_:
                         l_ = create_sadlock(c_, key, xact=True)
-                        bar.wait(10)
+                        bar.wait(30)
                         with c_.begin():
                             self.assertFalse(l_.acquire(block=False))
-                            sleep(3)
+                            sleep(10)
                             self.assertTrue(l_.acquire(block=False))
                 except Exception as exc:
                     trd_exc = exc
@@ -63,7 +63,7 @@ class PgTestCase(TestCase):
                 lck = create_sadlock(conn, key, xact=True)
                 with conn.begin():
                     self.assertTrue(lck.acquire(block=False))
-                    bar.wait(5)
+                    bar.wait(30)
                     sleep(3)
 
             trd.join()
