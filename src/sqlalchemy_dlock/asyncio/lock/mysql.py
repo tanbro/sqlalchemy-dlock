@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Callable, Union
+from typing import Union
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...lock.mysql import MysqlSadLockMixin
@@ -12,8 +12,6 @@ else:  # pragma: no cover
     from .._sa_types import TAsyncConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
-
-TConvertFunction = Callable[[Any], str]
 
 
 def default_convert(key: Union[bytearray, bytes, int, float]) -> str:

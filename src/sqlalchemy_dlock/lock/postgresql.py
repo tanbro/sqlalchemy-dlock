@@ -1,6 +1,7 @@
 import sys
+from collections.abc import Callable
 from time import sleep, time
-from typing import Any, Callable, Optional, Union
+from typing import Any, Optional, Union
 from warnings import warn
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
