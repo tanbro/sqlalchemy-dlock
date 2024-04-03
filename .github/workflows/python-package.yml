@@ -44,7 +44,7 @@ jobs:
       - name: Startup databases
         shell: bash
         run: |
-          (cd .github && docker-compose up -d)
+          (cd .github && docker compose up -d)
           sh scripts/wait-for-postgres.sh 127.0.0.1 test
           sh scripts/wait-for-mysql.sh 127.0.0.1 test test test
 
