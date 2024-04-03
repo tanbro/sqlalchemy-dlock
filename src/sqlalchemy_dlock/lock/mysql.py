@@ -1,15 +1,19 @@
 import sys
-from collections.abc import Callable
 from typing import Any, Optional, Union
+
+if sys.version_info >= (3, 9):
+    from collections.abc import Callable
+else:
+    from typing import Callable
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.mysql import LOCK, UNLOCK
 from .base import BaseSadLock
 
-if sys.version_info < (3, 12):  # pragma: no cover
-    from .._sa_types_backward import TConnectionOrSession
-else:  # pragma: no cover
+if sys.version_info >= (3, 12):  # pragma: no cover
     from .._sa_types import TConnectionOrSession
+else:  # pragma: no cover
+    from .._sa_types_backward import TConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
@@ -64,7 +68,7 @@ class MysqlSadLockMixin:
         self._actual_key = key
 
 
-class MysqlSadLock(BaseSadLock, MysqlSadLockMixin):
+class MysqlSadLock(MysqlSadLockMixin, BaseSadLock):
     """A distributed lock implemented by MySQL named-lock
 
     See Also:

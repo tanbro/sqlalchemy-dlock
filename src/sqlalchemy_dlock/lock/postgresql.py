@@ -1,8 +1,12 @@
 import sys
-from collections.abc import Callable
 from time import sleep, time
 from typing import Any, Optional, Union
 from warnings import warn
+
+if sys.version_info >= (3, 9):
+    from collections.abc import Callable
+else:
+    from typing import Callable
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.postgresql import (
@@ -22,10 +26,10 @@ from ..statement.postgresql import (
 from ..utils import ensure_int64, to_int64_key
 from .base import BaseSadLock
 
-if sys.version_info < (3, 12):  # pragma: no cover
-    from .._sa_types_backward import TConnectionOrSession
-else:  # pragma: no cover
+if sys.version_info >= (3, 12):  # pragma: no cover
     from .._sa_types import TConnectionOrSession
+else:  # pragma: no cover
+    from .._sa_types_backward import TConnectionOrSession
 
 
 class PostgresqlSadLockMixin:
@@ -92,7 +96,7 @@ class PostgresqlSadLockMixin:
         return self._xact
 
 
-class PostgresqlSadLock(BaseSadLock, PostgresqlSadLockMixin):
+class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock):
     """A distributed lock implemented by PostgreSQL advisory lock
 
     See also:

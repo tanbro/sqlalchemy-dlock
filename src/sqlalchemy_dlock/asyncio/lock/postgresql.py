@@ -9,13 +9,13 @@ from ...lock.postgresql import PostgresqlSadLockMixin
 from ...statement.postgresql import SLEEP_INTERVAL_DEFAULT, SLEEP_INTERVAL_MIN
 from .base import BaseAsyncSadLock
 
-if sys.version_info < (3, 12):  # pragma: no cover
-    from .._sa_types_backward import TAsyncConnectionOrSession
-else:  # pragma: no cover
+if sys.version_info >= (3, 12):  # pragma: no cover
     from .._sa_types import TAsyncConnectionOrSession
+else:  # pragma: no cover
+    from .._sa_types_backward import TAsyncConnectionOrSession
 
 
-class PostgresqlAsyncSadLock(BaseAsyncSadLock, PostgresqlSadLockMixin):
+class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock):
     def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)

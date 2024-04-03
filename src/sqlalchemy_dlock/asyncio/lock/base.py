@@ -1,10 +1,10 @@
 import sys
 from typing import Any, Union
 
-if sys.version_info < (3, 12):  # pragma: no cover
-    from .._sa_types_backward import TAsyncConnectionOrSession
-else:  # pragma: no cover
+if sys.version_info >= (3, 12):  # pragma: no cover
     from .._sa_types import TAsyncConnectionOrSession
+else:  # pragma: no cover
+    from .._sa_types_backward import TAsyncConnectionOrSession
 
 
 class BaseAsyncSadLock:

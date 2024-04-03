@@ -6,10 +6,10 @@ from ...lock.mysql import MysqlSadLockMixin
 from ...statement.mysql import LOCK, UNLOCK
 from .base import BaseAsyncSadLock
 
-if sys.version_info < (3, 12):  # pragma: no cover
-    from .._sa_types_backward import TAsyncConnectionOrSession
-else:  # pragma: no cover
+if sys.version_info >= (3, 12):  # pragma: no cover
     from .._sa_types import TAsyncConnectionOrSession
+else:  # pragma: no cover
+    from .._sa_types_backward import TAsyncConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
@@ -24,7 +24,7 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
     return result
 
 
-class MysqlAsyncSadLock(BaseAsyncSadLock, MysqlSadLockMixin):
+class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock):
     def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
