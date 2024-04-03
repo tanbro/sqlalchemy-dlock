@@ -49,7 +49,7 @@ jobs:
           sh scripts/wait-for-mysql.sh 127.0.0.1 test test test
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -72,7 +72,7 @@ jobs:
 
       - name: Shutdown databases
         shell: bash
-        run: (cd .github && docker-compose down -v)
+        run: (cd .github && docker compose down -v)
 
       - name: Upload coverage reports to CodeCov with GitHub Action
         uses: codecov/codecov-action@v4
