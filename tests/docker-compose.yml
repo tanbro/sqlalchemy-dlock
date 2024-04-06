@@ -30,7 +30,7 @@ services:
         target: /workspace
     working_dir: /workspace
     depends_on: [mysql, postgres]
-    env_file: .env
     environment:
       <<: *common-environment
+    env_file: .env
     command: [/bin/bash, /workspace/scripts/run-test.sh]
