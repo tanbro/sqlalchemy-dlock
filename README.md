@@ -195,7 +195,7 @@ You can run unit-tests
 
   ```bash
   cd tests
-  docker-compose up --abort-on-container-exit
+  docker compose up --abort-on-container-exit
   ```
 
 [SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
