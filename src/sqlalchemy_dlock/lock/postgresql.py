@@ -53,8 +53,8 @@ class PostgresqlSadLockMixin:
                         int64_key: int = do_sth(val)
                         return int64_key
 
-            shared: for :attr:`.shared`
-            xact: for :attr:`.xact`
+            shared: :attr:`.shared`
+            xact: :attr:`.xact`
             convert: Custom function to covert ``key`` to required data type.
         """  # noqa: E501
         if convert:
@@ -112,10 +112,10 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock):
         """
         Args:
             connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
-            key: see :attr:`.BaseSadLock.key`
-            shared: see :attr:`.PostgresqlSadLockMixin.shared`
-            xact: see :attr:`.PostgresqlSadLockMixin.xact`
-            convert: see :class:`.PostgresqlSadLockMixin`
+            key: :attr:`.BaseSadLock.key`
+            shared: :attr:`.PostgresqlSadLockMixin.shared`
+            xact: :attr:`.PostgresqlSadLockMixin.xact`
+            convert: :class:`.PostgresqlSadLockMixin`
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.PostgresqlSadLockMixin`
         """  # noqa: E501
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)

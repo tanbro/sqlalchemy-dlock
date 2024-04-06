@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## v0.6.1
+
+> 📅 **Date** 2024-4-6
+
+- ✅ Changes:
+  - `typing-extensions` required for Python earlier than 3.10
+
 ## v0.6
 
 > 📅 **Date** 2024-3-28

@@ -83,8 +83,8 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock):
     def __init__(self, connection_or_session: TConnectionOrSession, key, **kwargs):
         """
         Args:
-            connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
-            key: see :attr:`.BaseSadLock.key`
+            connection_or_session: :attr:`.BaseSadLock.connection_or_session`
+            key: :attr:`.BaseSadLock.key`
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.MysqlSadLockMixin`
         """
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
