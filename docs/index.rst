@@ -19,7 +19,7 @@ sqlalchemy-dlock
 
    *
       .. image:: https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml/badge.svg
-        :alt: github workflow
+        :alt: Python package
         :target: https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml
 
       .. image:: https://img.shields.io/pypi/v/sqlalchemy-dlock
@@ -27,7 +27,7 @@ sqlalchemy-dlock
          :target: https://pypi.org/project/sqlalchemy-dlock/
 
       .. image:: https://readthedocs.org/projects/sqlalchemy-dlock/badge/?version=latest
-         :alt: Read the docs
+         :alt: Documentation Status
          :target: https://sqlalchemy-dlock.readthedocs.io/en/latest/
 
       .. image:: https://codecov.io/gh/tanbro/sqlalchemy-dlock/branch/main/graph/badge.svg
@@ -44,6 +44,7 @@ Contents
 .. toctree::
    :caption: Documentation
    :titlesonly:
+   :maxdepth: 1
 
    README
    AUTHORS
