@@ -11,7 +11,10 @@ __all__ = ["create_async_sadlock"]
 
 
 def create_async_sadlock(
-    connection_or_session: TAsyncConnectionOrSession, key, contextual_timeout: Union[float, int, None] = None, **kwargs
+    connection_or_session: TAsyncConnectionOrSession,
+    key,
+    contextual_timeout: Union[float, int, None] = None,
+    **kwargs,
 ) -> BaseAsyncSadLock:
     if isinstance(connection_or_session, AsyncConnection):
         sync_engine = connection_or_session.sync_engine

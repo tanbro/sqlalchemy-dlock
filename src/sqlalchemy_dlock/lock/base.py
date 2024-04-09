@@ -89,7 +89,10 @@ class BaseSadLock(local):
 
     def __str__(self):  # pragma: no cover
         return "<{} {} key={} at 0x{:x}>".format(
-            "locked" if self._acquired else "unlocked", self.__class__.__name__, self._key, id(self)
+            "locked" if self._acquired else "unlocked",
+            self.__class__.__name__,
+            self._key,
+            id(self),
         )
 
     @property
@@ -115,7 +118,13 @@ class BaseSadLock(local):
         """
         return self._acquired
 
-    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:  # pragma: no cover
+    def acquire(
+        self,
+        block: bool = True,
+        timeout: Union[float, int, None] = None,
+        *args,
+        **kwargs,
+    ) -> bool:  # pragma: no cover
         """Acquire a lock, blocking or non-blocking.
 
         * With the ``block`` argument set to :data:`True` (the default), the method call will block until the lock is in an unlocked state, then set it to locked and return :data:`True`.
