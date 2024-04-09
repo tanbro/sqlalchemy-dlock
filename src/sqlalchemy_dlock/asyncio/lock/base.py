@@ -33,7 +33,10 @@ class BaseAsyncSadLock:
 
     def __str__(self):  # pragma: no cover
         return "<{} {} key={} at 0x{:x}>".format(
-            "locked" if self._acquired else "unlocked", self.__class__.__name__, self._key, id(self)
+            "locked" if self._acquired else "unlocked",
+            self.__class__.__name__,
+            self._key,
+            id(self),
         )
 
     @property
@@ -49,7 +52,11 @@ class BaseAsyncSadLock:
         return self._acquired
 
     async def acquire(
-        self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs
+        self,
+        block: bool = True,
+        timeout: Union[float, int, None] = None,
+        *args,
+        **kwargs,
     ) -> bool:  # pragma: no cover
         raise NotImplementedError()
 

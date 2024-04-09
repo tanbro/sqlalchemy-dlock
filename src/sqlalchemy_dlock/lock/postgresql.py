@@ -36,7 +36,13 @@ class PostgresqlSadLockMixin:
     """A Mix-in class for PostgreSQL advisory lock"""
 
     def __init__(
-        self, *, key, shared: bool = False, xact: bool = False, convert: Optional[Callable[[Any], int]] = None, **kwargs
+        self,
+        *,
+        key,
+        shared: bool = False,
+        xact: bool = False,
+        convert: Optional[Callable[[Any], int]] = None,
+        **kwargs,
     ):
         """
         Args:
@@ -68,6 +74,7 @@ class PostgresqlSadLockMixin:
         self._shared = bool(shared)
         self._xact = bool(xact)
         #
+        self._stmt_unlock = None
         if not shared and not xact:
             self._stmt_lock = LOCK.params(key=key)
             self._stmt_try_lock = TRY_LOCK.params(key=key)
@@ -79,11 +86,9 @@ class PostgresqlSadLockMixin:
         elif not shared and xact:
             self._stmt_lock = LOCK_XACT.params(key=key)
             self._stmt_try_lock = TRY_LOCK_XACT.params(key=key)
-            self._stmt_unlock = None
         else:
             self._stmt_lock = LOCK_XACT_SHARED.params(key=key)
             self._stmt_try_lock = TRY_LOCK_XACT_SHARED.params(key=key)
-            self._stmt_unlock = None
 
     @property
     def shared(self):

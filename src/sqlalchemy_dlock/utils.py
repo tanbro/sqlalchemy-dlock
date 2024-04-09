@@ -47,10 +47,10 @@ def camel_case(s: str) -> str:
     Returns:
         Camel case string.
     """
-    s = re.sub(r"\w[\s\W]+\w", "", str(s))
+    s = re.sub(r"\w[\s\W]+\w", "", s)
     if not s:
         return s
-    return lower_case(s[0]) + re.sub(r"[\-_\.\s]([a-z])", lambda matched: upper_case(matched.group(1)), s[1:])
+    return lower_case(s[0]) + re.sub(r"[\-_\.\s]([a-z])", lambda x: upper_case(str(x.group(1))), s[1:])
 
 
 def lower_case(s: str) -> str:
@@ -62,7 +62,7 @@ def lower_case(s: str) -> str:
     Returns:
         Lowercase case string.
     """
-    return str(s).lower()
+    return s.lower()
 
 
 def upper_case(s: str) -> str:
@@ -74,7 +74,7 @@ def upper_case(s: str) -> str:
     Returns:
         Uppercase case string.
     """
-    return str(s).upper()
+    return s.upper()
 
 
 def capital_case(s: str) -> str:
@@ -87,7 +87,6 @@ def capital_case(s: str) -> str:
     Returns:
         Capital case string.
     """
-    s = str(s)
     if not s:
         return s
     return upper_case(s[0]) + s[1:]

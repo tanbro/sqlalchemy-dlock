@@ -5,7 +5,7 @@ README
    :parser: myst_parser.sphinx_
 
 How to build docs
-=================
+-----------------
 
 #. This documentation is made with `Sphinx <https://www.sphinx-doc.org/>`_, be sure to install it's dependencies:
 
