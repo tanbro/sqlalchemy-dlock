@@ -67,6 +67,10 @@ class MysqlSadLockMixin:
             raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
         self._actual_key = key
 
+    @property
+    def actual_key(self) -> str:
+        return self._actual_key
+
 
 class MysqlSadLock(MysqlSadLockMixin, BaseSadLock):
     """A distributed lock implemented by MySQL named-lock
@@ -88,7 +92,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock):
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.MysqlSadLockMixin`
         """
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:

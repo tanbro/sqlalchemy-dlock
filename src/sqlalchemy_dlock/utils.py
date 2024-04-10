@@ -1,13 +1,14 @@
 import re
 from hashlib import blake2b
 from sys import byteorder
+from typing import Any
 
 
 def safe_name(s: str) -> str:
     return re.sub(r"[^A-Za-z0-9_]+", "_", s).strip().lower()
 
 
-def to_int64_key(k) -> int:
+def to_int64_key(k: Any) -> int:
     if isinstance(k, str):
         k = k.encode()
     if isinstance(k, (bytearray, bytes, memoryview)):

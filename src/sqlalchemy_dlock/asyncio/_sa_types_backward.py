@@ -13,4 +13,6 @@ else:  # pragma: no cover
 
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_scoped_session
 
+__all__ = ["TAsyncConnectionOrSession"]
+
 TAsyncConnectionOrSession: TypeAlias = Union[AsyncConnection, AsyncSession, async_scoped_session]

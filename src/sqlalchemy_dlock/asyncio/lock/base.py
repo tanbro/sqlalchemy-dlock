@@ -1,6 +1,10 @@
 import sys
 from typing import Any, Union
 
+if sys.version_info >= (3, 11):  # pragma: no cover
+    from typing import Self
+else:  # pragma: no cover
+    from typing_extensions import Self
 if sys.version_info >= (3, 12):  # pragma: no cover
     from .._sa_types import TAsyncConnectionOrSession
 else:  # pragma: no cover
@@ -21,17 +25,18 @@ class BaseAsyncSadLock:
         self._key = key
         self._contextual_timeout = contextual_timeout
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         if self._contextual_timeout is None:
             await self.acquire()
-        elif not await self.acquire(timeout=self._contextual_timeout):  # the timeout period has elapsed and not acquired
+        elif not await self.acquire(timeout=self._contextual_timeout):
+            # the timeout period has elapsed and not acquired
             raise TimeoutError()
         return self
 
     async def __aexit__(self, exc_type, exc_value, exc_tb):
         await self.close()
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self) -> str:
         return "<{} {} key={} at 0x{:x}>".format(
             "locked" if self._acquired else "unlocked",
             self.__class__.__name__,
@@ -44,7 +49,7 @@ class BaseAsyncSadLock:
         return self._connection_or_session
 
     @property
-    def key(self):
+    def key(self) -> Any:
         return self._key
 
     @property
@@ -57,12 +62,12 @@ class BaseAsyncSadLock:
         timeout: Union[float, int, None] = None,
         *args,
         **kwargs,
-    ) -> bool:  # pragma: no cover
+    ) -> bool:
         raise NotImplementedError()
 
-    async def release(self, *args, **kwargs):  # pragma: no cover
+    async def release(self, *args, **kwargs) -> None:
         raise NotImplementedError()
 
-    async def close(self, *args, **kwargs):
+    async def close(self, *args, **kwargs) -> None:
         if self._acquired:
             await self.release(*args, **kwargs)

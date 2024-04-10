@@ -1,7 +1,11 @@
 import sys
 from threading import local
-from typing import Union
+from typing import Any, Union
 
+if sys.version_info >= (3, 11):  # pragma: no cover
+    from typing import Self
+else:  # pragma: no cover
+    from typing_extensions import Self
 if sys.version_info >= (3, 12):  # pragma: no cover
     from .._sa_types import TConnectionOrSession
 else:  # pragma: no cover
@@ -37,12 +41,7 @@ class BaseSadLock(local):
     """  # noqa: E501
 
     def __init__(
-        self,
-        connection_or_session: TConnectionOrSession,
-        key,
-        /,
-        contextual_timeout: Union[float, int, None] = None,
-        **kwargs,
+        self, connection_or_session: TConnectionOrSession, key, /, contextual_timeout: Union[float, int, None] = None, **kwargs
     ):
         """
         Args:
@@ -77,7 +76,7 @@ class BaseSadLock(local):
         self._key = key
         self._contextual_timeout = contextual_timeout
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         if self._contextual_timeout is None:  # timeout period is infinite
             self.acquire()
         elif not self.acquire(timeout=self._contextual_timeout):  # the timeout period has elapsed and not acquired
@@ -87,7 +86,7 @@ class BaseSadLock(local):
     def __exit__(self, exc_type, exc_value, exc_tb):
         self.close()
 
-    def __str__(self):  # pragma: no cover
+    def __str__(self) -> str:
         return "<{} {} key={} at 0x{:x}>".format(
             "locked" if self._acquired else "unlocked",
             self.__class__.__name__,
@@ -104,7 +103,7 @@ class BaseSadLock(local):
         return self._connection_or_session
 
     @property
-    def key(self):
+    def key(self) -> Any:
         """ID or name of the SQL locking function
 
         It returns ``key`` parameter of the class's constructor"""
@@ -118,13 +117,7 @@ class BaseSadLock(local):
         """
         return self._acquired
 
-    def acquire(
-        self,
-        block: bool = True,
-        timeout: Union[float, int, None] = None,
-        *args,
-        **kwargs,
-    ) -> bool:  # pragma: no cover
+    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         """Acquire a lock, blocking or non-blocking.
 
         * With the ``block`` argument set to :data:`True` (the default), the method call will block until the lock is in an unlocked state, then set it to locked and return :data:`True`.
@@ -140,7 +133,7 @@ class BaseSadLock(local):
         """  # noqa: E501
         raise NotImplementedError()
 
-    def release(self, *args, **kwargs):  # pragma: no cover
+    def release(self, *args, **kwargs) -> None:
         """Release a lock.
 
         Since the class is thread-local, this cannot be called from other thread or process,
@@ -156,7 +149,7 @@ class BaseSadLock(local):
         """  # noqa: E501
         raise NotImplementedError()
 
-    def close(self, *args, **kwargs):
+    def close(self, *args, **kwargs) -> None:
         """Same as :meth:`release`
 
         Except that the :class:`ValueError` is **NOT** raised when invoked on an unlocked lock.

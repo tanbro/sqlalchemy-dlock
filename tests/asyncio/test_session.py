@@ -9,7 +9,7 @@ from .engines import create_engines, dispose_engines, get_engines
 
 
 class SessionTestCase(IsolatedAsyncioTestCase):
-    sessions = []
+    sessions = []  # type: ignore[var-annotated]
 
     def setUp(self):
         create_engines()

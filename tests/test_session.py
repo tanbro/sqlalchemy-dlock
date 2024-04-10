@@ -9,7 +9,7 @@ from .engines import ENGINES
 
 
 class SessionTestCase(TestCase):
-    Sessions = []
+    Sessions = []  # type: ignore[var-annotated]
 
     @classmethod
     def setUpClass(cls):

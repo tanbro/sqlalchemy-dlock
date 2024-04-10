@@ -91,12 +91,16 @@ class PostgresqlSadLockMixin:
             self._stmt_try_lock = TRY_LOCK_XACT_SHARED.params(key=key)
 
     @property
-    def shared(self):
+    def actual_key(self) -> int:
+        return self._actual_key
+
+    @property
+    def shared(self) -> bool:
         """Is the advisory lock shared or exclusive"""
         return self._shared
 
     @property
-    def xact(self):
+    def xact(self) -> bool:
         """Is the advisory lock transaction level or session level"""
         return self._xact
 
@@ -124,7 +128,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock):
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.PostgresqlSadLockMixin`
         """  # noqa: E501
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     def acquire(
         self,

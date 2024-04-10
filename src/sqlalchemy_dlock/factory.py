@@ -16,11 +16,7 @@ __all__ = ["create_sadlock"]
 
 
 def create_sadlock(
-    connection_or_session: TConnectionOrSession,
-    key,
-    /,
-    contextual_timeout: Union[float, int, None] = None,
-    **kwargs,
+    connection_or_session: TConnectionOrSession, key, /, contextual_timeout: Union[float, int, None] = None, **kwargs
 ) -> BaseSadLock:
     """Create a database distributed lock object
 
