@@ -1,4 +1,4 @@
-exclude: ^(src/sqlalchemy_dlock(/asyncio)?/_sa_types(_backward)?\.py)$
+exclude: ^src/sqlalchemy_dlock(/asyncio)?/_sa_types(_backward)?\.py$
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
