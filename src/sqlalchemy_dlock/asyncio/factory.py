@@ -1,5 +1,4 @@
 from importlib import import_module
-import sys
 from typing import Union, Type
 
 from sqlalchemy.engine import Connection
@@ -8,10 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from ..utils import pascal_case, safe_name
 from .lock.base import BaseAsyncSadLock
 
-if sys.version_info >= (3, 12):  # pragma: no cover
-    from ._sa_types import TAsyncConnectionOrSession
-else:  # pragma: no cover
-    from ._sa_types_backward import TAsyncConnectionOrSession
+from .types import TAsyncConnectionOrSession
 
 __all__ = ["create_async_sadlock"]
 

@@ -1,21 +1,22 @@
 import re
 from hashlib import blake2b
 from sys import byteorder
-from typing import Union
+from typing import Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from _typeshed import ReadableBuffer
 
 
 def safe_name(s: str) -> str:
     return re.sub(r"[^A-Za-z0-9_]+", "_", s).strip().lower()
 
 
-def to_int64_key(k: Union[int, str, bytearray, bytes, memoryview]) -> int:
-    if isinstance(k, str):
-        k = k.encode()
-    if isinstance(k, (bytearray, bytes, memoryview)):
-        return int.from_bytes(blake2b(k, digest_size=8).digest(), byteorder, signed=True)
+def to_int64_key(k: Union[int, ReadableBuffer]) -> int:
     if isinstance(k, int):
         return ensure_int64(k)
-    raise TypeError(f"{type(k)}")
+    if isinstance(k, str):
+        k = k.encode()
+    return int.from_bytes(blake2b(k, digest_size=8).digest(), byteorder, signed=True)
 
 
 def ensure_int64(i: int) -> int:

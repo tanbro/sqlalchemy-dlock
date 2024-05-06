@@ -1,19 +1,10 @@
-import sys
-from typing import Any, Optional, Union
-
-if sys.version_info >= (3, 9):
-    from collections.abc import Callable
-else:
-    from typing import Callable
+from typing import Any, Callable, Optional, Union, TypeVar
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.mysql import LOCK, UNLOCK
+from ..types import TConnectionOrSession
 from .base import BaseSadLock
 
-if sys.version_info >= (3, 12):  # pragma: no cover
-    from .._sa_types import TConnectionOrSession
-else:  # pragma: no cover
-    from .._sa_types_backward import TConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
@@ -28,10 +19,13 @@ def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
     return result
 
 
+TKey = TypeVar("TKey", bound=Any)
+
+
 class MysqlSadLockMixin:
     """A Mix-in class for MySQL named lock"""
 
-    def __init__(self, *, key, convert: Optional[Callable[[Any], str]] = None, **kwargs):
+    def __init__(self, *, key: TKey, convert: Optional[Callable[[TKey], str]] = None, **kwargs):
         """
         Args:
             key: MySQL named lock requires the key given by string.
@@ -58,14 +52,13 @@ class MysqlSadLockMixin:
                             return the_string_covert_from_value
         """  # noqa: E501
         if convert:
-            key = convert(key)
+            self._actual_key = convert(key)
         elif not isinstance(key, str):
-            key = default_convert(key)
+            self._actual_key = default_convert(key)
         if not isinstance(key, str):
             raise TypeError("MySQL named lock requires the key given by string")
-        if len(key) > MYSQL_LOCK_NAME_MAX_LENGTH:
+        if len(self._actual_key) > MYSQL_LOCK_NAME_MAX_LENGTH:
             raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
-        self._actual_key = key
 
     @property
     def actual_key(self) -> str:

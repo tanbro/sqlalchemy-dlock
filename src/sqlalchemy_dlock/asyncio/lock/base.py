@@ -5,10 +5,8 @@ if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover
     from typing_extensions import Self
-if sys.version_info >= (3, 12):  # pragma: no cover
-    from .._sa_types import TAsyncConnectionOrSession
-else:  # pragma: no cover
-    from .._sa_types_backward import TAsyncConnectionOrSession
+
+from ..types import TAsyncConnectionOrSession
 
 
 class BaseAsyncSadLock:
@@ -36,7 +34,7 @@ class BaseAsyncSadLock:
     async def __aexit__(self, exc_type, exc_value, exc_tb):
         await self.close()
 
-    def __str__(self) -> str:
+    def __str__(self):
         return "<{} {} key={} at 0x{:x}>".format(
             "locked" if self._acquired else "unlocked",
             self.__class__.__name__,
@@ -57,15 +55,11 @@ class BaseAsyncSadLock:
         return self._acquired
 
     async def acquire(
-        self,
-        block: bool = True,
-        timeout: Union[float, int, None] = None,
-        *args,
-        **kwargs,
-    ) -> bool:
+        self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs
+    ) -> bool:  # pragma: no cover
         raise NotImplementedError()
 
-    async def release(self, *args, **kwargs) -> None:
+    async def release(self, *args, **kwargs) -> None:  # pragma: no cover
         raise NotImplementedError()
 
     async def close(self, *args, **kwargs) -> None:

@@ -1,15 +1,10 @@
-import sys
 from typing import Union
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...lock.mysql import MysqlSadLockMixin
 from ...statement.mysql import LOCK, UNLOCK
+from ..types import TAsyncConnectionOrSession
 from .base import BaseAsyncSadLock
-
-if sys.version_info >= (3, 12):  # pragma: no cover
-    from .._sa_types import TAsyncConnectionOrSession
-else:  # pragma: no cover
-    from .._sa_types_backward import TAsyncConnectionOrSession
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 

@@ -1,12 +1,6 @@
-import sys
 from time import sleep, time
-from typing import Any, Optional, Union
+from typing import Any, Callable, Optional, Union, TypeVar
 from warnings import warn
-
-if sys.version_info >= (3, 9):
-    from collections.abc import Callable
-else:
-    from typing import Callable
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.postgresql import (
@@ -23,13 +17,12 @@ from ..statement.postgresql import (
     UNLOCK,
     UNLOCK_SHARED,
 )
+from ..types import TConnectionOrSession
 from ..utils import ensure_int64, to_int64_key
 from .base import BaseSadLock
 
-if sys.version_info >= (3, 12):  # pragma: no cover
-    from .._sa_types import TConnectionOrSession
-else:  # pragma: no cover
-    from .._sa_types_backward import TConnectionOrSession
+
+TKey = TypeVar("TKey", bound=Any)
 
 
 class PostgresqlSadLockMixin:
@@ -38,10 +31,10 @@ class PostgresqlSadLockMixin:
     def __init__(
         self,
         *,
-        key,
+        key: TKey,
         shared: bool = False,
         xact: bool = False,
-        convert: Optional[Callable[[Any], int]] = None,
+        convert: Optional[Callable[[TKey], int]] = None,
         **kwargs,
     ):
         """
@@ -64,12 +57,9 @@ class PostgresqlSadLockMixin:
             convert: Custom function to covert ``key`` to required data type.
         """  # noqa: E501
         if convert:
-            key = ensure_int64(convert(key))
-        elif isinstance(key, int):
-            key = ensure_int64(key)
+            self._actual_key = ensure_int64(convert(key))
         else:
-            key = to_int64_key(key)
-        self._actual_key = key
+            self._actual_key = to_int64_key(key)
         #
         self._shared = bool(shared)
         self._xact = bool(xact)

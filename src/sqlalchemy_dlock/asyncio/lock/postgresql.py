@@ -1,5 +1,4 @@
 import asyncio
-import sys
 from time import time
 from typing import Union
 from warnings import warn
@@ -7,12 +6,8 @@ from warnings import warn
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...lock.postgresql import PostgresqlSadLockMixin
 from ...statement.postgresql import SLEEP_INTERVAL_DEFAULT, SLEEP_INTERVAL_MIN
+from ..types import TAsyncConnectionOrSession
 from .base import BaseAsyncSadLock
-
-if sys.version_info >= (3, 12):  # pragma: no cover
-    from .._sa_types import TAsyncConnectionOrSession
-else:  # pragma: no cover
-    from .._sa_types_backward import TAsyncConnectionOrSession
 
 
 class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock):

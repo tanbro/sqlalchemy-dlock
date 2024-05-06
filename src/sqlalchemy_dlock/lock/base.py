@@ -6,10 +6,8 @@ if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
 else:  # pragma: no cover
     from typing_extensions import Self
-if sys.version_info >= (3, 12):  # pragma: no cover
-    from .._sa_types import TConnectionOrSession
-else:  # pragma: no cover
-    from .._sa_types_backward import TConnectionOrSession
+
+from ..types import TConnectionOrSession
 
 
 class BaseSadLock(local):
@@ -117,7 +115,7 @@ class BaseSadLock(local):
         """
         return self._acquired
 
-    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:  # pragma: no cover
         """Acquire a lock, blocking or non-blocking.
 
         * With the ``block`` argument set to :data:`True` (the default), the method call will block until the lock is in an unlocked state, then set it to locked and return :data:`True`.
@@ -133,7 +131,7 @@ class BaseSadLock(local):
         """  # noqa: E501
         raise NotImplementedError()
 
-    def release(self, *args, **kwargs) -> None:
+    def release(self, *args, **kwargs) -> None:  # pragma: no cover
         """Release a lock.
 
         Since the class is thread-local, this cannot be called from other thread or process,
