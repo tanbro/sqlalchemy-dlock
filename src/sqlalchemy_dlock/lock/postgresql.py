@@ -66,19 +66,19 @@ class PostgresqlSadLockMixin:
         #
         self._stmt_unlock = None
         if not shared and not xact:
-            self._stmt_lock = LOCK.params(key=key)
-            self._stmt_try_lock = TRY_LOCK.params(key=key)
-            self._stmt_unlock = UNLOCK.params(key=key)
+            self._stmt_lock = LOCK.params(key=self._actual_key)
+            self._stmt_try_lock = TRY_LOCK.params(key=self._actual_key)
+            self._stmt_unlock = UNLOCK.params(key=self._actual_key)
         elif shared and not xact:
-            self._stmt_lock = LOCK_SHARED.params(key=key)
-            self._stmt_try_lock = TRY_LOCK_SHARED.params(key=key)
-            self._stmt_unlock = UNLOCK_SHARED.params(key=key)
+            self._stmt_lock = LOCK_SHARED.params(key=self._actual_key)
+            self._stmt_try_lock = TRY_LOCK_SHARED.params(key=self._actual_key)
+            self._stmt_unlock = UNLOCK_SHARED.params(key=self._actual_key)
         elif not shared and xact:
-            self._stmt_lock = LOCK_XACT.params(key=key)
-            self._stmt_try_lock = TRY_LOCK_XACT.params(key=key)
+            self._stmt_lock = LOCK_XACT.params(key=self._actual_key)
+            self._stmt_try_lock = TRY_LOCK_XACT.params(key=self._actual_key)
         else:
-            self._stmt_lock = LOCK_XACT_SHARED.params(key=key)
-            self._stmt_try_lock = TRY_LOCK_XACT_SHARED.params(key=key)
+            self._stmt_lock = LOCK_XACT_SHARED.params(key=self._actual_key)
+            self._stmt_try_lock = TRY_LOCK_XACT_SHARED.params(key=self._actual_key)
 
     @property
     def actual_key(self) -> int:
@@ -145,7 +145,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock):
         if block:
             if timeout is None:
                 # None: set the timeout period to infinite.
-                _ = self.connection_or_session.execute(self._stmt_lock).all()
+                self.connection_or_session.execute(self._stmt_lock).all()
                 self._acquired = True
             else:
                 # negative value for `timeout` are equivalent to a `timeout` of zero.

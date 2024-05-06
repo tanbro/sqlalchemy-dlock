@@ -53,9 +53,11 @@ class MysqlSadLockMixin:
         """  # noqa: E501
         if convert:
             self._actual_key = convert(key)
-        elif not isinstance(key, str):
+        elif isinstance(key, str):
+            self._actual_key = key
+        else:
             self._actual_key = default_convert(key)
-        if not isinstance(key, str):
+        if not isinstance(self._actual_key, str):
             raise TypeError("MySQL named lock requires the key given by string")
         if len(self._actual_key) > MYSQL_LOCK_NAME_MAX_LENGTH:
             raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")

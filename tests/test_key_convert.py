@@ -59,20 +59,7 @@ class KeyConvertTestCase(TestCase):
                     create_sadlock(conn, key)
 
     def test_mysql_key_not_a_string(self):
-        keys = (
-            None,
-            1,
-            0,
-            -1,
-            0.1,
-            True,
-            False,
-            (),
-            [],
-            set(),
-            {},
-            object(),
-        )
+        keys = None, 1, 0, -1, 0.1, True, False, (), [], set(), {}, object()
 
         for engine in ENGINES:
             if engine.name != "mysql":

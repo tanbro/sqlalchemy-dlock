@@ -61,20 +61,7 @@ class KeyConvertTestCase(IsolatedAsyncioTestCase):
                     create_async_sadlock(conn, key)
 
     async def test_mysql_key_not_a_string(self):
-        keys = (
-            None,
-            1,
-            0,
-            -1,
-            0.1,
-            True,
-            False,
-            (),
-            [],
-            set(),
-            {},
-            object(),
-        )
+        keys = None, 1, 0, -1, 0.1, True, False, (), [], set(), {}, object()
 
         for engine in get_engines():
             if engine.name != "mysql":

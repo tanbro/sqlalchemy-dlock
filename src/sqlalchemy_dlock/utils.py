@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import re
 from hashlib import blake2b
 from sys import byteorder
 from typing import Union, TYPE_CHECKING
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from _typeshed import ReadableBuffer
 
 
