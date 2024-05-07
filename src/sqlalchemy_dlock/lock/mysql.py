@@ -1,22 +1,13 @@
-from typing import Any, Callable, Optional, Union, TypeVar
+from typing import Any, Callable, Optional, TypeVar, Union
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.mysql import LOCK, UNLOCK
 from ..types import TConnectionOrSession
+from ..utils import to_str_key
 from .base import BaseSadLock
 
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
-
-
-def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
-    if isinstance(key, (bytearray, bytes)):
-        result = key.decode()
-    elif isinstance(key, (int, float)):
-        result = str(key)
-    else:
-        raise TypeError(f"{type(key)}")
-    return result
 
 
 TKey = TypeVar("TKey", bound=Any)
@@ -56,18 +47,14 @@ class MysqlSadLockMixin:
         elif isinstance(key, str):
             self._actual_key = key
         else:
-            self._actual_key = default_convert(key)
+            self._actual_key = to_str_key(key)
         if not isinstance(self._actual_key, str):
             raise TypeError("MySQL named lock requires the key given by string")
         if len(self._actual_key) > MYSQL_LOCK_NAME_MAX_LENGTH:
             raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
 
-    @property
-    def actual_key(self) -> str:
-        return self._actual_key
 
-
-class MysqlSadLock(MysqlSadLockMixin, BaseSadLock):
+class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
     """A distributed lock implemented by MySQL named-lock
 
     See Also:
@@ -87,7 +74,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock):
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.MysqlSadLockMixin`
         """
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
         if self._acquired:

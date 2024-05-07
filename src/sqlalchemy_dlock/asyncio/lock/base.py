@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Union
+from typing import Generic, Union, TypeVar
 
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -9,11 +9,14 @@ else:  # pragma: no cover
 from ..types import TAsyncConnectionOrSession
 
 
-class BaseAsyncSadLock:
+TKey = TypeVar("TKey")
+
+
+class BaseAsyncSadLock(Generic[TKey]):
     def __init__(
         self,
         connection_or_session: TAsyncConnectionOrSession,
-        key: Any,
+        key: TKey,
         /,
         contextual_timeout: Union[float, int, None] = None,
         **kwargs,
@@ -47,7 +50,7 @@ class BaseAsyncSadLock:
         return self._connection_or_session
 
     @property
-    def key(self) -> Any:
+    def key(self) -> TKey:
         return self._key
 
     @property

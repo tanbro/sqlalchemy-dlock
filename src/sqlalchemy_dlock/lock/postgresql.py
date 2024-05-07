@@ -29,13 +29,7 @@ class PostgresqlSadLockMixin:
     """A Mix-in class for PostgreSQL advisory lock"""
 
     def __init__(
-        self,
-        *,
-        key: TKey,
-        shared: bool = False,
-        xact: bool = False,
-        convert: Optional[Callable[[TKey], int]] = None,
-        **kwargs,
+        self, *, key: TKey, shared: bool = False, xact: bool = False, convert: Optional[Callable[[TKey], int]] = None, **kwargs
     ):
         """
         Args:
@@ -81,10 +75,6 @@ class PostgresqlSadLockMixin:
             self._stmt_try_lock = TRY_LOCK_XACT_SHARED.params(key=self._actual_key)
 
     @property
-    def actual_key(self) -> int:
-        return self._actual_key
-
-    @property
     def shared(self) -> bool:
         """Is the advisory lock shared or exclusive"""
         return self._shared
@@ -95,7 +85,7 @@ class PostgresqlSadLockMixin:
         return self._xact
 
 
-class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock):
+class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
     """A distributed lock implemented by PostgreSQL advisory lock
 
     See also:
@@ -118,13 +108,10 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock):
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.PostgresqlSadLockMixin`
         """  # noqa: E501
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
     def acquire(
-        self,
-        block: bool = True,
-        timeout: Union[float, int, None] = None,
-        interval: Union[float, int, None] = None,
+        self, block: bool = True, timeout: Union[float, int, None] = None, interval: Union[float, int, None] = None
     ) -> bool:
         """
         See Also:

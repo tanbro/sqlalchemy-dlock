@@ -6,20 +6,8 @@ from ...statement.mysql import LOCK, UNLOCK
 from ..types import TAsyncConnectionOrSession
 from .base import BaseAsyncSadLock
 
-MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
-
-def default_convert(key: Union[bytearray, bytes, int, float]) -> str:
-    if isinstance(key, (bytearray, bytes)):
-        result = key.decode()
-    elif isinstance(key, (int, float)):
-        result = str(key)
-    else:
-        raise TypeError(f"{type(key)}")
-    return result
-
-
-class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock):
+class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str]):
     def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)

@@ -10,16 +10,13 @@ from ..types import TAsyncConnectionOrSession
 from .base import BaseAsyncSadLock
 
 
-class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock):
+class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
     def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
     async def acquire(
-        self,
-        block: bool = True,
-        timeout: Union[float, int, None] = None,
-        interval: Union[float, int, None] = None,
+        self, block: bool = True, timeout: Union[float, int, None] = None, interval: Union[float, int, None] = None
     ) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")

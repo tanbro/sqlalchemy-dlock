@@ -1,6 +1,6 @@
 import sys
 from threading import local
-from typing import Any, Union
+from typing import Generic, Union, TypeVar
 
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -10,7 +10,10 @@ else:  # pragma: no cover
 from ..types import TConnectionOrSession
 
 
-class BaseSadLock(local):
+TKey = TypeVar("TKey")
+
+
+class BaseSadLock(Generic[TKey], local):
     """Base class of database lock implementation
 
     Note:
@@ -39,7 +42,12 @@ class BaseSadLock(local):
     """  # noqa: E501
 
     def __init__(
-        self, connection_or_session: TConnectionOrSession, key, /, contextual_timeout: Union[float, int, None] = None, **kwargs
+        self,
+        connection_or_session: TConnectionOrSession,
+        key: TKey,
+        /,
+        contextual_timeout: Union[float, int, None] = None,
+        **kwargs,
     ):
         """
         Args:
@@ -101,7 +109,7 @@ class BaseSadLock(local):
         return self._connection_or_session
 
     @property
-    def key(self) -> Any:
+    def key(self) -> TKey:
         """ID or name of the SQL locking function
 
         It returns ``key`` parameter of the class's constructor"""
