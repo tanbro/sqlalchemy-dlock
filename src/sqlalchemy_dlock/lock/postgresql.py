@@ -1,5 +1,5 @@
 from time import sleep, time
-from typing import Any, Callable, Optional, Union, TypeVar
+from typing import Any, Callable, Optional, TypeVar, Union
 from warnings import warn
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
@@ -20,7 +20,6 @@ from ..statement.postgresql import (
 from ..types import TConnectionOrSession
 from ..utils import ensure_int64, to_int64_key
 from .base import BaseSadLock
-
 
 TKey = TypeVar("TKey", bound=Any)
 

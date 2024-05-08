@@ -6,7 +6,6 @@ from ..types import TConnectionOrSession
 from ..utils import to_str_key
 from .base import BaseSadLock
 
-
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
 

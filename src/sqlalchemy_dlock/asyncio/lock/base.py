@@ -1,5 +1,5 @@
 import sys
-from typing import Generic, Union, TypeVar
+from typing import Generic, TypeVar, Union
 
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -7,7 +7,6 @@ else:  # pragma: no cover
     from typing_extensions import Self
 
 from ..types import TAsyncConnectionOrSession
-
 
 TKey = TypeVar("TKey")
 

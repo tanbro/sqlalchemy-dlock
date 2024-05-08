@@ -1,6 +1,5 @@
 from sqlalchemy import text
 
-
 LOCK = text("SELECT pg_advisory_lock(:key)")
 LOCK_SHARED = text("SELECT pg_advisory_lock_shared(:key)")
 LOCK_XACT = text("SELECT pg_advisory_xact_lock(:key)")

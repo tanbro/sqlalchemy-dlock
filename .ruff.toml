@@ -1,8 +1,9 @@
 src = ["src"]
-extend-exclude = ["docs"]
+extend-exclude = ["docs", "scripts", "tests"]
 line-length = 128
 
 [lint]
+extend-select = ["I"]
 ignore-init-module-imports = true
 
 [lint.mccabe]

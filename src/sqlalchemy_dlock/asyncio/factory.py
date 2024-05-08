@@ -1,12 +1,11 @@
 from importlib import import_module
-from typing import Union, Type
+from typing import Type, Union
 
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from ..utils import pascal_case, safe_name
 from .lock.base import BaseAsyncSadLock
-
 from .types import TAsyncConnectionOrSession
 
 __all__ = ["create_async_sadlock"]
