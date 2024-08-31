@@ -4,7 +4,7 @@ name: sqlalchemy-dlock-db
 
 services:
   mysql:
-    image: mysql
+    image: alpine/mysql
     ports:
       - "127.0.0.1:3306:3306"
     environment:
@@ -14,7 +14,7 @@ services:
       MYSQL_PASSWORD: test
 
   postgres:
-    image: postgres
+    image: postgres:alpine
     ports:
       - "127.0.0.1:5432:5432"
     environment:

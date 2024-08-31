@@ -9,14 +9,14 @@ x-common-environment: &common-environment
 
 services:
   mysql:
-    image: mysql
+    image: alpine/mysql
     ports:
       - "3306:3306"
     environment:
       <<: *common-environment
 
   postgres:
-    image: postgres
+    image: postgres:alpine
     ports:
       - "5432:5432"
     environment:
