@@ -24,4 +24,5 @@ Submodules
 
    sqlalchemy_dlock.exceptions
    sqlalchemy_dlock.factory
+   sqlalchemy_dlock.types
    sqlalchemy_dlock.utils

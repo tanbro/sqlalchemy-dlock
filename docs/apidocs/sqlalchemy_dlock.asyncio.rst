@@ -21,3 +21,4 @@ Submodules
    :maxdepth: 4
 
    sqlalchemy_dlock.asyncio.factory
+   sqlalchemy_dlock.asyncio.types

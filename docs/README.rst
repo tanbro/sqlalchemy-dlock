@@ -25,7 +25,7 @@ How to build docs
 
    .. code:: sh
 
-      docs/make html
+      make -C docs html
 
 The built static web site is output to ``docs/_build/html``, we can serve it:
 

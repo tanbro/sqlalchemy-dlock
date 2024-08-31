@@ -1,3 +1,5 @@
+coverage
+
 python-dotenv
 cryptography;sys_platform=="win32"
 
