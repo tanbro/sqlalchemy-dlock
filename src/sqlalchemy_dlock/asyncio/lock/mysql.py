@@ -12,7 +12,7 @@ class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str]):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
-    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
+    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
         if block:

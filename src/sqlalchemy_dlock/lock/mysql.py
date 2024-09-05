@@ -75,7 +75,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
-    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None) -> bool:
+    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
         if block:
