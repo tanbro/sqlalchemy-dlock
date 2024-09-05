@@ -110,7 +110,12 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
         BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
     def acquire(
-        self, block: bool = True, timeout: Union[float, int, None] = None, interval: Union[float, int, None] = None
+        self,
+        block: bool = True,
+        timeout: Union[float, int, None] = None,
+        interval: Union[float, int, None] = None,
+        *args,
+        **kwargs,
     ) -> bool:
         """
         See Also:
