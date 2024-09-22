@@ -15,14 +15,14 @@ def create_async_sadlock(
     connection_or_session: TAsyncConnectionOrSession, key, contextual_timeout: Union[float, int, None] = None, **kwargs
 ) -> BaseAsyncSadLock:
     if isinstance(connection_or_session, AsyncConnection):
-        sync_engine = connection_or_session.sync_engine
+        engine = connection_or_session.sync_engine
     else:
         bind = connection_or_session.get_bind()
         if isinstance(bind, Connection):
-            sync_engine = bind.engine
+            engine = bind.engine
         else:
-            sync_engine = bind
-    engine_name = safe_name(sync_engine.name)
+            engine = bind
+    engine_name = safe_name(engine.name)
     try:
         mod = import_module(f"..lock.{engine_name}", __name__)
     except ImportError as exception:  # pragma: no cover
