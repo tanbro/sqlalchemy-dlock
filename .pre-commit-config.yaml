@@ -19,7 +19,7 @@ repos:
       - id: check-docstring-first
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.7
+    rev: v0.7.0
     hooks:
       # Run the linter.
       - id: ruff
@@ -36,7 +36,7 @@ repos:
         args: [--config-file, mypy.ini, --ignore-missing-imports]
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.29.2"
+    rev: "0.29.4"
     hooks:
       - id: check-github-workflows
       - id: check-readthedocs
