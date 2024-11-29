@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## v0.6.1.post2
+
+> 📅 **Date** 2024-11-29
+
+- 🐛 Bug-fix:
+  - Issue #4: PostgreSQL xact lock in context manager produces warning #4
+- ✅ Changes:
+  - `typing-extensions` required for Python earlier than 3.12
+- 🖊️ Modifications:
+  - Add some `override` decorators
+- 🎯 CI:
+  - update pre-commit hooks
+
 ## v0.6.1
 
 > 📅 **Date** 2024-4-6
