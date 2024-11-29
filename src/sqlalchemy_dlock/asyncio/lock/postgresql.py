@@ -24,8 +24,12 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
 
     @override
     async def __aexit__(self, exc_type, exc_value, exc_tb):
-        with catch_warnings(category=RuntimeWarning):
-            return await super().__aexit__(exc_type, exc_value, exc_tb)
+        if sys.version_info < (3, 11):
+            with catch_warnings():
+                return await super().__aexit__(exc_type, exc_value, exc_tb)
+        else:
+            with catch_warnings(category=RuntimeWarning):
+                return await super().__aexit__(exc_type, exc_value, exc_tb)
 
     @override
     async def acquire(

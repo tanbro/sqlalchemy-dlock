@@ -118,8 +118,12 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
 
     @override
     def __exit__(self, exc_type, exc_value, exc_tb):
-        with catch_warnings(category=RuntimeWarning):
-            return super().__exit__(exc_type, exc_value, exc_tb)
+        if sys.version_info < (3, 11):
+            with catch_warnings():
+                return super().__exit__(exc_type, exc_value, exc_tb)
+        else:
+            with catch_warnings(category=RuntimeWarning):
+                return super().__exit__(exc_type, exc_value, exc_tb)
 
     @override
     def acquire(
