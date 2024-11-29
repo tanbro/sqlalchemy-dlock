@@ -1,4 +1,10 @@
+import sys
 from typing import Union
+
+if sys.version_info < (3, 12):  # pragma: no cover
+    from typing_extensions import override
+else:  # pragma: no cover
+    from typing import override
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...lock.mysql import MysqlSadLockMixin
@@ -8,10 +14,12 @@ from .base import BaseAsyncSadLock
 
 
 class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str]):
+    @override
     def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
+    @override
     async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
@@ -36,6 +44,7 @@ class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str]):
             raise SqlAlchemyDLockDatabaseError(f"GET_LOCK({self.key!r}, {timeout}) returns {ret_val}")
         return self._acquired
 
+    @override
     async def release(self):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")

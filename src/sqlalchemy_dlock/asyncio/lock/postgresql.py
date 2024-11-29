@@ -1,7 +1,13 @@
 import asyncio
+import sys
 from time import time
 from typing import Union
-from warnings import warn
+from warnings import catch_warnings, warn
+
+if sys.version_info < (3, 12):  # pragma: no cover
+    from typing_extensions import override
+else:  # pragma: no cover
+    from typing import override
 
 from ...exceptions import SqlAlchemyDLockDatabaseError
 from ...lock.postgresql import PostgresqlSadLockMixin
@@ -11,10 +17,17 @@ from .base import BaseAsyncSadLock
 
 
 class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
+    @override
     def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
+    @override
+    async def __aexit__(self, exc_type, exc_value, exc_tb):
+        with catch_warnings(category=RuntimeWarning):
+            return await super().__aexit__(exc_type, exc_value, exc_tb)
+
+    @override
     async def acquire(
         self,
         block: bool = True,
@@ -54,6 +67,7 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
         #
         return self._acquired
 
+    @override
     async def release(self):
         if self._stmt_unlock is None:
             warn(

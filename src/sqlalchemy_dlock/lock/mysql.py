@@ -1,4 +1,10 @@
+import sys
 from typing import Any, Callable, Optional, TypeVar, Union
+
+if sys.version_info < (3, 12):  # pragma: no cover
+    from typing_extensions import override
+else:  # pragma: no cover
+    from typing import override
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.mysql import LOCK, UNLOCK
@@ -65,6 +71,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
         When perform multiple :meth:`.acquire` for a key on the **same** SQLAlchemy connection, latter :meth:`.acquire` will success immediately no wait and never block, it causes cascade lock instead!
     """  # noqa: E501
 
+    @override
     def __init__(self, connection_or_session: TConnectionOrSession, key, **kwargs):
         """
         Args:
@@ -75,6 +82,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
+    @override
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
@@ -99,6 +107,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
             raise SqlAlchemyDLockDatabaseError(f"GET_LOCK({self.key!r}, {timeout}) returns {ret_val}")
         return self._acquired
 
+    @override
     def release(self):
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
