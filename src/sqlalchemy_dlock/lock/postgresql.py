@@ -1,6 +1,12 @@
+import sys
 from time import sleep, time
 from typing import Any, Callable, Optional, TypeVar, Union
-from warnings import warn
+from warnings import catch_warnings, warn
+
+if sys.version_info < (3, 12):  # pragma: no cover
+    from typing_extensions import override
+else:  # pragma: no cover
+    from typing import override
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.postgresql import (
@@ -96,6 +102,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
         Multiple session-level lock requests stack, so that if the same resource identifier is locked three times there must then be three unlock requests to release the resource in advance of session end.
     """
 
+    @override
     def __init__(self, connection_or_session: TConnectionOrSession, key, **kwargs):
         """
         Args:
@@ -109,6 +116,16 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
+    @override
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        if sys.version_info < (3, 11):
+            with catch_warnings():
+                return super().__exit__(exc_type, exc_value, exc_tb)
+        else:
+            with catch_warnings(category=RuntimeWarning):
+                return super().__exit__(exc_type, exc_value, exc_tb)
+
+    @override
     def acquire(
         self,
         block: bool = True,
@@ -162,6 +179,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
         #
         return self._acquired
 
+    @override
     def release(self):
         if self._stmt_unlock is None:
             warn(
