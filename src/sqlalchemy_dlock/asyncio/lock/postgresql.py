@@ -23,15 +23,6 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
         BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
 
     @override
-    async def __aexit__(self, exc_type, exc_value, exc_tb):
-        if sys.version_info < (3, 11):
-            with catch_warnings():
-                return await super().__aexit__(exc_type, exc_value, exc_tb)
-        else:
-            with catch_warnings(category=RuntimeWarning):
-                return await super().__aexit__(exc_type, exc_value, exc_tb)
-
-    @override
     async def acquire(
         self,
         block: bool = True,
@@ -75,7 +66,8 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
     async def release(self):
         if self._stmt_unlock is None:
             warn(
-                "PostgreSQL transaction level advisory locks are held until the current transaction ends; there is no provision for manual release.",
+                "PostgreSQL transaction level advisory locks are held until the current transaction ends; "
+                "there is no provision for manual release.",
                 RuntimeWarning,
             )
             return
@@ -87,3 +79,12 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
         else:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")
+
+    @override
+    async def close(self):
+        if sys.version_info < (3, 11):
+            with catch_warnings():
+                return await super().close()
+        else:
+            with catch_warnings(category=RuntimeWarning):
+                return await super().close()
