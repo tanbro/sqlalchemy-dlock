@@ -1,11 +1,11 @@
 from importlib import import_module
-from typing import Type, Union
+from string import Template
+from typing import Any, Mapping, Type, Union
 
 from sqlalchemy.engine import Connection
 
 from .lock.base import BaseSadLock
 from .types import TConnectionOrSession
-from .utils import pascal_case, safe_name
 
 __all__ = ["create_sadlock"]
 
@@ -47,10 +47,11 @@ def create_sadlock(
             engine = bind.engine
         else:
             engine = bind
-    engine_name = safe_name(engine.name)
-    try:
-        mod = import_module(f"..lock.{engine_name}", __name__)
-    except ImportError as exception:  # pragma: no cover
-        raise NotImplementedError(f"{engine_name}: {exception}")
-    clz: Type[BaseSadLock] = getattr(mod, f"{pascal_case(engine_name)}SadLock")
+
+    conf: Mapping[str, Any] = getattr(import_module(".registry", __package__), "REGISTRY")[engine.name]
+    package: Union[str, None] = conf.get("package")
+    if package:
+        package = Template(package).safe_substitute(package=__package__)
+    mod = import_module(conf["module"], package)
+    clz: Type[BaseSadLock] = getattr(mod, conf["class"])
     return clz(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)

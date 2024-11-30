@@ -89,6 +89,11 @@ class PostgresqlSadLockMixin:
         """Is the advisory lock transaction level or session level"""
         return self._xact
 
+    @property
+    def actual_key(self) -> int:
+        """The actual key used in PostgreSQL advisory lock"""
+        return self._actual_key
+
 
 class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
     """A distributed lock implemented by PostgreSQL advisory lock
@@ -114,7 +119,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.PostgresqlSadLockMixin`
         """  # noqa: E501
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     @override
     def acquire(
@@ -193,7 +198,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
         if self._acquired:
             if sys.version_info < (3, 11):
                 with catch_warnings():
-                    return self.close()
+                    return self.release()
             else:
                 with catch_warnings(category=RuntimeWarning):
-                    return self.close()
+                    return self.release()
