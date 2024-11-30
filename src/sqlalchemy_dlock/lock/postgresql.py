@@ -89,6 +89,11 @@ class PostgresqlSadLockMixin:
         """Is the advisory lock transaction level or session level"""
         return self._xact
 
+    @property
+    def actual_key(self) -> int:
+        """The actual key used in PostgreSQL advisory lock"""
+        return self._actual_key
+
 
 class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
     """A distributed lock implemented by PostgreSQL advisory lock
@@ -114,16 +119,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.PostgresqlSadLockMixin`
         """  # noqa: E501
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
-
-    @override
-    def __exit__(self, exc_type, exc_value, exc_tb):
-        if sys.version_info < (3, 11):
-            with catch_warnings():
-                return super().__exit__(exc_type, exc_value, exc_tb)
-        else:
-            with catch_warnings(category=RuntimeWarning):
-                return super().__exit__(exc_type, exc_value, exc_tb)
+        BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     @override
     def acquire(
@@ -181,17 +177,28 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
 
     @override
     def release(self):
+        if not self._acquired:
+            raise ValueError("invoked on an unlocked lock")
         if self._stmt_unlock is None:
             warn(
-                "PostgreSQL transaction level advisory locks are held until the current transaction ends; there is no provision for manual release.",
+                "PostgreSQL transaction level advisory locks are held until the current transaction ends; "
+                "there is no provision for manual release.",
                 RuntimeWarning,
             )
             return
-        if not self._acquired:
-            raise ValueError("invoked on an unlocked lock")
         ret_val = self.connection_or_session.execute(self._stmt_unlock).scalar_one()
         if ret_val:
             self._acquired = False
         else:  # pragma: no cover
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")
+
+    @override
+    def close(self):
+        if self._acquired:
+            if sys.version_info < (3, 11):
+                with catch_warnings():
+                    return self.release()
+            else:
+                with catch_warnings(category=RuntimeWarning):
+                    return self.release()

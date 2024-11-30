@@ -9,10 +9,10 @@ else:  # pragma: no cover
 
 from ..types import TConnectionOrSession
 
-TKey = TypeVar("TKey")
+KT = TypeVar("KT")
 
 
-class BaseSadLock(Generic[TKey], local):
+class BaseSadLock(Generic[KT], local):
     """Base class of database lock implementation
 
     Note:
@@ -43,7 +43,7 @@ class BaseSadLock(Generic[TKey], local):
     def __init__(
         self,
         connection_or_session: TConnectionOrSession,
-        key: TKey,
+        key: KT,
         /,
         contextual_timeout: Union[float, int, None] = None,
         **kwargs,
@@ -108,7 +108,7 @@ class BaseSadLock(Generic[TKey], local):
         return self._connection_or_session
 
     @property
-    def key(self) -> TKey:
+    def key(self) -> KT:
         """ID or name of the SQL locking function
 
         It returns ``key`` parameter of the class's constructor"""

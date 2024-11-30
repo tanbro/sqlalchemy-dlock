@@ -58,6 +58,11 @@ class MysqlSadLockMixin:
         if len(self._actual_key) > MYSQL_LOCK_NAME_MAX_LENGTH:
             raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
 
+    @property
+    def actual_key(self) -> str:
+        """The actual key used in MySQL named lock"""
+        return self._actual_key
+
 
 class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
     """A distributed lock implemented by MySQL named-lock
