@@ -8,14 +8,14 @@ else:  # pragma: no cover
 
 from ..types import TAsyncConnectionOrSession
 
-TKey = TypeVar("TKey")
+KT = TypeVar("KT")
 
 
-class BaseAsyncSadLock(Generic[TKey]):
+class BaseAsyncSadLock(Generic[KT]):
     def __init__(
         self,
         connection_or_session: TAsyncConnectionOrSession,
-        key: TKey,
+        key: KT,
         /,
         contextual_timeout: Union[float, int, None] = None,
         **kwargs,
@@ -49,7 +49,7 @@ class BaseAsyncSadLock(Generic[TKey]):
         return self._connection_or_session
 
     @property
-    def key(self) -> TKey:
+    def key(self) -> KT:
         return self._key
 
     @property
