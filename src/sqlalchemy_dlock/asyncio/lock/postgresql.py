@@ -64,6 +64,8 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
 
     @override
     async def release(self):
+        if not self._acquired:
+            raise ValueError("invoked on an unlocked lock")
         if self._stmt_unlock is None:
             warn(
                 "PostgreSQL transaction level advisory locks are held until the current transaction ends; "
@@ -71,8 +73,6 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
                 RuntimeWarning,
             )
             return
-        if not self._acquired:
-            raise ValueError("invoked on an unlocked lock")
         ret_val = (await self.connection_or_session.execute(self._stmt_unlock)).scalar_one()
         if ret_val:
             self._acquired = False
@@ -82,9 +82,10 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
 
     @override
     async def close(self):
-        if sys.version_info < (3, 11):
-            with catch_warnings():
-                return await super().close()
-        else:
-            with catch_warnings(category=RuntimeWarning):
-                return await super().close()
+        if self._acquired:
+            if sys.version_info < (3, 11):
+                with catch_warnings():
+                    return await self.release()
+            else:
+                with catch_warnings(category=RuntimeWarning):
+                    return await self.release()
