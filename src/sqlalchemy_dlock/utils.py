@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from hashlib import blake2b
 from io import BytesIO
 from sys import byteorder
@@ -8,10 +7,6 @@ from typing import TYPE_CHECKING, Union
 
 if TYPE_CHECKING:  # pragma: no cover
     from _typeshed import ReadableBuffer
-
-
-def safe_name(s: str) -> str:
-    return re.sub(r"[^A-Za-z0-9_]+", "_", s).strip().lower()
 
 
 def to_int64_key(k: Union[int, str, ReadableBuffer]) -> int:
