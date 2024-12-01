@@ -1,17 +1,17 @@
-from importlib import import_module
-from string import Template
-from typing import Any, Mapping, Type, Union
+from typing import Union
 
 from sqlalchemy.engine import Connection
+from sqlalchemy.ext.asyncio import AsyncConnection
 
-from .lock.base import BaseSadLock
-from .types import TConnectionOrSession
+from .lock.base import BaseAsyncSadLock, BaseSadLock
+from .types import AsyncConnectionOrSessionT, ConnectionOrSessionT
+from .utils import find_lock_class
 
-__all__ = ["create_sadlock"]
+__all__ = ["create_sadlock", "create_async_sadlock"]
 
 
 def create_sadlock(
-    connection_or_session: TConnectionOrSession, key, /, contextual_timeout: Union[float, int, None] = None, **kwargs
+    connection_or_session: ConnectionOrSessionT, key, /, contextual_timeout: Union[float, int, None] = None, **kwargs
 ) -> BaseSadLock:
     """Create a database distributed lock object
 
@@ -48,10 +48,22 @@ def create_sadlock(
         else:
             engine = bind
 
-    conf: Mapping[str, Any] = getattr(import_module(".registry", __package__), "REGISTRY")[engine.name]
-    package: Union[str, None] = conf.get("package")
-    if package:
-        package = Template(package).safe_substitute(package=__package__)
-    mod = import_module(conf["module"], package)
-    clz: Type[BaseSadLock] = getattr(mod, conf["class"])
-    return clz(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
+    class_ = find_lock_class(engine.name)
+    return class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
+
+
+def create_async_sadlock(
+    connection_or_session: AsyncConnectionOrSessionT, key, /, contextual_timeout: Union[float, int, None] = None, **kwargs
+) -> BaseAsyncSadLock:
+    """AsyncIO version of :func:`create_sadlock`"""
+    if isinstance(connection_or_session, AsyncConnection):
+        engine = connection_or_session.engine
+    else:
+        bind = connection_or_session.get_bind()
+        if isinstance(bind, Connection):
+            engine = bind.engine
+        else:
+            engine = bind
+
+    class_ = find_lock_class(engine.name, True)
+    return class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)

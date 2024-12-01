@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-import re
+from functools import lru_cache
 from hashlib import blake2b
+from importlib import import_module
 from io import BytesIO
+from string import Template
 from sys import byteorder
 from typing import TYPE_CHECKING, Union
 
+from . import registry
+
 if TYPE_CHECKING:  # pragma: no cover
     from _typeshed import ReadableBuffer
-
-
-def safe_name(s: str) -> str:
-    return re.sub(r"[^A-Za-z0-9_]+", "_", s).strip().lower()
 
 
 def to_int64_key(k: Union[int, str, ReadableBuffer]) -> int:
@@ -53,3 +53,15 @@ def ensure_int64(i: int) -> int:
     if i < -0x8000_0000_0000_0000:
         raise OverflowError("int too small")
     return i
+
+
+@lru_cache
+def find_lock_class(engine_name, is_asyncio=False):
+    reg = registry.ASYNCIO_REGISTRY if is_asyncio else registry.REGISTRY
+    conf = reg[engine_name]
+    package = conf.get("package")
+    if package:
+        package = Template(package).safe_substitute(package=__package__)
+    module = import_module(conf["module"], package)
+    class_ = getattr(module, conf["class"])
+    return class_

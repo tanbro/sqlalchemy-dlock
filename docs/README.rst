@@ -19,13 +19,19 @@ How to build docs
 
    .. code:: sh
 
-      sphinx-apidoc -o docs/apidocs -eMTf src
+      rm -fr docs/apidocs/* && sphinx-apidoc -o docs/apidocs -eMTf src
 
 #. Build HTML documentation:
 
    .. code:: sh
 
       make -C docs html
+
+   or rebuild it:
+
+   .. code:: sh
+
+      make -C docs clean html
 
 The built static web site is output to ``docs/_build/html``, we can serve it:
 

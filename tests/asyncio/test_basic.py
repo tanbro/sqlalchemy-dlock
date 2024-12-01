@@ -5,7 +5,7 @@ from secrets import token_bytes, token_hex
 from unittest import IsolatedAsyncioTestCase
 from uuid import uuid4
 
-from sqlalchemy_dlock.asyncio import create_async_sadlock
+from sqlalchemy_dlock import create_async_sadlock
 
 from .engines import create_engines, dispose_engines, get_engines
 

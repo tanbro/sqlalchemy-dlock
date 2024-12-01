@@ -3,7 +3,7 @@ from uuid import uuid1
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlalchemy_dlock.asyncio import create_async_sadlock
+from sqlalchemy_dlock import create_async_sadlock
 
 from .engines import create_engines, dispose_engines, get_engines
 
