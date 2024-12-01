@@ -77,7 +77,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
     """  # noqa: E501
 
     @override
-    def __init__(self, connection_or_session: ConnectionOrSessionT, key: str, **kwargs):
+    def __init__(self, connection_or_session: ConnectionOrSessionT, key, **kwargs):
         """
         Args:
             connection_or_session: :attr:`.BaseSadLock.connection_or_session`
@@ -85,7 +85,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.MysqlSadLockMixin`
         """
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     @override
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
@@ -138,7 +138,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
 
 class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str]):
     @override
-    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: str, **kwargs):
+    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key, **kwargs):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 

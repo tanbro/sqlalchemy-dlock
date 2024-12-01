@@ -109,7 +109,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
     """
 
     @override
-    def __init__(self, connection_or_session: ConnectionOrSessionT, key: int, **kwargs):
+    def __init__(self, connection_or_session: ConnectionOrSessionT, key, **kwargs):
         """
         Args:
             connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
@@ -207,7 +207,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
 
 class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
     @override
-    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: int, **kwargs):
+    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key, **kwargs):
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 

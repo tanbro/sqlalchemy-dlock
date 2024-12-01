@@ -12,7 +12,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   sqlalchemy_dlock.asyncio
    sqlalchemy_dlock.lock
    sqlalchemy_dlock.statement
 
@@ -24,5 +23,6 @@ Submodules
 
    sqlalchemy_dlock.exceptions
    sqlalchemy_dlock.factory
+   sqlalchemy_dlock.registry
    sqlalchemy_dlock.types
    sqlalchemy_dlock.utils
