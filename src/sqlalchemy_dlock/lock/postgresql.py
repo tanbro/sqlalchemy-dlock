@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from time import sleep, time
 from typing import Any, Callable, Optional, TypeVar, Union
@@ -23,9 +24,9 @@ from ..statement.postgresql import (
     UNLOCK,
     UNLOCK_SHARED,
 )
-from ..types import TConnectionOrSession
+from ..types import AsyncConnectionOrSessionT, ConnectionOrSessionT
 from ..utils import ensure_int64, to_int64_key
-from .base import BaseSadLock
+from .base import BaseAsyncSadLock, BaseSadLock
 
 KT = TypeVar("KT", bound=Any)
 
@@ -108,7 +109,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
     """
 
     @override
-    def __init__(self, connection_or_session: TConnectionOrSession, key: int, **kwargs):
+    def __init__(self, connection_or_session: ConnectionOrSessionT, key: int, **kwargs):
         """
         Args:
             connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
@@ -202,3 +203,78 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
             else:
                 with catch_warnings(category=RuntimeWarning):
                     return self.release()
+
+
+class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
+    @override
+    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: int, **kwargs):
+        PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
+        BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
+
+    @override
+    async def acquire(
+        self,
+        block: bool = True,
+        timeout: Union[float, int, None] = None,
+        interval: Union[float, int, None] = None,
+        *args,
+        **kwargs,
+    ) -> bool:
+        if self._acquired:
+            raise ValueError("invoked on a locked lock")
+        if block:
+            if timeout is None:
+                # None: set the timeout period to infinite.
+                _ = (await self.connection_or_session.execute(self._stmt_lock)).all()
+                self._acquired = True
+            else:
+                # negative value for `timeout` are equivalent to a `timeout` of zero.
+                if timeout < 0:
+                    timeout = 0
+                interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
+                if interval < SLEEP_INTERVAL_MIN:  # pragma: no cover
+                    raise ValueError("interval too small")
+                ts_begin = time()
+                while True:
+                    ret_val = (await self.connection_or_session.execute(self._stmt_try_lock)).scalar_one()
+                    if ret_val:  # succeed
+                        self._acquired = True
+                        break
+                    if time() - ts_begin > timeout:  # expired
+                        break
+                    await asyncio.sleep(interval)
+        else:
+            # This will either obtain the lock immediately and return true,
+            # or return false without waiting if the lock cannot be acquired immediately.
+            ret_val = (await self.connection_or_session.execute(self._stmt_try_lock)).scalar_one()
+            self._acquired = bool(ret_val)
+        #
+        return self._acquired
+
+    @override
+    async def release(self):
+        if not self._acquired:
+            raise ValueError("invoked on an unlocked lock")
+        if self._stmt_unlock is None:
+            warn(
+                "PostgreSQL transaction level advisory locks are held until the current transaction ends; "
+                "there is no provision for manual release.",
+                RuntimeWarning,
+            )
+            return
+        ret_val = (await self.connection_or_session.execute(self._stmt_unlock)).scalar_one()
+        if ret_val:
+            self._acquired = False
+        else:  # pragma: no cover
+            self._acquired = False
+            raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")
+
+    @override
+    async def close(self):
+        if self._acquired:
+            if sys.version_info < (3, 11):
+                with catch_warnings():
+                    return await self.release()
+            else:
+                with catch_warnings(category=RuntimeWarning):
+                    return await self.release()

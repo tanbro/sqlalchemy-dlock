@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from hashlib import blake2b
+from importlib import import_module
 from io import BytesIO
+from string import Template
 from sys import byteorder
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Any, Mapping, Type, Union
+
+from .lock.base import BaseAsyncSadLock, BaseSadLock
 
 if TYPE_CHECKING:  # pragma: no cover
     from _typeshed import ReadableBuffer
@@ -48,3 +52,15 @@ def ensure_int64(i: int) -> int:
     if i < -0x8000_0000_0000_0000:
         raise OverflowError("int too small")
     return i
+
+
+def find_lock_class(engine_name: str, is_asyncio: bool = False) -> Union[Type[BaseSadLock], Type[BaseAsyncSadLock]]:
+    conf: Mapping[str, Any] = getattr(
+        import_module(".registry", __package__), "ASYNCIO_REGISTRY" if is_asyncio else "REGISTRY"
+    )[engine_name]
+    package: Union[str, None] = conf.get("package")
+    if package:
+        package = Template(package).safe_substitute(package=__package__)
+    module = import_module(conf["module"], package)
+    class_ = getattr(module, conf["class"])
+    return class_

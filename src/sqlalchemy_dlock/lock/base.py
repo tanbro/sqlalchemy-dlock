@@ -7,7 +7,7 @@ if sys.version_info >= (3, 11):  # pragma: no cover
 else:  # pragma: no cover
     from typing_extensions import Self
 
-from ..types import TConnectionOrSession
+from ..types import AsyncConnectionOrSessionT, ConnectionOrSessionT
 
 KT = TypeVar("KT")
 
@@ -42,7 +42,7 @@ class BaseSadLock(Generic[KT], local):
 
     def __init__(
         self,
-        connection_or_session: TConnectionOrSession,
+        connection_or_session: ConnectionOrSessionT,
         key: KT,
         /,
         contextual_timeout: Union[float, int, None] = None,
@@ -100,7 +100,7 @@ class BaseSadLock(Generic[KT], local):
         )
 
     @property
-    def connection_or_session(self) -> TConnectionOrSession:
+    def connection_or_session(self) -> ConnectionOrSessionT:
         """Connection or Session object SQL locking functions will be invoked on it
 
         It returns ``connection_or_session`` parameter of the class's constructor.
@@ -190,3 +190,61 @@ class BaseSadLock(Generic[KT], local):
         """  # noqa: E501
         if self._acquired:
             self.release(*args, **kwargs)
+
+
+class BaseAsyncSadLock(Generic[KT], local):
+    def __init__(
+        self,
+        connection_or_session: AsyncConnectionOrSessionT,
+        key: KT,
+        /,
+        contextual_timeout: Union[float, int, None] = None,
+        **kwargs,
+    ):
+        self._acquired = False
+        self._connection_or_session = connection_or_session
+        self._key = key
+        self._contextual_timeout = contextual_timeout
+
+    async def __aenter__(self) -> Self:
+        if self._contextual_timeout is None:
+            await self.acquire()
+        elif not await self.acquire(timeout=self._contextual_timeout):
+            # the timeout period has elapsed and not acquired
+            raise TimeoutError()
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, exc_tb):
+        await self.close()
+
+    def __str__(self):
+        return "<{} {} key={} at 0x{:x}>".format(
+            "locked" if self._acquired else "unlocked",
+            self.__class__.__name__,
+            self._key,
+            id(self),
+        )
+
+    @property
+    def connection_or_session(self) -> AsyncConnectionOrSessionT:
+        return self._connection_or_session
+
+    @property
+    def key(self) -> KT:
+        return self._key
+
+    @property
+    def locked(self) -> bool:
+        return self._acquired
+
+    async def acquire(
+        self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs
+    ) -> bool:  # pragma: no cover
+        raise NotImplementedError()
+
+    async def release(self, *args, **kwargs) -> None:  # pragma: no cover
+        raise NotImplementedError()
+
+    async def close(self, *args, **kwargs) -> None:
+        if self._acquired:
+            await self.release(*args, **kwargs)

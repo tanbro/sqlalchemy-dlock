@@ -108,7 +108,7 @@ pip install sqlalchemy-dlock
 
   ```python
   from sqlalchemy.ext.asyncio import create_async_engine
-  from sqlalchemy_dlock.asyncio import create_async_sadlock
+  from sqlalchemy_dlock import create_async_sadlock
 
   key = 'user/001'
 
