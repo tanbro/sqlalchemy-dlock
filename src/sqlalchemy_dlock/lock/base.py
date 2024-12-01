@@ -7,6 +7,11 @@ if sys.version_info >= (3, 11):  # pragma: no cover
 else:  # pragma: no cover
     from typing_extensions import Self
 
+if sys.version_info < (3, 12):  # pragma: no cover
+    from typing_extensions import override
+else:  # pragma: no cover
+    from typing import override
+
 from ..types import AsyncConnectionOrSessionT, ConnectionOrSessionT
 
 KT = TypeVar("KT")
@@ -40,12 +45,14 @@ class BaseSadLock(Generic[KT], local):
         A :exc:`TimeoutError` will be thrown if acquire timeout in :keyword:`with` statement.
     """  # noqa: E501
 
+    @override
     def __init__(
         self,
         connection_or_session: ConnectionOrSessionT,
         key: KT,
         /,
         contextual_timeout: Union[float, int, None] = None,
+        *args,
         **kwargs,
     ):
         """
@@ -76,6 +83,7 @@ class BaseSadLock(Generic[KT], local):
                 Note:
                     The default value of `timeout` is still :data:`None`, when invoking :meth:`.acquire`
         """  # noqa: E501
+        super().__init__()
         self._acquired = False
         self._connection_or_session = connection_or_session
         self._key = key
@@ -201,6 +209,7 @@ class BaseAsyncSadLock(Generic[KT], local):
         contextual_timeout: Union[float, int, None] = None,
         **kwargs,
     ):
+        super().__init__()
         self._acquired = False
         self._connection_or_session = connection_or_session
         self._key = key

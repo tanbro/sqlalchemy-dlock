@@ -3,7 +3,7 @@ from os import getenv
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-__all__ = ["ENGINES"]
+__all__ = ["ENGINES", "URLS"]
 
 load_dotenv()
 

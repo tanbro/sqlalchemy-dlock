@@ -1,6 +1,6 @@
 # https://github.com/sqlalchemy/sqlalchemy/issues/5581
 #
-# Multiple Co-routines of SQL executions on a same Engine's Connection/Session will case a dead-lock.
+# Multiple Co-routines of SQL executions on a same Engine's Connection/Session will case a deadlock.
 # So we shall do that on different Engine objects!
 
 

@@ -61,7 +61,7 @@ Date: 2023-06-17
   - Many optimizations
 
 - CI/Test:
-  - Github action: Python 3.8~3.11 x SQLAlchemy 1.x/2.x matrix testing
+  - GitHub action: Python 3.8~3.11 x SQLAlchemy 1.x/2.x matrix testing
   - Local compose: Python 3.7~3.11 x SQLAlchemy 1.x/2.x matrix testing
 
 - Doc: Update to Sphinx 7.x, and Furo theme
@@ -116,7 +116,7 @@ Date: 2021-03-16
 - Add:
 
   - New unit tests
-  - CI by github workflows
+  - CI by GitHub workflows
 
 ## v0.2a3
 
@@ -125,12 +125,12 @@ Date: 2021-03-14
 - Change:
 
   - Drop Python 3.5 support.
-  - Remove SQLAlchemy version requires earlier than 1.4 in setup, it's not supported actually.
+  - Remove SQLAlchemy version requires earlier than 1.4 in setup, it's not supported, actually.
   - Adjust PostgreSQL lock's constructor arguments order
 
 - Add:
 
-  - More test cases, and add test/deploy workflow in github actions.
+  - More test cases, and add test/deploy workflow in GitHub actions.
   - Add docker-compose test scripts
 
 ## v0.2a2
@@ -160,7 +160,7 @@ Date: 2021-03-08
 
     - [asyncpg](https://github.com/MagicStack/asyncpg) for PostgreSQL
 
-      Connection URL is like: `"postgresql+asyncpg://user:password@host:5432/db"`
+      Connection URL is like: `"PostgreSQL+asyncpg://user:password@host:5432/db"`
 
     Read <https://docs.sqlalchemy.org/en/14/orm/extensions/asyncio.html> for details
 
@@ -181,5 +181,5 @@ Still an early version, not for production.
 ## v0.1.1
 
 - A very early version, maybe not stable enough.
-- Replace black2b with crc64-iso in PostgreSQL key convert function
+- Replace `black2b` with crc64-iso in PostgreSQL key convert function
 - Only named arguments as extra parameters allowed in Lock's implementation class
