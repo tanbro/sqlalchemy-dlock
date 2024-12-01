@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Union
 
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncConnection
@@ -48,7 +48,7 @@ def create_sadlock(
         else:
             engine = bind
 
-    class_: Type[BaseSadLock] = find_lock_class(engine.name)  # type: ignore
+    class_ = find_lock_class(engine.name)
     return class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
 
 
@@ -65,5 +65,5 @@ def create_async_sadlock(
         else:
             engine = bind
 
-    class_: Type[BaseAsyncSadLock] = find_lock_class(engine.name, True)  # type: ignore
+    class_ = find_lock_class(engine.name, True)
     return class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
