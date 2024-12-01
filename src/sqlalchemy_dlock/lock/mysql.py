@@ -15,13 +15,13 @@ from .base import BaseSadLock
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
 
-TKey = TypeVar("TKey", bound=Any)
+KT = TypeVar("KT", bound=Any)
 
 
 class MysqlSadLockMixin:
     """A Mix-in class for MySQL named lock"""
 
-    def __init__(self, *, key: TKey, convert: Optional[Callable[[TKey], str]] = None, **kwargs):
+    def __init__(self, *, key: KT, convert: Optional[Callable[[KT], str]] = None, **kwargs):
         """
         Args:
             key: MySQL named lock requires the key given by string.

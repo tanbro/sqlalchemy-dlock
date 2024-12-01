@@ -27,14 +27,14 @@ from ..types import TConnectionOrSession
 from ..utils import ensure_int64, to_int64_key
 from .base import BaseSadLock
 
-TKey = TypeVar("TKey", bound=Any)
+KT = TypeVar("KT", bound=Any)
 
 
 class PostgresqlSadLockMixin:
     """A Mix-in class for PostgreSQL advisory lock"""
 
     def __init__(
-        self, *, key: TKey, shared: bool = False, xact: bool = False, convert: Optional[Callable[[TKey], int]] = None, **kwargs
+        self, *, key: KT, shared: bool = False, xact: bool = False, convert: Optional[Callable[[KT], int]] = None, **kwargs
     ):
         """
         Args:
