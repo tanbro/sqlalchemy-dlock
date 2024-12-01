@@ -77,7 +77,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
     """  # noqa: E501
 
     @override
-    def __init__(self, connection_or_session: TConnectionOrSession, key, **kwargs):
+    def __init__(self, connection_or_session: TConnectionOrSession, key: str, **kwargs):
         """
         Args:
             connection_or_session: :attr:`.BaseSadLock.connection_or_session`

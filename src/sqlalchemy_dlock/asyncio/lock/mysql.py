@@ -15,9 +15,9 @@ from .base import BaseAsyncSadLock
 
 class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str]):
     @override
-    def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
+    def __init__(self, connection_or_session: TAsyncConnectionOrSession, key: str, **kwargs):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
+        BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     @override
     async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:

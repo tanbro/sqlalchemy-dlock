@@ -18,9 +18,9 @@ from .base import BaseAsyncSadLock
 
 class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
     @override
-    def __init__(self, connection_or_session: TAsyncConnectionOrSession, key, **kwargs):
+    def __init__(self, connection_or_session: TAsyncConnectionOrSession, key: int, **kwargs):
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseAsyncSadLock.__init__(self, connection_or_session, self._actual_key, **kwargs)
+        BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     @override
     async def acquire(

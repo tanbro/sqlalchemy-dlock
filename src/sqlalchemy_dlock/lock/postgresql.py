@@ -108,7 +108,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
     """
 
     @override
-    def __init__(self, connection_or_session: TConnectionOrSession, key, **kwargs):
+    def __init__(self, connection_or_session: TConnectionOrSession, key: int, **kwargs):
         """
         Args:
             connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
