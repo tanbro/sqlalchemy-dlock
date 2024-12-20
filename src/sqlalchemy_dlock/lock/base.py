@@ -20,7 +20,19 @@ ConnT = TypeVar("ConnT", bound=ConnectionOrSessionT)
 AsyncConnT = TypeVar("AsyncConnT", bound=AsyncConnectionOrSessionT)
 
 
-class BaseSadLock(Generic[VKTV, ConnT], local):
+class AbstractLockMixin(Generic[VKTV, AKTV]):
+    def __init__(self, *, key: VKTV, convert: Optional[Callable[[VKTV], AKTV]] = None, **kwargs):
+        raise NotImplementedError()
+
+    def get_actual_key(self) -> AKTV:
+        raise NotImplementedError()
+
+    @property
+    def actual_key(self) -> AKTV:
+        return self.get_actual_key()
+
+
+class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local):
     """Base class of database lock implementation
 
     Note:
@@ -50,13 +62,7 @@ class BaseSadLock(Generic[VKTV, ConnT], local):
 
     @override
     def __init__(
-        self,
-        connection_or_session: ConnT,
-        key: VKTV,
-        /,
-        contextual_timeout: Union[float, int, None] = None,
-        *args,
-        **kwargs,
+        self, connection_or_session: ConnT, key: VKTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
     ):
         """
         Args:
@@ -86,7 +92,6 @@ class BaseSadLock(Generic[VKTV, ConnT], local):
                 Note:
                     The default value of `timeout` is still :data:`None`, when invoking :meth:`.acquire`
         """  # noqa: E501
-        super().__init__()
         self._acquired = False
         self._connection_or_session = connection_or_session
         self._key = key
@@ -203,16 +208,10 @@ class BaseSadLock(Generic[VKTV, ConnT], local):
             self.release(*args, **kwargs)
 
 
-class BaseAsyncSadLock(Generic[VKTV, AsyncConnT], local):
+class BaseAsyncSadLock(AbstractLockMixin, Generic[VKTV, AsyncConnT], local):
     def __init__(
-        self,
-        connection_or_session: AsyncConnT,
-        key: VKTV,
-        /,
-        contextual_timeout: Union[float, int, None] = None,
-        **kwargs,
+        self, connection_or_session: AsyncConnT, key: VKTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
     ):
-        super().__init__()
         self._acquired = False
         self._connection_or_session = connection_or_session
         self._key = key
@@ -260,15 +259,3 @@ class BaseAsyncSadLock(Generic[VKTV, AsyncConnT], local):
     async def close(self, *args, **kwargs) -> None:
         if self._acquired:
             await self.release(*args, **kwargs)
-
-
-class AbstractLockMixin(Generic[VKTV, AKTV]):
-    def __init__(self, *, key: VKTV, convert: Optional[Callable[[VKTV], AKTV]] = None, **kwargs):
-        raise NotImplementedError()
-
-    def get_actual_key(self) -> AKTV:
-        raise NotImplementedError()
-
-    @property
-    def actual_key(self) -> AKTV:
-        return self.get_actual_key()
