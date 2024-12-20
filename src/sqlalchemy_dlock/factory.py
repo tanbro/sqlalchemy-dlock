@@ -1,7 +1,8 @@
-from typing import Union
+from typing import Any, Union
 
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import AsyncConnection
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_scoped_session
+from sqlalchemy.orm import Session, scoped_session
 
 from .lock.base import BaseAsyncSadLock, BaseSadLock
 from .types import AsyncConnectionOrSessionT, ConnectionOrSessionT
@@ -12,7 +13,7 @@ __all__ = ["create_sadlock", "create_async_sadlock"]
 
 def create_sadlock(
     connection_or_session: ConnectionOrSessionT, key, /, contextual_timeout: Union[float, int, None] = None, **kwargs
-) -> BaseSadLock:
+) -> BaseSadLock[Any, ConnectionOrSessionT]:
     """Create a database distributed lock object
 
     All arguments will be passed to a sub-class of :class:`.BaseSadLock`, depend on the type of ``connection_session``'s SQLAlchemy engine.
@@ -40,30 +41,34 @@ def create_sadlock(
         MySQL and PostgreSQL connection/session are supported til now.
     """  # noqa: E501
     if isinstance(connection_or_session, Connection):
-        engine = connection_or_session.engine
-    else:
+        engine_name = connection_or_session.engine.name
+    elif isinstance(connection_or_session, (Session, scoped_session)):
         bind = connection_or_session.get_bind()
         if isinstance(bind, Connection):
-            engine = bind.engine
+            engine_name = bind.engine.name
         else:
-            engine = bind
+            engine_name = bind.name
+    else:
+        raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
 
-    class_ = find_lock_class(engine.name)
+    class_ = find_lock_class(engine_name)
     return class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
 
 
 def create_async_sadlock(
     connection_or_session: AsyncConnectionOrSessionT, key, /, contextual_timeout: Union[float, int, None] = None, **kwargs
-) -> BaseAsyncSadLock:
+) -> BaseAsyncSadLock[Any, AsyncConnectionOrSessionT]:
     """AsyncIO version of :func:`create_sadlock`"""
     if isinstance(connection_or_session, AsyncConnection):
-        engine = connection_or_session.engine
-    else:
+        engine_name = connection_or_session.engine.name
+    elif isinstance(connection_or_session, (AsyncSession, async_scoped_session)):
         bind = connection_or_session.get_bind()
         if isinstance(bind, Connection):
-            engine = bind.engine
+            engine_name = bind.engine.name
         else:
-            engine = bind
+            engine_name = bind.name
+    else:
+        raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
 
-    class_ = find_lock_class(engine.name, True)
+    class_ = find_lock_class(engine_name, True)
     return class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)

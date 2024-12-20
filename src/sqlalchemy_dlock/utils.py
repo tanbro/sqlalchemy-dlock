@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from functools import lru_cache
+from functools import cache
 from hashlib import blake2b
 from importlib import import_module
 from io import BytesIO
@@ -55,7 +55,7 @@ def ensure_int64(i: int) -> int:
     return i
 
 
-@lru_cache
+@cache
 def find_lock_class(engine_name, is_asyncio=False):
     reg = registry.ASYNCIO_REGISTRY if is_asyncio else registry.REGISTRY
     conf = reg[engine_name]

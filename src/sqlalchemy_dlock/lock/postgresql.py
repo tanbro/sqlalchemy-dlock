@@ -96,7 +96,7 @@ class PostgresqlSadLockMixin:
         return self._actual_key
 
 
-class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
+class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int, ConnectionOrSessionT]):
     """A distributed lock implemented by PostgreSQL advisory lock
 
     See also:
@@ -205,7 +205,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int]):
                     return self.release()
 
 
-class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int]):
+class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, AsyncConnectionOrSessionT]):
     @override
     def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key, **kwargs):
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)

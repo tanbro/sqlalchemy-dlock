@@ -1,6 +1,6 @@
 import sys
 from threading import local
-from typing import Generic, TypeVar, Union
+from typing import Generic, Union
 
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -12,12 +12,10 @@ if sys.version_info < (3, 12):  # pragma: no cover
 else:  # pragma: no cover
     from typing import override
 
-from ..types import AsyncConnectionOrSessionT, ConnectionOrSessionT
-
-KT = TypeVar("KT")
+from ..types import KT, AsyncConnectionOrSessionT, ConnectionOrSessionT
 
 
-class BaseSadLock(Generic[KT], local):
+class BaseSadLock(Generic[KT, ConnectionOrSessionT], local):
     """Base class of database lock implementation
 
     Note:
@@ -200,7 +198,7 @@ class BaseSadLock(Generic[KT], local):
             self.release(*args, **kwargs)
 
 
-class BaseAsyncSadLock(Generic[KT], local):
+class BaseAsyncSadLock(Generic[KT, AsyncConnectionOrSessionT], local):
     def __init__(
         self,
         connection_or_session: AsyncConnectionOrSessionT,
