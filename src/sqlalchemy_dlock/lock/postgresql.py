@@ -1,7 +1,8 @@
 import asyncio
 import sys
+from hashlib import blake2b
 from time import sleep, time
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import Callable, Optional, TypeVar, Union
 from warnings import catch_warnings, warn
 
 if sys.version_info < (3, 12):  # pragma: no cover
@@ -24,18 +25,19 @@ from ..statement.postgresql import (
     UNLOCK,
     UNLOCK_SHARED,
 )
-from ..types import AsyncConnectionOrSessionT, ConnectionOrSessionT
-from ..utils import ensure_int64, to_int64_key
-from .base import BaseAsyncSadLock, BaseSadLock
+from ..typing import AsyncConnectionOrSessionT, ConnectionOrSessionT
+from .base import AbstractLockMixin, BaseAsyncSadLock, BaseSadLock
 
-KT = TypeVar("KT", bound=Any)
+KT = Union[bytes, bytearray, memoryview, str, int, float]
+KTV = TypeVar("KTV", bound=KT)
 
 
-class PostgresqlSadLockMixin:
+class PostgresqlSadLockMixin(AbstractLockMixin[KTV, int]):
     """A Mix-in class for PostgreSQL advisory lock"""
 
+    @override
     def __init__(
-        self, *, key: KT, shared: bool = False, xact: bool = False, convert: Optional[Callable[[KT], int]] = None, **kwargs
+        self, *, key: KTV, convert: Optional[Callable[[KTV], int]] = None, shared: bool = False, xact: bool = False, **kwargs
     ):
         """
         Args:
@@ -57,9 +59,10 @@ class PostgresqlSadLockMixin:
             convert: Custom function to covert ``key`` to required data type.
         """  # noqa: E501
         if convert:
-            self._actual_key = ensure_int64(convert(key))
+            self._actual_key = convert(key)
         else:
-            self._actual_key = to_int64_key(key)
+            self._actual_key = self.convert(key)
+        self._actual_key = self.ensure_int64(self._actual_key)
         #
         self._shared = bool(shared)
         self._xact = bool(xact)
@@ -80,6 +83,47 @@ class PostgresqlSadLockMixin:
             self._stmt_lock = LOCK_XACT_SHARED.params(key=self._actual_key)
             self._stmt_try_lock = TRY_LOCK_XACT_SHARED.params(key=self._actual_key)
 
+    @override
+    def get_actual_key(self) -> int:
+        """The actual key used in MySQL named lock"""
+        return self._actual_key
+
+    @classmethod
+    def convert(cls, k) -> int:
+        """To int64"""
+        if isinstance(k, int):
+            return k
+        if isinstance(k, str):
+            d = k.encode()
+        elif isinstance(k, (bytes, bytearray)):
+            d = k
+        elif isinstance(k, memoryview):
+            d = k.tobytes()
+        else:
+            raise TypeError(type(k).__name__)
+        return int.from_bytes(blake2b(d, digest_size=8).digest(), sys.byteorder, signed=True)
+
+    @classmethod
+    def ensure_int64(cls, i: int) -> int:
+        """ensure the integer in PostgreSQL advisory lock's range (Signed INT64)
+
+        * max of signed int64: ``2**63-1`` (``+0x7FFF_FFFF_FFFF_FFFF``)
+        * min of signed int64: ``-2**63`` (``-0x8000_0000_0000_0000``)
+
+        Returns:
+            Signed int64 key
+        """
+        ## no force convert UINT greater than 2**63-1 to SINT
+        # if i > 0x7FFF_FFFF_FFFF_FFFF:
+        #     return int.from_bytes(i.to_bytes(8, byteorder, signed=False), byteorder, signed=True)
+        if not isinstance(i, int):
+            raise TypeError(f"int type expected, but actual type is {type(i)}")
+        if i > 0x7FFF_FFFF_FFFF_FFFF:
+            raise OverflowError("int too big")
+        if i < -0x8000_0000_0000_0000:
+            raise OverflowError("int too small")
+        return i
+
     @property
     def shared(self) -> bool:
         """Is the advisory lock shared or exclusive"""
@@ -96,7 +140,7 @@ class PostgresqlSadLockMixin:
         return self._actual_key
 
 
-class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int, ConnectionOrSessionT]):
+class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSessionT]):
     """A distributed lock implemented by PostgreSQL advisory lock
 
     See also:
@@ -109,7 +153,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[int, ConnectionOrSes
     """
 
     @override
-    def __init__(self, connection_or_session: ConnectionOrSessionT, key, **kwargs):
+    def __init__(self, connection_or_session: ConnectionOrSessionT, key: KT, **kwargs):
         """
         Args:
             connection_or_session: see :attr:`.BaseSadLock.connection_or_session`

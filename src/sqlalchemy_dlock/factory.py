@@ -1,19 +1,21 @@
-from typing import Any, Union
+from typing import TypeVar, Union
 
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_scoped_session
 from sqlalchemy.orm import Session, scoped_session
 
-from .lock.base import BaseAsyncSadLock, BaseSadLock
-from .types import AsyncConnectionOrSessionT, ConnectionOrSessionT
-from .utils import find_lock_class
+from .lock.base import AsyncConnT, BaseAsyncSadLock, BaseSadLock, ConnT
+from .registry import find_lock_class
 
 __all__ = ["create_sadlock", "create_async_sadlock"]
 
 
+KTV = TypeVar("KTV")
+
+
 def create_sadlock(
-    connection_or_session: ConnectionOrSessionT, key, /, contextual_timeout: Union[float, int, None] = None, **kwargs
-) -> BaseSadLock[Any, ConnectionOrSessionT]:
+    connection_or_session: ConnT, key: KTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
+) -> BaseSadLock[KTV, ConnT]:
     """Create a database distributed lock object
 
     All arguments will be passed to a sub-class of :class:`.BaseSadLock`, depend on the type of ``connection_session``'s SQLAlchemy engine.
@@ -56,8 +58,8 @@ def create_sadlock(
 
 
 def create_async_sadlock(
-    connection_or_session: AsyncConnectionOrSessionT, key, /, contextual_timeout: Union[float, int, None] = None, **kwargs
-) -> BaseAsyncSadLock[Any, AsyncConnectionOrSessionT]:
+    connection_or_session: AsyncConnT, key: KTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
+) -> BaseAsyncSadLock[KTV, AsyncConnT]:
     """AsyncIO version of :func:`create_sadlock`"""
     if isinstance(connection_or_session, AsyncConnection):
         engine_name = connection_or_session.engine.name

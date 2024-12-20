@@ -1,5 +1,5 @@
 import sys
-from typing import Any, Callable, Optional, TypeVar, Union
+from typing import Callable, Optional, TypeVar, Union
 
 if sys.version_info < (3, 12):  # pragma: no cover
     from typing_extensions import override
@@ -8,20 +8,20 @@ else:  # pragma: no cover
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.mysql import LOCK, UNLOCK
-from ..types import AsyncConnectionOrSessionT, ConnectionOrSessionT
-from ..utils import to_str_key
-from .base import BaseAsyncSadLock, BaseSadLock
+from ..typing import AsyncConnectionOrSessionT, ConnectionOrSessionT
+from .base import AbstractLockMixin, BaseAsyncSadLock, BaseSadLock
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
+KT = Union[bytes, bytearray, memoryview, str, int, float]
+KTV = TypeVar("KTV", bound=KT)
 
-KT = TypeVar("KT", bound=Any)
 
-
-class MysqlSadLockMixin:
+class MysqlSadLockMixin(AbstractLockMixin[KTV, str]):
     """A Mix-in class for MySQL named lock"""
 
-    def __init__(self, *, key: KT, convert: Optional[Callable[[KT], str]] = None, **kwargs):
+    @override
+    def __init__(self, *, key: KTV, convert: Optional[Callable[[KTV], str]] = None, **kwargs):
         """
         Args:
             key: MySQL named lock requires the key given by string.
@@ -49,19 +49,30 @@ class MysqlSadLockMixin:
         """  # noqa: E501
         if convert:
             self._actual_key = convert(key)
-        elif isinstance(key, str):
-            self._actual_key = key
         else:
-            self._actual_key = to_str_key(key)
+            self._actual_key = self.convert(key)
         if not isinstance(self._actual_key, str):
             raise TypeError("MySQL named lock requires the key given by string")
         if len(self._actual_key) > MYSQL_LOCK_NAME_MAX_LENGTH:
             raise ValueError(f"MySQL enforces a maximum length on lock names of {MYSQL_LOCK_NAME_MAX_LENGTH} characters.")
 
-    @property
-    def actual_key(self) -> str:
+    @override
+    def get_actual_key(self) -> str:
         """The actual key used in MySQL named lock"""
         return self._actual_key
+
+    @classmethod
+    def convert(cls, k) -> str:
+        if isinstance(k, str):
+            return k
+        if isinstance(k, (int, float)):
+            return str(k)
+        if isinstance(k, (bytes, bytearray)):
+            return k.decode()
+        if isinstance(k, memoryview):
+            return k.tobytes().decode()
+        else:
+            raise TypeError(type(k).__name__)
 
 
 class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
@@ -77,7 +88,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
     """  # noqa: E501
 
     @override
-    def __init__(self, connection_or_session: ConnectionOrSessionT, key, **kwargs):
+    def __init__(self, connection_or_session: ConnectionOrSessionT, key: KT, **kwargs):
         """
         Args:
             connection_or_session: :attr:`.BaseSadLock.connection_or_session`

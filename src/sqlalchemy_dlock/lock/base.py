@@ -1,6 +1,6 @@
 import sys
 from threading import local
-from typing import Generic, Union
+from typing import Callable, Generic, Optional, TypeVar, Union
 
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -12,10 +12,15 @@ if sys.version_info < (3, 12):  # pragma: no cover
 else:  # pragma: no cover
     from typing import override
 
-from ..types import KT, AsyncConnectionOrSessionT, ConnectionOrSessionT
+from ..typing import AsyncConnectionOrSessionT, ConnectionOrSessionT
+
+VKTV = TypeVar("VKTV")
+AKTV = TypeVar("AKTV")
+ConnT = TypeVar("ConnT", bound=ConnectionOrSessionT)
+AsyncConnT = TypeVar("AsyncConnT", bound=AsyncConnectionOrSessionT)
 
 
-class BaseSadLock(Generic[KT, ConnectionOrSessionT], local):
+class BaseSadLock(Generic[VKTV, ConnT], local):
     """Base class of database lock implementation
 
     Note:
@@ -46,8 +51,8 @@ class BaseSadLock(Generic[KT, ConnectionOrSessionT], local):
     @override
     def __init__(
         self,
-        connection_or_session: ConnectionOrSessionT,
-        key: KT,
+        connection_or_session: ConnT,
+        key: VKTV,
         /,
         contextual_timeout: Union[float, int, None] = None,
         *args,
@@ -106,7 +111,7 @@ class BaseSadLock(Generic[KT, ConnectionOrSessionT], local):
         )
 
     @property
-    def connection_or_session(self) -> ConnectionOrSessionT:
+    def connection_or_session(self) -> ConnT:
         """Connection or Session object SQL locking functions will be invoked on it
 
         It returns ``connection_or_session`` parameter of the class's constructor.
@@ -114,7 +119,7 @@ class BaseSadLock(Generic[KT, ConnectionOrSessionT], local):
         return self._connection_or_session
 
     @property
-    def key(self) -> KT:
+    def key(self) -> VKTV:
         """ID or name of the SQL locking function
 
         It returns ``key`` parameter of the class's constructor"""
@@ -198,11 +203,11 @@ class BaseSadLock(Generic[KT, ConnectionOrSessionT], local):
             self.release(*args, **kwargs)
 
 
-class BaseAsyncSadLock(Generic[KT, AsyncConnectionOrSessionT], local):
+class BaseAsyncSadLock(Generic[VKTV, AsyncConnT], local):
     def __init__(
         self,
-        connection_or_session: AsyncConnectionOrSessionT,
-        key: KT,
+        connection_or_session: AsyncConnT,
+        key: VKTV,
         /,
         contextual_timeout: Union[float, int, None] = None,
         **kwargs,
@@ -233,11 +238,11 @@ class BaseAsyncSadLock(Generic[KT, AsyncConnectionOrSessionT], local):
         )
 
     @property
-    def connection_or_session(self) -> AsyncConnectionOrSessionT:
+    def connection_or_session(self) -> AsyncConnT:
         return self._connection_or_session
 
     @property
-    def key(self) -> KT:
+    def key(self) -> VKTV:
         return self._key
 
     @property
@@ -255,3 +260,15 @@ class BaseAsyncSadLock(Generic[KT, AsyncConnectionOrSessionT], local):
     async def close(self, *args, **kwargs) -> None:
         if self._acquired:
             await self.release(*args, **kwargs)
+
+
+class AbstractLockMixin(Generic[VKTV, AKTV]):
+    def __init__(self, *, key: VKTV, convert: Optional[Callable[[VKTV], AKTV]] = None, **kwargs):
+        raise NotImplementedError()
+
+    def get_actual_key(self) -> AKTV:
+        raise NotImplementedError()
+
+    @property
+    def actual_key(self) -> AKTV:
+        return self.get_actual_key()
