@@ -9,10 +9,10 @@
 
 It currently supports below locks:
 
- Database  |                                             Lock
----------- | ---------------------------------------------------------------------------------------------
-MySQL      | [named lock](https://dev.mysql.com/doc/refman/en/locking-functions.html)
-PostgreSQL | [advisory lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)
+| Database   | Lock                                                                                          |
+|------------|-----------------------------------------------------------------------------------------------|
+| MySQL      | [named lock](https://dev.mysql.com/doc/refman/en/locking-functions.html)                      |
+| PostgreSQL | [advisory lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS) |
 
 ## Install
 
@@ -161,7 +161,7 @@ You can run unit-tests
      pip install -e .[asyncio] -r tests/requirements.txt
      ```
 
-  1. start up mysql and postgresql service
+  2. start up mysql and postgresql service
 
      There is a docker [compose][] file `db.docker-compose.yml` in project's top directory,
      which can be used to run mysql and postgresql develop environment conveniently:
@@ -170,7 +170,7 @@ You can run unit-tests
      docker compose -f db.docker-compose.yml up
      ```
 
-  1. set environment variables `TEST_URLS` and `TEST_ASYNC_URLS` for sync and async database connection url.
+  3. set environment variables `TEST_URLS` and `TEST_ASYNC_URLS` for sync and async database connection url.
      Multiple connections separated by space.
 
      eg: (following values are also the defaults, and can be omitted)
@@ -183,7 +183,7 @@ You can run unit-tests
      > ℹ️ **NOTE** \
      > The test cases would load environment variables from dot-env file `tests/.env`.
 
-  1. run unit-test
+  4. run unit-test
 
      ```bash
      python -m unittest

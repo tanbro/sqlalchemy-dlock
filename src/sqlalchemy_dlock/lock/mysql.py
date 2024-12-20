@@ -64,7 +64,7 @@ class MysqlSadLockMixin:
         return self._actual_key
 
 
-class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
+class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
     """A distributed lock implemented by MySQL named-lock
 
     See Also:
@@ -136,7 +136,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str]):
             raise SqlAlchemyDLockDatabaseError(f"RELEASE_LOCK({self.key!r}) returns {ret_val}")
 
 
-class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str]):
+class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnectionOrSessionT]):
     @override
     def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key, **kwargs):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)

@@ -3,10 +3,7 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-try:
-    import importlib.metadata as importlib_metadata  # type: ignore
-except ImportError:
-    import importlib_metadata  # type: ignore
+import importlib.metadata
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -16,7 +13,7 @@ copyright = "2023-2024, liu xue yan"
 author = "liu xue yan"
 
 # full version
-version = importlib_metadata.version(project)
+version = importlib.metadata.version(project)
 # major/minor version
 release = ".".join(version.split(".")[:2])
 
@@ -43,7 +40,6 @@ source_suffix = {
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
@@ -94,7 +90,6 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/", None),
     "sphinx": ("https://docs.sqlalchemy.org/", None),
 }
-
 
 # -- Options for Napoleon settings ---------------------------------------
 napoleon_use_admonition_for_examples = True
