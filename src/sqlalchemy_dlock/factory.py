@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, scoped_session
 from .lock.base import AsyncConnT, BaseAsyncSadLock, BaseSadLock, ConnT
 from .registry import find_lock_class
 
-__all__ = ["create_sadlock", "create_async_sadlock"]
+__all__ = ("create_sadlock", "create_async_sadlock")
 
 
 KTV = TypeVar("KTV")
