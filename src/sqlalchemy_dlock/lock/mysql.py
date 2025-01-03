@@ -46,7 +46,7 @@ class MysqlSadLockMixin(AbstractLockMixin[KTV, str]):
                         def convert(value) -> str:
                             # get a string key by `value`
                             return the_string_covert_from_value
-        """  # noqa: E501
+        """
         if convert:
             self._actual_key = convert(key)
         else:
@@ -131,12 +131,12 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:
             self._acquired = False
-        elif ret_val == 0:  # pragma: no cover
+        elif ret_val == 0:
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 f"The named lock {self.key!r} was not established by this thread, and the lock is not released."
             )
-        elif ret_val is None:  # pragma: no cover
+        elif ret_val is None:
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 f"The named lock {self.key!r} did not exist, "
@@ -148,6 +148,8 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
 
 
 class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnectionOrSessionT]):
+    """Async IO version of :class:`MysqlSadLock`"""
+
     @override
     def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key, **kwargs):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
@@ -186,12 +188,12 @@ class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnection
         ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
         if ret_val == 1:
             self._acquired = False
-        elif ret_val == 0:  # pragma: no cover
+        elif ret_val == 0:
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 f"The named lock {self.key!r} was not established by this thread, " "and the lock is not released."
             )
-        elif ret_val is None:  # pragma: no cover
+        elif ret_val is None:
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 f"The named lock {self.key!r} did not exist, "

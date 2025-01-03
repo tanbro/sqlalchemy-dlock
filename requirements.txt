@@ -6,9 +6,9 @@
 -r docs/requirements.txt
 -r tests/requirements.txt
 
-coverage
-
 build
 twine
 
 pre-commit
+ruff
+mypy

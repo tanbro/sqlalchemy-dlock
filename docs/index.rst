@@ -55,7 +55,7 @@ Contents
    :titlesonly:
    :maxdepth: 1
 
-   apidocs/sqlalchemy_dlock
+   apidocs/modules
 
 ------------------
 Indices and tables

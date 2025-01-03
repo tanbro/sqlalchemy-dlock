@@ -57,7 +57,7 @@ class PostgresqlSadLockMixin(AbstractLockMixin[KTV, int]):
             shared: :attr:`.shared`
             xact: :attr:`.xact`
             convert: Custom function to covert ``key`` to required data type.
-        """  # noqa: E501
+        """
         if convert:
             self._actual_key = convert(key)
         else:
@@ -162,7 +162,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
             xact: :attr:`.PostgresqlSadLockMixin.xact`
             convert: :class:`.PostgresqlSadLockMixin`
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.PostgresqlSadLockMixin`
-        """  # noqa: E501
+        """
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
@@ -188,7 +188,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
             That is:
                 The actual timeout won't be precise when ``interval`` is big;
                 while small ``interval`` will cause high CPU usage and frequent SQL execution.
-        """  # noqa: E501
+        """
         if self._acquired:
             raise ValueError("invoked on a locked lock")
         if block:
@@ -250,6 +250,8 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
 
 
 class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, AsyncConnectionOrSessionT]):
+    """Async IO version of :class:`PostgresqlSadLock`"""
+
     @override
     def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key, **kwargs):
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)

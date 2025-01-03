@@ -1,4 +1,5 @@
 import sys
+from abc import ABC, abstractmethod
 from threading import local
 from typing import Callable, Generic, Optional, TypeVar, Union
 
@@ -20,19 +21,21 @@ ConnT = TypeVar("ConnT", bound=ConnectionOrSessionT)
 AsyncConnT = TypeVar("AsyncConnT", bound=AsyncConnectionOrSessionT)
 
 
-class AbstractLockMixin(Generic[VKTV, AKTV]):
+class AbstractLockMixin(Generic[VKTV, AKTV], ABC):
+    @abstractmethod
     def __init__(self, *, key: VKTV, convert: Optional[Callable[[VKTV], AKTV]] = None, **kwargs):
-        raise NotImplementedError()
+        pass
 
+    @abstractmethod
     def get_actual_key(self) -> AKTV:
-        raise NotImplementedError()
+        pass
 
     @property
     def actual_key(self) -> AKTV:
         return self.get_actual_key()
 
 
-class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local):
+class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local, ABC):
     """Base class of database lock implementation
 
     Note:
@@ -58,7 +61,7 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local):
 
     Note:
         A :exc:`TimeoutError` will be thrown if acquire timeout in :keyword:`with` statement.
-    """  # noqa: E501
+    """
 
     @override
     def __init__(
@@ -91,7 +94,7 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local):
 
                 Note:
                     The default value of `timeout` is still :data:`None`, when invoking :meth:`.acquire`
-        """  # noqa: E501
+        """
         self._acquired = False
         self._connection_or_session = connection_or_session
         self._key = key
@@ -138,7 +141,8 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local):
         """
         return self._acquired
 
-    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:  # pragma: no cover
+    @abstractmethod
+    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         """Acquire a lock, blocking or non-blocking.
 
         * With the ``block`` argument set to :data:`True` (the default), the method call will block until the lock is in an unlocked state, then set it to locked and return :data:`True`.
@@ -151,10 +155,11 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local):
           Invocations with a `timeout` value of ``None`` (the default) set the timeout period to infinite.
           The ``timeout`` parameter has no practical implications if the ``block`` argument is set to :data:`False` and is thus ignored.
           Returns :data:`True` if the lock has been acquired or :data:`False` if the timeout period has elapsed.
-        """  # noqa: E501
-        raise NotImplementedError()
+        """
+        pass
 
-    def release(self, *args, **kwargs) -> None:  # pragma: no cover
+    @abstractmethod
+    def release(self, *args, **kwargs) -> None:
         """Release a lock.
 
         Since the class is thread-local, this cannot be called from other thread or process,
@@ -167,8 +172,8 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local):
         When invoked on an unlocked lock, a :class:`ValueError` is raised.
 
         There is no return value.
-        """  # noqa: E501
-        raise NotImplementedError()
+        """
+        pass
 
     def close(self, *args, **kwargs) -> None:
         """Same as :meth:`release`
@@ -203,12 +208,14 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local):
 
                 # `close` will be called at the end with-block
                 assert not lock.locked
-        """  # noqa: E501
+        """
         if self._acquired:
             self.release(*args, **kwargs)
 
 
-class BaseAsyncSadLock(AbstractLockMixin, Generic[VKTV, AsyncConnT], local):
+class BaseAsyncSadLock(AbstractLockMixin, Generic[VKTV, AsyncConnT], local, ABC):
+    """Async version of :class:`.BaseSadLock`"""
+
     def __init__(
         self, connection_or_session: AsyncConnT, key: VKTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
     ):
@@ -248,13 +255,13 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[VKTV, AsyncConnT], local):
     def locked(self) -> bool:
         return self._acquired
 
-    async def acquire(
-        self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs
-    ) -> bool:  # pragma: no cover
-        raise NotImplementedError()
+    @abstractmethod
+    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+        pass
 
-    async def release(self, *args, **kwargs) -> None:  # pragma: no cover
-        raise NotImplementedError()
+    @abstractmethod
+    async def release(self, *args, **kwargs) -> None:
+        pass
 
     async def close(self, *args, **kwargs) -> None:
         if self._acquired:
