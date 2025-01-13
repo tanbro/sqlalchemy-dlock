@@ -191,7 +191,7 @@ class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnection
         elif ret_val == 0:
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
-                f"The named lock {self.key!r} was not established by this thread, " "and the lock is not released."
+                f"The named lock {self.key!r} was not established by this thread, and the lock is not released."
             )
         elif ret_val is None:
             self._acquired = False

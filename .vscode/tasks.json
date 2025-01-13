@@ -17,13 +17,24 @@
             "problemMatcher": []
         },
         {
-            "label": "python docs",
+            "label": "docs: build",
             "type": "shell",
-            "command": "${command:python.interpreterPath} -m sphinx -b html -j auto -d _build/doctrees . _build/html",
+            "command": "${command:python.interpreterPath} -m sphinx -j auto -d _build/doctrees . _build/html",
             "runOptions": {
                 "instanceLimit": 1
             },
-            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}/docs"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "docs: serve",
+            "type": "shell",
+            "command": "${command:python.interpreterPath} -m http.server _build/html",
+            "runOptions": {
+                "instanceLimit": 1
+            },
             "options": {
                 "cwd": "${workspaceFolder}/docs"
             },

@@ -1,4 +1,4 @@
-from typing import TypeVar, Union
+from typing import Type, TypeGuard, TypeVar, Union
 
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_scoped_session
@@ -54,6 +54,8 @@ def create_sadlock(
         raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
 
     class_ = find_lock_class(engine_name)
+    if not is_sadlock_type(class_):
+        raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
     return class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
 
 
@@ -73,4 +75,16 @@ def create_async_sadlock(
         raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
 
     class_ = find_lock_class(engine_name, True)
+    if not is_async_sadlock_type(class_):
+        raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
     return class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
+
+
+def is_sadlock_type(cls: Type) -> TypeGuard[Type[BaseSadLock]]:
+    """Check if the passed-in class type is :class:`.BaseSadLock` object"""
+    return issubclass(cls, BaseSadLock)
+
+
+def is_async_sadlock_type(cls: Type) -> TypeGuard[Type[BaseAsyncSadLock]]:
+    """Check if the passed-in class type is :class:`.BaseAsyncSadLock` object"""
+    return issubclass(cls, BaseAsyncSadLock)

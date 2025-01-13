@@ -6,9 +6,4 @@
 -r docs/requirements.txt
 -r tests/requirements.txt
 
-build
-twine
-
 pre-commit
-ruff
-mypy
