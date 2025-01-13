@@ -1,4 +1,10 @@
-from typing import Type, TypeGuard, TypeVar, Union
+import sys
+from typing import Type, TypeVar, Union
+
+if sys.version_info < (3, 10):  # pragma: no cover
+    from typing_extensions import TypeGuard
+else:  # pragma: no cover
+    from typing import TypeGuard
 
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_scoped_session
