@@ -13,7 +13,7 @@ if sys.version_info < (3, 12):  # pragma: no cover
 else:  # pragma: no cover
     from typing import override
 
-from ..typing import AsyncConnectionOrSessionT, ConnectionOrSessionT
+from ..types import AsyncConnectionOrSessionT, ConnectionOrSessionT
 
 VKTV = TypeVar("VKTV")
 AKTV = TypeVar("AKTV")

@@ -25,7 +25,7 @@ from ..statement.postgresql import (
     UNLOCK,
     UNLOCK_SHARED,
 )
-from ..typing import AsyncConnectionOrSessionT, ConnectionOrSessionT
+from ..types import AsyncConnectionOrSessionT, ConnectionOrSessionT
 from .base import AbstractLockMixin, BaseAsyncSadLock, BaseSadLock
 
 KT = Union[bytes, bytearray, memoryview, str, int, float]
