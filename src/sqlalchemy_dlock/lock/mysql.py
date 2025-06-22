@@ -8,7 +8,7 @@ else:  # pragma: no cover
 
 from ..exceptions import SqlAlchemyDLockDatabaseError
 from ..statement.mysql import LOCK, UNLOCK
-from ..types import AsyncConnectionOrSessionT, ConnectionOrSessionT
+from ..typing import AsyncConnectionOrSessionT, ConnectionOrSessionT
 from .base import AbstractLockMixin, BaseAsyncSadLock, BaseSadLock
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
