@@ -173,7 +173,7 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local, ABC):
 
         There is no return value.
         """
-        pass
+        raise NotImplementedError()
 
     def close(self, *args, **kwargs) -> None:
         """Same as :meth:`release`
