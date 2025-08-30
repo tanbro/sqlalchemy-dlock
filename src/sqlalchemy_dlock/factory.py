@@ -47,7 +47,7 @@ def create_sadlock(
         Type of the lock object is a sub-class of :class:`.BaseSadLock`, which depends on the passed-in SQLAlchemy `connection` or `session`.
 
         MySQL and PostgreSQL connection/session are supported til now.
-    """  # noqa: E501
+    """
     if isinstance(connection_or_session, Connection):
         engine_name = connection_or_session.engine.name
     elif isinstance(connection_or_session, (Session, scoped_session)):
@@ -59,10 +59,10 @@ def create_sadlock(
     else:
         raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
 
-    class_ = find_lock_class(engine_name)
-    if not is_sadlock_type(class_):
+    lock_class = find_lock_class(engine_name)
+    if not is_sadlock_type(lock_class):
         raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
-    return class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
+    return lock_class(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
 
 
 def create_async_sadlock(

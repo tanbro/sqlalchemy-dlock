@@ -151,7 +151,7 @@ class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnection
     """Async IO version of :class:`MysqlSadLock`"""
 
     @override
-    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key, **kwargs):
+    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: KT, **kwargs):
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 

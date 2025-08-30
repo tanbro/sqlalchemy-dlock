@@ -253,7 +253,7 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, Async
     """Async IO version of :class:`PostgresqlSadLock`"""
 
     @override
-    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key, **kwargs):
+    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: KT, **kwargs):
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
         BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 

@@ -143,7 +143,7 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local, ABC):
 
     @abstractmethod
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
-        """Acquire a lock, blocking or non-blocking.
+        """Acquire the lock, blocking or non-blocking.
 
         * With the ``block`` argument set to :data:`True` (the default), the method call will block until the lock is in an unlocked state, then set it to locked and return :data:`True`.
 
@@ -160,7 +160,7 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local, ABC):
 
     @abstractmethod
     def release(self, *args, **kwargs) -> None:
-        """Release a lock.
+        """Release the lock.
 
         Since the class is thread-local, this cannot be called from other thread or process,
         and also can not be called from other connection.
@@ -173,7 +173,7 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local, ABC):
 
         There is no return value.
         """
-        pass
+        raise NotImplementedError()
 
     def close(self, *args, **kwargs) -> None:
         """Same as :meth:`release`

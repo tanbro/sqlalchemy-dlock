@@ -12,7 +12,13 @@ How to Build the Documentation
 
    .. code:: sh
 
-      pip install -e . -r docs/requirements.txt
+      pip install -e . --group docs
+
+   or if you are using uv:
+
+   .. code:: sh
+
+      uv sync --group docs
 
 #. Generate API documentation.
    If the source tree has changed, you may clear the `docs/apidocs` directory and regenerate the API documentation:

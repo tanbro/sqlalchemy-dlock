@@ -20,7 +20,6 @@ keywords = [
 license = { text = "BSD-3-Clause" }
 classifiers = [
   "Development Status :: 5 - Production/Stable",
-  "License :: OSI Approved :: BSD License",
   "Topic :: Database :: Front-Ends",
   "Intended Audience :: Developers",
   "Programming Language :: Python",
@@ -73,6 +72,29 @@ where = ["src"]
 
 [tool.setuptools_scm]
 write_to = "src/sqlalchemy_dlock/_version.py"
+
+[[tool.uv.index]]
+url = "https://mirrors.aliyun.com/pypi/simple"
+default = true
+
+[dependency-groups]
+dev = [
+    "coverage>=7.6.1",
+    "ipykernel>=6.29.5",
+    "mypy>=1.14.1",
+]
+docs = [
+    "furo>=2024.8.6",
+    "importlib-metadata>=8.5.0 ; python_full_version < '3.8'",
+    "linkify-it-py>=2.0.3",
+    "myst-parser>=3.0.1",
+    "nbsphinx>=0.9.7",
+    "sphinx>=7",
+    "sphinx-copybutton>=0.5.2",
+    "sphinx-inline-tabs>=2023.4.21",
+    "sphinx-tippy>=0.4.3",
+    "sphinx-version-warning>=1.1.2",
+]
 
 [tool.setuptools.package-data]
 sqlalchemy_dlock = ["sqlalchemy_dlock/py.typed"]
