@@ -94,7 +94,7 @@ jobs:
       - name: Install the project
         run: |
           uv sync --group test --group mypy --extra mysqlclient --extra aiomysql --extra psycopg2 --extra asyncpg
-          uv pip install "${{ matrix.sqlalchemy-requires }}"
+          uv pip install cryptography "${{ matrix.sqlalchemy-requires }}"
 
       - name: Lint check with ruff
         uses: astral-sh/ruff-action@v3
