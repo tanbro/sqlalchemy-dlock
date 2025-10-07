@@ -58,7 +58,7 @@ jobs:
           --health-retries 5
 
       postgres:
-        image: postgres/alpine
+        image: postgres:alpine
         env:
           POSTGRES_PASSWORD: test
         options: >-
