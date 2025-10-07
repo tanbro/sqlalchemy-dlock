@@ -87,7 +87,7 @@ docs = [
   "sphinx-autodoc-typehints",
 ]
 mypy = ["mypy"]
-test = ["coverage"]
+test = ["coverage", "python-dotenv"]
 ipy = ["ipykernel", "pip"]
 
 

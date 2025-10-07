@@ -43,46 +43,74 @@ jobs:
           - SQLAlchemy[asyncio]>=1.4.3,<2.0
           - SQLAlchemy[asyncio]>=2.0,<3.0
 
+    services:
+      mysql:
+        image: mysql
+        env:
+          MYSQL_RANDOM_ROOT_PASSWORD: "1"
+          MYSQL_DATABASE: test
+          MYSQL_USER: test
+          MYSQL_PASSWORD: test
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost -u $$MYSQL_USER --password=$$MYSQL_PASSWORD"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      postgres:
+        image: postgres/alpine
+        env:
+          POSTGRES_PASSWORD: test
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Startup databases
-        shell: bash
-        run: |
-          (cd .github && docker compose up -d)
-          sh scripts/wait-for-postgres.sh 127.0.0.1 test
-          sh scripts/wait-for-mysql.sh 127.0.0.1 test test test
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
+          enable-cache: true
           python-version: ${{ matrix.python-version }}
-          cache: pip
 
-      - name: Install project and dependent tools
-        run: pip install -e .[asyncio] "${{ matrix.sqlalchemy-requires }}" -r tests/requirements.txt ruff coverage
+      - name: Cache of Ruff PyTest and MyPY
+        uses: actions/cache@v4
+        with:
+          path: |
+            .ruff_cache
+            .pytest_cache
+            .mypy_cache
+          key: ${{ runner.os }}-py${{ matrix.python-version }}-ruff-pytest-mypy-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-py${{ matrix.python-version }}-ruff-pytest-mypy-
 
-      - name: Check with ruff
+      - name: Install the project
         run: |
-          ruff check .
+          uv pip install "${{ matrix.sqlalchemy-requires }}"
+          uv sync --group test --group mypy --extra mysqlclient --extra aiomysql --extra psycopg2 --extra asyncpg
 
-      - name: Test with coverage
+      - name: Lint check with ruff
+        uses: astral-sh/ruff-action@v3
+
+      - name: Static check with mypy
+        run: uv run mypy
+
+      - name: Run tests
         shell: bash
         run: |
           export TEST_URLS="mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/"
           export TEST_ASYNC_URLS="mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/"
-          coverage run -m unittest -cfv
-          coverage report -m
-          coverage xml
+          uv run coverage run -m unittest -cfv
+          uv run coverage report -m
+          uv run coverage xml
 
-      - name: Shutdown databases
-        shell: bash
-        run: (cd .github && docker compose down -v)
-
-      - name: Upload coverage reports to CodeCov with GitHub Action
-        uses: codecov/codecov-action@v4
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   build:
     runs-on: ubuntu-latest
@@ -90,15 +118,15 @@ jobs:
     if: needs.get-version.outputs.version != ''
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/checkout@v5
         with:
-          cache: pip
-      - name: Install builder
-        run: pip install build
-      - name: Build package distributions
-        run: pyproject-build
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Build
+        run: uv build
       - name: Upload package distributions to artifact
         uses: actions/upload-artifact@v4
         with:
