@@ -1,8 +1,3 @@
-#!/usr/bin/env bash
-
-# Python unittest running script for the docker-compose tests.
-# DO NOT run it alone.
-
 set -eu
 
 export TEST_URLS="mysql://$MYSQL_USER:$MYSQL_PASSWORD@mysql/$MYSQL_DATABASE postgresql://postgres:$POSTGRES_PASSWORD@postgres/"
@@ -19,6 +14,8 @@ export PIP_NO_WARN_SCRIPT_LOCATION=1
 PYTHON_LIST=(python3.9 python3.10 python3.11 python3.12 python3.13)
 REQUIRES_LIST=("SQLAlchemy[asyncio]>=1.4.3,<2" "SQLAlchemy[asyncio]>=2,<3")
 
+trap 'rm -rf /tmp/sqlalchemy-dlock-test-*' EXIT
+
 for PYTHON in ${PYTHON_LIST[@]}
 do
     for REQUIRES in ${REQUIRES_LIST[@]}
@@ -28,15 +25,18 @@ do
         echo "Begin of ${PYTHON} ${REQUIRES}"
         echo "---------------------------------------------------------------"
         echo
-        TMPDIR=$(mktemp -d)
-        trap 'rm -rf $TMPDIR' EXIT
-        $PYTHON -m venv $TMPDIR
+        TMPDIR=$(mktemp -d -t sqlalchemy-dlock-test-${PYTHON}-${REQUIRES//[^a-zA-Z0-9]/-})
         (
+            set -e
             cd /workspace
-            $TMPDIR/bin/python -m pip install -e . -r tests/requirements-compose.txt $REQUIRES
+            $TMPDIR/bin/python -m pip install -e . --group tests cryptography $REQUIRES
             $TMPDIR/bin/python -m coverage run -m unittest -cfv
             $TMPDIR/bin/python -m coverage report
-        )
+        ) || {
+            echo "Test failed for ${PYTHON} ${REQUIRES}"
+            exit 1
+        }
+        rm -rf $TMPDIR
         echo
         echo "---------------------------------------------------------------"
         echo "End of ${PYTHON} ${REQUIRES}"
