@@ -2,7 +2,7 @@ import asyncio
 import sys
 from hashlib import blake2b
 from time import sleep, time
-from typing import Callable, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar, Union
 from warnings import catch_warnings, warn
 
 if sys.version_info < (3, 12):  # pragma: no cover
@@ -28,7 +28,8 @@ from ..statement.postgresql import (
 from ..typing import AsyncConnectionOrSessionT, ConnectionOrSessionT
 from .base import AbstractLockMixin, BaseAsyncSadLock, BaseSadLock
 
-KT = Union[bytes, bytearray, memoryview, str, int, float]
+ConvertibleKT = Union[bytes, bytearray, memoryview, str, int, float]
+KT = Any
 KTV = TypeVar("KTV", bound=KT)
 
 
@@ -89,8 +90,8 @@ class PostgresqlSadLockMixin(AbstractLockMixin[KTV, int]):
         return self._actual_key
 
     @classmethod
-    def convert(cls, k) -> int:
-        """To int64"""
+    def convert(cls, k: ConvertibleKT) -> int:
+        """The default key converter for PostgreSQL advisory lock"""
         if isinstance(k, int):
             return k
         if isinstance(k, str):
@@ -117,7 +118,7 @@ class PostgresqlSadLockMixin(AbstractLockMixin[KTV, int]):
         # if i > 0x7FFF_FFFF_FFFF_FFFF:
         #     return int.from_bytes(i.to_bytes(8, byteorder, signed=False), byteorder, signed=True)
         if not isinstance(i, int):
-            raise TypeError(f"int type expected, but actual type is {type(i)}")
+            raise TypeError(f"int type expected, but actual type is {type(i).__name__}")
         if i > 0x7FFF_FFFF_FFFF_FFFF:
             raise OverflowError("int too big")
         if i < -0x8000_0000_0000_0000:

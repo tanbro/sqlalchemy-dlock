@@ -125,18 +125,6 @@ pip install sqlalchemy-dlock
 
   > ℹ️ **NOTE** \
   > [aiomysql][], [asyncpg][] and [psycopg][] are tested asynchronous drivers.
-  >
-  > We can install it with asynchronous DB libraries:
-  >
-  > ```bash
-  > pip install SQLAlchemy[asyncio] aiomysql sqlalchemy-dlock
-  > ```
-  >
-  > or
-  >
-  > ```bash
-  > pip install SQLAlchemy[asyncio] asyncpg sqlalchemy-dlock
-  > ```
 
 ## Test
 

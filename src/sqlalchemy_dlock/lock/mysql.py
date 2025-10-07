@@ -1,5 +1,5 @@
 import sys
-from typing import Callable, Optional, TypeVar, Union
+from typing import Any, Callable, Optional, TypeVar, Union
 
 if sys.version_info < (3, 12):  # pragma: no cover
     from typing_extensions import override
@@ -13,7 +13,8 @@ from .base import AbstractLockMixin, BaseAsyncSadLock, BaseSadLock
 
 MYSQL_LOCK_NAME_MAX_LENGTH = 64
 
-KT = Union[bytes, bytearray, memoryview, str, int, float]
+ConvertibleKT = Union[bytes, bytearray, memoryview, str, int, float]
+KT = Any
 KTV = TypeVar("KTV", bound=KT)
 
 
@@ -62,7 +63,8 @@ class MysqlSadLockMixin(AbstractLockMixin[KTV, str]):
         return self._actual_key
 
     @classmethod
-    def convert(cls, k) -> str:
+    def convert(cls, k: ConvertibleKT) -> str:
+        """The default key converter for MySQL named lock"""
         if isinstance(k, str):
             return k
         if isinstance(k, (int, float)):
@@ -71,8 +73,7 @@ class MysqlSadLockMixin(AbstractLockMixin[KTV, str]):
             return k.decode()
         if isinstance(k, memoryview):
             return k.tobytes().decode()
-        else:
-            raise TypeError(type(k).__name__)
+        raise TypeError(type(k).__name__)
 
 
 class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):

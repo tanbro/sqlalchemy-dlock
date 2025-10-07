@@ -32,18 +32,16 @@ dynamic = ["version"]
 requires-python = ">=3.9"
 # requires
 dependencies = [
-  "SQLAlchemy>=1.4,<3.0",
+  "SQLAlchemy[asyncio]>=1.4,<3.0",
   "typing-extensions; python_version<'3.12'",
 ]
 # extra requires
 [project.optional-dependencies]
-# SQLAlchemy with asyncio, no engines
-asyncio = ["SQLAlchemy[asyncio]>=1.4,<3.0"]
 # MySQL
 mysqlclient = ["mysqlclient"]
 pymysql = ["pymysql"]
 # MySQL asyncio
-aiomysql = ["SQLAlchemy[asyncio]>=1.4,<3.0", "aiomysql"]
+aiomysql = ["aiomysql"]
 # Postgres
 # psycopg2: sync
 psycopg2 = ["psycopg2>=2.8"] # psycopg2 compiling needed when install
@@ -51,17 +49,11 @@ psycopg2-binary = [
   "psycopg2-binary>=2.8",
 ] # psycopg2 with pre-compiled C library
 # psycopg3: both sync and asyncio
-psycopg3 = ["SQLAlchemy>=2.0,<3.0", "psycopg"] # psycopg3 dynamik link to libpq
-psycopg3-binary = [
-  "SQLAlchemy>=2.0,<3.0",
-  "psycopg[binary]",
-] # psycopg3 with pre-compiled C library
-psycopg3-c = [
-  "SQLAlchemy>=2.0,<3.0",
-  "psycopg[c]",
-] # psycopg3 compiling needed when install
+psycopg3 = ["psycopg"] # psycopg3 dynamik link to libpq
+psycopg3-binary = ["psycopg[binary]"] # psycopg3 with pre-compiled C library
+psycopg3-c = ["psycopg[c]",] # psycopg3 compiling needed when install
 # Postgres asyncio
-asyncpg = ["SQLAlchemy[asyncio]>=1.4,<3.0", "asyncpg"]
+asyncpg = ["asyncpg"]
 
 # Project links
 [project.urls]
