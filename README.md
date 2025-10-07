@@ -146,7 +146,7 @@ You can run unit-tests
   1. Install the project in editable mode with `asyncio` optional dependencies, and libraries/drivers needed in test. A virtual environment ([venv][]) is strongly advised:
 
      ```bash
-     pip install -e .[asyncio] -r tests/requirements.txt
+     pip install -e . --group dev
      ```
 
   2. start up mysql and postgresql service
