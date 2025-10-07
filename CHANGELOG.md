@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Developing
+
+- 💔 **Breaking Changes:**
+  - Drop support for Python 3.8
+- 📦 **Build:**
+  - Upgrade build backend to `setuptools>=80`
+
 ## v0.6.1.post2
 
 > 📅 **Date** 2024-11-29

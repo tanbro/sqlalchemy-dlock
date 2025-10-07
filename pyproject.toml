@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=64", "setuptools-scm>=8"]
+requires = ["setuptools>=80", "setuptools-scm>=8"]
 
 [project]
 name = "sqlalchemy-dlock"
@@ -17,7 +17,9 @@ keywords = [
   "DBMS",
   "RDBMS",
 ]
-license = { text = "BSD-3-Clause" }
+license = "BSD-3-Clause"
+license-files = ["LICENSE"]
+
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Topic :: Database :: Front-Ends",
@@ -27,7 +29,7 @@ classifiers = [
 dynamic = ["version"]
 
 # requires python version
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 # requires
 dependencies = [
   "SQLAlchemy>=1.4,<3.0",
@@ -79,22 +81,27 @@ default = true
 
 [dependency-groups]
 dev = [
-    "coverage>=7.6.1",
-    "ipykernel>=6.29.5",
-    "mypy>=1.14.1",
+  { include-group = "mypy" },
+  { include-group = "test" },
+  { include-group = "docs" },
+  { include-group = "ipykernel" },
 ]
 docs = [
-    "furo>=2024.8.6",
-    "importlib-metadata>=8.5.0 ; python_full_version < '3.8'",
-    "linkify-it-py>=2.0.3",
-    "myst-parser>=3.0.1",
-    "nbsphinx>=0.9.7",
-    "sphinx>=7",
-    "sphinx-copybutton>=0.5.2",
-    "sphinx-inline-tabs>=2023.4.21",
-    "sphinx-tippy>=0.4.3",
-    "sphinx-version-warning>=1.1.2",
+  "sphinx>=7",
+  "furo",
+  "importlib-metadata;python_full_version<'3.8'",
+  "linkify-it-py",
+  "myst-parser",
+  "nbsphinx",
+  "sphinx-copybutton",
+  "sphinx-inline-tabs",
+  "sphinx-tippy",
+  "sphinx-version-warning",
 ]
+mypy = ["mypy"]
+test = ["coverage"]
+ipykernel = ["ipykernel", "pip"]
+
 
 [tool.setuptools.package-data]
 sqlalchemy_dlock = ["sqlalchemy_dlock/py.typed"]
