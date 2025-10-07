@@ -143,35 +143,42 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
 
     @abstractmethod
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
-        """Acquire the lock, blocking or non-blocking.
+        """Acquire the lock in blocking or non-blocking mode.
 
-        * With the ``block`` argument set to :data:`True` (the default), the method call will block until the lock is in an unlocked state, then set it to locked and return :data:`True`.
+        The implementation should provide the following behavior:
 
-        * With the ``block`` argument set to :data:`False`, the method call does not block.
-          If the lock is currently in a locked state, return :data:`False`; otherwise set the lock to a locked state and return :data:`True`.
+        * When ``block`` is :data:`True` (the default), the method blocks until the lock is in an unlocked state,
+          then sets it to locked and returns :data:`True`.
 
-        * When invoked with a positive, floating-point value for `timeout`, block for at most the number of seconds specified by timeout as long as the lock can not be acquired.
-          Invocations with a negative value for `timeout` are equivalent to a `timeout` of zero.
-          Invocations with a `timeout` value of ``None`` (the default) set the timeout period to infinite.
-          The ``timeout`` parameter has no practical implications if the ``block`` argument is set to :data:`False` and is thus ignored.
-          Returns :data:`True` if the lock has been acquired or :data:`False` if the timeout period has elapsed.
+        * When ``block`` is :data:`False`, the method call is non-blocking.
+          If the lock is currently locked, it returns :data:`False`; otherwise, it sets the lock to locked state and returns :data:`True`.
+
+        * When invoked with a positive floating-point value for ``timeout``, it blocks for at most the specified number
+          of seconds until the lock can be acquired.
+
+        * Invocations with a negative ``timeout`` value are equivalent to a ``timeout`` of zero.
+
+        * When ``timeout`` is ``None`` (the default), the timeout period is infinite.
+          The ``timeout`` parameter has no effect when ``block`` is :data:`False` and is thus ignored.
+
+        * Returns :data:`True` if the lock has been acquired or :data:`False` if the timeout period has elapsed.
         """
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     def release(self, *args, **kwargs) -> None:
         """Release the lock.
 
-        Since the class is thread-local, this cannot be called from other thread or process,
-        and also can not be called from other connection.
-        (Although PostgreSQL's shared advisory lock supports so).
+        Since the class is thread-local, this method cannot be called from another thread or process,
+        nor can it be called from another connection.
+        (Although PostgreSQL's shared advisory lock supports this).
 
-        When the lock is locked, reset it to unlocked, and return.
-        If any other threads are blocked waiting for the lock to become unlocked, allow exactly one of them to proceed.
+        The implementation should provide the following behavior:
 
-        When invoked on an unlocked lock, a :class:`ValueError` is raised.
-
-        There is no return value.
+        * Reset the lock to unlocked state and return when the lock is currently locked.
+        * Allow exactly one of any other threads blocked waiting for the lock to become unlocked to proceed.
+        * Raise a :class:`ValueError` when invoked on an unlocked lock.
+        * Not return a value.
         """
         raise NotImplementedError()
 
@@ -262,11 +269,11 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
 
     @abstractmethod
     async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
-        pass
+        raise NotImplementedError()
 
     @abstractmethod
     async def release(self, *args, **kwargs) -> None:
-        pass
+        raise NotImplementedError()
 
     async def close(self, *args, **kwargs) -> None:
         if self._acquired:
