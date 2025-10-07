@@ -8,7 +8,7 @@ How to Build the Documentation
 ------------------------------
 
 #. The documentation is built using `Sphinx <https://www.sphinx-doc.org/>`_.
-   We need to install the package and its testing requirements:
+   We need to install the package and its requirements for building documentation:
 
    .. code:: sh
 
