@@ -89,8 +89,8 @@ jobs:
 
       - name: Install the project
         run: |
-          uv pip install "${{ matrix.sqlalchemy-requires }}"
           uv sync --group test --group mypy --extra mysqlclient --extra aiomysql --extra psycopg2 --extra asyncpg
+          uv pip install "${{ matrix.sqlalchemy-requires }}"
 
       - name: Lint check with ruff
         uses: astral-sh/ruff-action@v3
