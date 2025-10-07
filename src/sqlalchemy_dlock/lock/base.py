@@ -15,27 +15,27 @@ else:  # pragma: no cover
 
 from ..typing import AsyncConnectionOrSessionT, ConnectionOrSessionT
 
-VKTV = TypeVar("VKTV")
-AKTV = TypeVar("AKTV")
-ConnT = TypeVar("ConnT", bound=ConnectionOrSessionT)
-AsyncConnT = TypeVar("AsyncConnT", bound=AsyncConnectionOrSessionT)
+KeyTV = TypeVar("KeyTV")
+ActualKeyTV = TypeVar("ActualKeyTV")
+ConnectionTV = TypeVar("ConnectionTV", bound=ConnectionOrSessionT)
+AsyncConnectionTV = TypeVar("AsyncConnectionTV", bound=AsyncConnectionOrSessionT)
 
 
-class AbstractLockMixin(Generic[VKTV, AKTV], ABC):
+class AbstractLockMixin(Generic[KeyTV, ActualKeyTV], ABC):
     @abstractmethod
-    def __init__(self, *, key: VKTV, convert: Optional[Callable[[VKTV], AKTV]] = None, **kwargs):
-        pass
+    def __init__(self, *, key: KeyTV, convert: Optional[Callable[[KeyTV], ActualKeyTV]] = None, **kwargs):
+        raise NotImplementedError()
 
     @abstractmethod
-    def get_actual_key(self) -> AKTV:
-        pass
+    def get_actual_key(self) -> ActualKeyTV:
+        raise NotImplementedError()
 
     @property
-    def actual_key(self) -> AKTV:
+    def actual_key(self) -> ActualKeyTV:
         return self.get_actual_key()
 
 
-class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local, ABC):
+class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
     """Base class of database lock implementation
 
     Note:
@@ -65,7 +65,7 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local, ABC):
 
     @override
     def __init__(
-        self, connection_or_session: ConnT, key: VKTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
+        self, connection_or_session: ConnectionTV, key: KeyTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
     ):
         """
         Args:
@@ -119,7 +119,7 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local, ABC):
         )
 
     @property
-    def connection_or_session(self) -> ConnT:
+    def connection_or_session(self) -> ConnectionTV:
         """Connection or Session object SQL locking functions will be invoked on it
 
         It returns ``connection_or_session`` parameter of the class's constructor.
@@ -127,7 +127,7 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local, ABC):
         return self._connection_or_session
 
     @property
-    def key(self) -> VKTV:
+    def key(self) -> KeyTV:
         """ID or name of the SQL locking function
 
         It returns ``key`` parameter of the class's constructor"""
@@ -213,11 +213,16 @@ class BaseSadLock(AbstractLockMixin, Generic[VKTV, ConnT], local, ABC):
             self.release(*args, **kwargs)
 
 
-class BaseAsyncSadLock(AbstractLockMixin, Generic[VKTV, AsyncConnT], local, ABC):
+class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], local, ABC):
     """Async version of :class:`.BaseSadLock`"""
 
     def __init__(
-        self, connection_or_session: AsyncConnT, key: VKTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
+        self,
+        connection_or_session: AsyncConnectionTV,
+        key: KeyTV,
+        /,
+        contextual_timeout: Union[float, int, None] = None,
+        **kwargs,
     ):
         self._acquired = False
         self._connection_or_session = connection_or_session
@@ -244,11 +249,11 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[VKTV, AsyncConnT], local, ABC)
         )
 
     @property
-    def connection_or_session(self) -> AsyncConnT:
+    def connection_or_session(self) -> AsyncConnectionTV:
         return self._connection_or_session
 
     @property
-    def key(self) -> VKTV:
+    def key(self) -> KeyTV:
         return self._key
 
     @property

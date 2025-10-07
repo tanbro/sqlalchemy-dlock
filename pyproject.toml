@@ -75,21 +75,16 @@ where = ["src"]
 [tool.setuptools_scm]
 write_to = "src/sqlalchemy_dlock/_version.py"
 
-[[tool.uv.index]]
-url = "https://mirrors.aliyun.com/pypi/simple"
-default = true
-
 [dependency-groups]
 dev = [
   { include-group = "mypy" },
   { include-group = "test" },
   { include-group = "docs" },
-  { include-group = "ipykernel" },
+  { include-group = "ipy" },
 ]
 docs = [
   "sphinx>=7",
   "furo",
-  "importlib-metadata;python_full_version<'3.8'",
   "linkify-it-py",
   "myst-parser",
   "nbsphinx",
@@ -97,10 +92,11 @@ docs = [
   "sphinx-inline-tabs",
   "sphinx-tippy",
   "sphinx-version-warning",
+  "sphinx-autodoc-typehints",
 ]
 mypy = ["mypy"]
 test = ["coverage"]
-ipykernel = ["ipykernel", "pip"]
+ipy = ["ipykernel", "pip"]
 
 
 [tool.setuptools.package-data]

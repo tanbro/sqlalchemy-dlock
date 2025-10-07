@@ -14,7 +14,7 @@ How to Build the Documentation
 
       pip install -e . --group docs
 
-   or if you are using uv:
+   or if you are using `uv`_:
 
    .. code:: sh
 
@@ -25,7 +25,7 @@ How to Build the Documentation
 
    .. code:: sh
 
-      sphinx-apidoc -o docs/apidocs -f -e -H APIs src
+      sphinx-apidoc -H "" -feo docs/apidocs src
 
 #. Build HTML documentation:
 
@@ -58,3 +58,5 @@ Then open http://localhost:8000/ in a web browser.
       python -m http.server --directory docs/_build/html 8080
 
    .. seealso:: Python ``stdlib``'s :mod:`http.server`
+
+.. _uv: https://docs.astral.sh/uv/

@@ -32,6 +32,7 @@ extensions = [
     "sphinx_inline_tabs",
     "sphinx_copybutton",
     "versionwarning.extension",
+    "sphinx_autodoc_typehints",
 ]
 source_suffix = {
     ".rst": "restructuredtext",
