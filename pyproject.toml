@@ -32,7 +32,7 @@ dynamic = ["version"]
 requires-python = ">=3.9"
 # requires
 dependencies = [
-  "SQLAlchemy[asyncio]>=1.4,<3.0",
+  "SQLAlchemy[asyncio]>=1.4.3,<3.0",
   "typing-extensions; python_version<'3.12'",
 ]
 # extra requires
