@@ -179,7 +179,7 @@ You can run unit-tests
 
 - or on docker [compose][]:
 
-  `tests/docker-compose.yml` defines a Python and [SQLAlchemy][] version matrix -- it combines Python `3.9` to `3.12` and [SQLAlchemy][] `v1`/`v2` for test cases. We can run it by:
+  `tests/docker-compose.yml` defines a Python and [SQLAlchemy][] version matrix -- it combines multiple Python versions and [SQLAlchemy][] `v1`/`v2` for test cases. We can run it by:
 
   ```bash
   cd tests
