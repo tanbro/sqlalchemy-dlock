@@ -1,4 +1,6 @@
+from typing import Final
+
 from sqlalchemy import text
 
-LOCK = text("SELECT GET_LOCK(:str, :timeout)")
-UNLOCK = text("SELECT RELEASE_LOCK(:str)")
+LOCK: Final = text("SELECT GET_LOCK(:str, :timeout)")
+UNLOCK: Final = text("SELECT RELEASE_LOCK(:str)")
