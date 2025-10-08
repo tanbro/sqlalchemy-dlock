@@ -53,9 +53,6 @@ jobs:
           MYSQL_PASSWORD: test
         options: >-
           --health-cmd "mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
         ports:
           - 3306:3306
 
@@ -65,9 +62,6 @@ jobs:
           POSTGRES_PASSWORD: test
         options: >-
           --health-cmd "pg_isready -U postgres -h 127.0.0.1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
         ports:
           - 5432:5432
 
@@ -80,16 +74,13 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
-      - name: Cache of Ruff PyTest and MyPY
+      - name: Cache of Ruff and MyPY
         uses: actions/cache@v4
         with:
           path: |
-            .ruff_cache
-            .pytest_cache
             .mypy_cache
-          key: ${{ runner.os }}-py${{ matrix.python-version }}-ruff-pytest-mypy-${{ hashFiles('pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-py${{ matrix.python-version }}-ruff-pytest-mypy-
+            .ruff_cache
+          key: mypy-ruff
 
       - name: Install the project
         env:
