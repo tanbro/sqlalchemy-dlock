@@ -125,5 +125,5 @@ jobs:
           enable-cache: true
       - name: Build
         run: uv build
-      - name: Punblish
-        run: uv publis --token ${{ secrets.PYPI_API_TOKEN }}
+      - name: Publish
+        run: uv publish --token ${{ secrets.PYPI_API_TOKEN }}
