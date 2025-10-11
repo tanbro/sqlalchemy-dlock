@@ -1,6 +1,8 @@
 # CHANGELOG
 
-## Developing
+## 0.7.0
+
+> 📅 **Date** 2025-10-12
 
 - 🆕 **New Features:**
   - Supported Python 3.14
