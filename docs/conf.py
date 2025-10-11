@@ -65,7 +65,7 @@ autodoc_typehints = "both"
 # autodoc_class_signature = "separated"
 
 autoclass_content = "both"
-autodoc_member_order = "bysource"
+# autodoc_member_order = "bysource"
 
 # -- Options for myst_parser extension ---------------------------------------
 

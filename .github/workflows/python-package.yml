@@ -80,7 +80,7 @@ jobs:
           path: |
             .mypy_cache
             .ruff_cache
-          key: mypy-ruff
+          key: cache-mypy-ruff
 
       - name: Install the project
         env:
@@ -93,7 +93,7 @@ jobs:
         uses: astral-sh/ruff-action@v3
 
       - name: Static check with mypy
-        run: uv run mypy
+        run: uv run --no-dev mypy
 
       - name: Run tests
         shell: bash
@@ -101,9 +101,9 @@ jobs:
           TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/
           TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/
         run: |
-          uv run coverage run -m unittest -cfv
-          uv run coverage report -m
-          uv run coverage xml
+          uv run --no-dev coverage run -m unittest -cfv
+          uv run --no-dev coverage report -m
+          uv run --no-dev coverage xml
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
@@ -125,27 +125,5 @@ jobs:
           enable-cache: true
       - name: Build
         run: uv build
-      - name: Upload package distributions to artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: sqlalchemy_dlock-dist-${{ needs.get-version.outputs.version }}
-          path: dist
-          if-no-files-found: error
-          retention-days: 1
-
-  publish:
-    runs-on: ubuntu-latest
-    needs: [get-version, build]
-    if: needs.get-version.outputs.version != ''
-
-    steps:
-      - name: Download package distributions from artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: sqlalchemy_dlock-dist-${{needs.get-version.outputs.version}}
-          path: dist
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Punblish
+        run: uv publis --token ${{ secrets.PYPI_API_TOKEN }}
