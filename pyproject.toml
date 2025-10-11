@@ -58,8 +58,8 @@ asyncpg = ["asyncpg"]
 # Project links
 [project.urls]
 homepage = "https://github.com/tanbro/sqlalchemy-dlock"
+source = "https://github.com/tanbro/sqlalchemy-dlock.git"
 documentation = "https://sqlalchemy-dlock.readthedocs.io/"
-repository = "https://github.com/tanbro/sqlalchemy-dlock.git"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -72,7 +72,6 @@ dev = [
   { include-group = "mypy" },
   { include-group = "test" },
   { include-group = "docs" },
-  { include-group = "ipy" },
 ]
 docs = [
   "sphinx>=7",
@@ -88,7 +87,7 @@ docs = [
 ]
 mypy = ["mypy"]
 test = ["coverage", "python-dotenv"]
-ipy = ["ipykernel", "pip"]
+ipy = ["ipykernel"]
 
 
 [tool.setuptools.package-data]
