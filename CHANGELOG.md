@@ -2,10 +2,13 @@
 
 ## Developing
 
+- 🆕 **New Features:**
+  - Supported Python 3.14
 - 💔 **Breaking Changes:**
   - Drop support for Python 3.8
 - 📦 **Build:**
   - Upgrade build backend to `setuptools>=80`
+  - Remove all `requirements.txt` files
 
 ## v0.6.1.post2
 
