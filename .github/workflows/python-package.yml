@@ -91,7 +91,7 @@ jobs:
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: "0"
         run: |
-          uv sync --no-dev --group test --group mypy --extra mysqlclient --extra aiomysql --extra psycopg2 --extra asyncpg
+          uv sync --no-dev --group test --group typed --extra mysqlclient --extra aiomysql --extra psycopg2 --extra asyncpg
           uv pip install cryptography "${{ matrix.sqlalchemy-requires }}"
 
       - name: Lint check with ruff
