@@ -113,28 +113,25 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
         stmt = LOCK.params(str=self.key, timeout=timeout)
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:
-            self._acquired = True
+            return True
         elif ret_val == 0:
-            pass  # 直到超时也没有成功锁定
+            return False  # 直到超时也没有成功锁定
         elif ret_val is None:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(f"An error occurred while attempting to obtain the lock {self.key!r}")
         else:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(f"GET_LOCK({self.key!r}, {timeout}) returns {ret_val}")
-        return self._acquired
 
     @override
     def do_release(self):
         stmt = UNLOCK.params(str=self.key)
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:
-            self._acquired = False
+            return
         elif ret_val == 0:
-            self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 f"The named lock {self.key!r} was not established by this thread, and the lock is not released."
             )
         elif ret_val is None:
-            self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 f"The named lock {self.key!r} did not exist, "
                 "was never obtained by a call to GET_LOCK(), "
@@ -153,9 +150,7 @@ class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnection
         BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     @override
-    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
-        if self._acquired:
-            raise ValueError("invoked on a locked lock")
+    async def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         if block:
             # None: set the timeout period to infinite.
             if timeout is None:
@@ -168,30 +163,25 @@ class MysqlAsyncSadLock(MysqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnection
         stmt = LOCK.params(str=self.key, timeout=timeout)
         ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
         if ret_val == 1:
-            self._acquired = True
+            return True
         elif ret_val == 0:
-            pass  # 直到超时也没有成功锁定
+            return False  # 直到超时也没有成功锁定
         elif ret_val is None:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(f"An error occurred while attempting to obtain the lock {self.key!r}")
         else:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(f"GET_LOCK({self.key!r}, {timeout}) returns {ret_val}")
-        return self._acquired
 
     @override
-    async def release(self):
-        if not self._acquired:
-            raise ValueError("invoked on an unlocked lock")
+    async def do_release(self):
         stmt = UNLOCK.params(str=self.key)
         ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
         if ret_val == 1:
-            self._acquired = False
+            return
         elif ret_val == 0:
-            self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 f"The named lock {self.key!r} was not established by this thread, and the lock is not released."
             )
         elif ret_val is None:
-            self._acquired = False
             raise SqlAlchemyDLockDatabaseError(
                 f"The named lock {self.key!r} did not exist, "
                 "was never obtained by a call to GET_LOCK(), "

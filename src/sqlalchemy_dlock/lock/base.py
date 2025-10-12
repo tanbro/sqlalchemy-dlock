@@ -165,7 +165,8 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
         """
         if self._acquired:
             raise ValueError("invoked on a locked lock")
-        return self.do_acquire(block, timeout, *args, **kwargs)
+        self._acquired = self.do_acquire(block, timeout, *args, **kwargs)
+        return self._acquired
 
     @abstractmethod
     def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
@@ -188,7 +189,8 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
         """
         if not self._acquired:
             raise ValueError("invoked on an unlocked lock")
-        return self.do_release(*args, **kwargs)
+        self.do_release(*args, **kwargs)
+        self._acquired = False
 
     @abstractmethod
     def do_release(self, *args, **kwargs):
@@ -280,14 +282,28 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
     def locked(self) -> bool:
         return self._acquired
 
-    @abstractmethod
+    @final
     async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
-        raise NotImplementedError()
+        if self._acquired:
+            raise ValueError("invoked on a locked lock")
+        self._acquired = await self.do_acquire(block, timeout, *args, **kwargs)
+        return self._acquired
 
     @abstractmethod
-    async def release(self, *args, **kwargs) -> None:
+    async def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         raise NotImplementedError()
 
-    async def close(self, *args, **kwargs) -> None:
+    @final
+    async def release(self, *args, **kwargs):
+        if not self._acquired:
+            raise ValueError("invoked on an unlocked lock")
+        await self.do_release(*args, **kwargs)
+        self._acquired = False
+
+    @abstractmethod
+    async def do_release(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    async def close(self, *args, **kwargs):
         if self._acquired:
             await self.release(*args, **kwargs)

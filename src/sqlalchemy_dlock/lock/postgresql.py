@@ -194,7 +194,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
             if timeout is None:
                 # None: set the timeout period to infinite.
                 self.connection_or_session.execute(self._stmt_lock).all()
-                self._acquired = True
+                return True
             else:
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
                 if timeout < 0:
@@ -206,18 +206,15 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
                 while True:
                     ret_val = self.connection_or_session.execute(self._stmt_try_lock).scalar_one()
                     if ret_val:  # succeed
-                        self._acquired = True
-                        break
+                        return True
                     if time() - ts_begin > timeout:  # expired
-                        break
+                        return False
                     sleep(interval)
         else:
             # This will either obtain the lock immediately and return true,
             # or return false without waiting if the lock cannot be acquired immediately.
             ret_val = self.connection_or_session.execute(self._stmt_try_lock).scalar_one()
-            self._acquired = bool(ret_val)
-        #
-        return self._acquired
+            return bool(ret_val)
 
     @override
     def do_release(self):
@@ -229,15 +226,12 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
             )
             return
         ret_val = self.connection_or_session.execute(self._stmt_unlock).scalar_one()
-        if ret_val:
-            self._acquired = False
-        else:  # pragma: no cover
-            self._acquired = False
+        if not ret_val:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")
 
     # Force override close, and disable transaction level advisory locks warning it the method
     def close(self):  # type: ignore
-        if self._acquired:
+        if self.locked:
             if sys.version_info < (3, 11):
                 with catch_warnings():
                     return self.release()
@@ -255,7 +249,7 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, Async
         BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     @override
-    async def acquire(
+    async def do_acquire(
         self,
         block: bool = True,
         timeout: Union[float, int, None] = None,
@@ -263,13 +257,11 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, Async
         *args,
         **kwargs,
     ) -> bool:
-        if self._acquired:
-            raise ValueError("invoked on a locked lock")
         if block:
             if timeout is None:
                 # None: set the timeout period to infinite.
                 _ = (await self.connection_or_session.execute(self._stmt_lock)).all()
-                self._acquired = True
+                return True
             else:
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
                 if timeout < 0:
@@ -281,23 +273,18 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, Async
                 while True:
                     ret_val = (await self.connection_or_session.execute(self._stmt_try_lock)).scalar_one()
                     if ret_val:  # succeed
-                        self._acquired = True
-                        break
+                        return True
                     if time() - ts_begin > timeout:  # expired
-                        break
+                        return False
                     await asyncio.sleep(interval)
         else:
             # This will either obtain the lock immediately and return true,
             # or return false without waiting if the lock cannot be acquired immediately.
             ret_val = (await self.connection_or_session.execute(self._stmt_try_lock)).scalar_one()
-            self._acquired = bool(ret_val)
-        #
-        return self._acquired
+            return bool(ret_val)
 
     @override
-    async def release(self):
-        if not self._acquired:
-            raise ValueError("invoked on an unlocked lock")
+    async def do_release(self):
         if self._stmt_unlock is None:
             warn(
                 "PostgreSQL transaction level advisory locks are held until the current transaction ends; "
@@ -306,15 +293,12 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, Async
             )
             return
         ret_val = (await self.connection_or_session.execute(self._stmt_unlock)).scalar_one()
-        if ret_val:
-            self._acquired = False
-        else:  # pragma: no cover
-            self._acquired = False
+        if not ret_val:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")
 
     @override
     async def close(self):
-        if self._acquired:
+        if self.locked:
             if sys.version_info < (3, 11):
                 with catch_warnings():
                     return await self.release()
