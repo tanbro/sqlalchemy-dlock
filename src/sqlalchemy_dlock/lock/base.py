@@ -30,6 +30,7 @@ class AbstractLockMixin(Generic[KeyTV, ActualKeyTV], ABC):
     def get_actual_key(self) -> ActualKeyTV:
         raise NotImplementedError()
 
+    @final
     @property
     def actual_key(self) -> ActualKeyTV:
         return self.get_actual_key()
@@ -100,6 +101,7 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
         self._key = key
         self._contextual_timeout = contextual_timeout
 
+    @final
     def __enter__(self) -> Self:
         if self._contextual_timeout is None:  # timeout period is infinite
             self.acquire()
@@ -107,9 +109,11 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
             raise TimeoutError()
         return self
 
+    @final
     def __exit__(self, exc_type, exc_value, exc_tb):
         self.close()
 
+    @final
     def __str__(self) -> str:
         return "<{} {} key={} at 0x{:x}>".format(
             "locked" if self._acquired else "unlocked",
@@ -118,6 +122,7 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
             id(self),
         )
 
+    @final
     @property
     def connection_or_session(self) -> ConnectionTV:
         """Connection or Session object SQL locking functions will be invoked on it
@@ -126,6 +131,7 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
         """
         return self._connection_or_session
 
+    @final
     @property
     def key(self) -> KeyTV:
         """ID or name of the SQL locking function
@@ -133,6 +139,7 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
         It returns ``key`` parameter of the class's constructor"""
         return self._key
 
+    @final
     @property
     def locked(self) -> bool:
         """locked/unlocked state property
@@ -238,6 +245,7 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
 class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], local, ABC):
     """Async version of :class:`.BaseSadLock`"""
 
+    @override
     def __init__(
         self,
         connection_or_session: AsyncConnectionTV,
@@ -251,6 +259,7 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
         self._key = key
         self._contextual_timeout = contextual_timeout
 
+    @final
     async def __aenter__(self) -> Self:
         if self._contextual_timeout is None:
             await self.acquire()
@@ -259,9 +268,11 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
             raise TimeoutError()
         return self
 
+    @final
     async def __aexit__(self, exc_type, exc_value, exc_tb):
         await self.close()
 
+    @final
     def __str__(self):
         return "<{} {} key={} at 0x{:x}>".format(
             "locked" if self._acquired else "unlocked",
@@ -270,14 +281,17 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
             id(self),
         )
 
+    @final
     @property
     def connection_or_session(self) -> AsyncConnectionTV:
         return self._connection_or_session
 
+    @final
     @property
     def key(self) -> KeyTV:
         return self._key
 
+    @final
     @property
     def locked(self) -> bool:
         return self._acquired
@@ -304,6 +318,7 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
     async def do_release(self, *args, **kwargs):
         raise NotImplementedError()
 
+    @final
     async def close(self, *args, **kwargs):
         if self._acquired:
             await self.release(*args, **kwargs)

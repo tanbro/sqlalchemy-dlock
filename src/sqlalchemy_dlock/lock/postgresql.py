@@ -135,11 +135,6 @@ class PostgresqlSadLockMixin(AbstractLockMixin[KTV, int]):
         """Is the advisory lock transaction level or session level"""
         return self._xact
 
-    @property
-    def actual_key(self) -> int:
-        """The actual key used in PostgreSQL advisory lock"""
-        return self._actual_key
-
 
 class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSessionT]):
     """A distributed lock implemented by PostgreSQL advisory lock
@@ -296,8 +291,8 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, Async
         if not ret_val:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")
 
-    @override
-    async def close(self):
+    # # Force override close, and disable transaction level advisory locks warning it the method
+    async def close(self):  # type: ignore
         if self.locked:
             if sys.version_info < (3, 11):
                 with catch_warnings():
