@@ -1,7 +1,7 @@
 import sys
 from abc import ABC, abstractmethod
 from threading import local
-from typing import Callable, Generic, Optional, TypeVar, Union
+from typing import Callable, Generic, Optional, TypeVar, Union, final
 
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -141,11 +141,11 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
         """
         return self._acquired
 
-    @abstractmethod
+    @final
     def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         """Acquire the lock in blocking or non-blocking mode.
 
-        The implementation should provide the following behavior:
+        The implementation (:meth:`do_acquire`) should provide the following behavior:
 
         * When ``block`` is :data:`True` (the default), the method blocks until the lock is in an unlocked state,
           then sets it to locked and returns :data:`True`.
@@ -163,26 +163,39 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
 
         * Returns :data:`True` if the lock has been acquired or :data:`False` if the timeout period has elapsed.
         """
-        raise NotImplementedError()
+        if self._acquired:
+            raise ValueError("invoked on a locked lock")
+        return self.do_acquire(block, timeout, *args, **kwargs)
 
     @abstractmethod
-    def release(self, *args, **kwargs) -> None:
+    def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+        raise NotImplementedError()
+
+    @final
+    def release(self, *args, **kwargs):
         """Release the lock.
 
         Since the class is thread-local, this method cannot be called from another thread or process,
         nor can it be called from another connection.
         (Although PostgreSQL's shared advisory lock supports this).
 
-        The implementation should provide the following behavior:
+        The implementation (:meth:`do_release`) should provide the following behavior:
 
         * Reset the lock to unlocked state and return when the lock is currently locked.
         * Allow exactly one of any other threads blocked waiting for the lock to become unlocked to proceed.
         * Raise a :class:`ValueError` when invoked on an unlocked lock.
         * Not return a value.
         """
+        if not self._acquired:
+            raise ValueError("invoked on an unlocked lock")
+        return self.do_release(*args, **kwargs)
+
+    @abstractmethod
+    def do_release(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def close(self, *args, **kwargs) -> None:
+    @final
+    def close(self, *args, **kwargs):
         """Same as :meth:`release`
 
         Except that the :class:`ValueError` is **NOT** raised when invoked on an unlocked lock.

@@ -168,7 +168,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
         BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     @override
-    def acquire(
+    def do_acquire(
         self,
         block: bool = True,
         timeout: Union[float, int, None] = None,
@@ -190,8 +190,6 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
                 The actual timeout won't be precise when ``interval`` is big;
                 while small ``interval`` will cause high CPU usage and frequent SQL execution.
         """
-        if self._acquired:
-            raise ValueError("invoked on a locked lock")
         if block:
             if timeout is None:
                 # None: set the timeout period to infinite.
@@ -222,9 +220,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
         return self._acquired
 
     @override
-    def release(self):
-        if not self._acquired:
-            raise ValueError("invoked on an unlocked lock")
+    def do_release(self):
         if self._stmt_unlock is None:
             warn(
                 "PostgreSQL transaction level advisory locks are held until the current transaction ends; "
@@ -239,8 +235,8 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
             self._acquired = False
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")
 
-    @override
-    def close(self):
+    # Force override close, and disable transaction level advisory locks warning it the method
+    def close(self):  # type: ignore
         if self._acquired:
             if sys.version_info < (3, 11):
                 with catch_warnings():

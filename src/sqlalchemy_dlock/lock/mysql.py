@@ -100,9 +100,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
         BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
 
     @override
-    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
-        if self._acquired:
-            raise ValueError("invoked on a locked lock")
+    def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
         if block:
             # None: set the timeout period to infinite.
             if timeout is None:
@@ -125,9 +123,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
         return self._acquired
 
     @override
-    def release(self):
-        if not self._acquired:
-            raise ValueError("invoked on an unlocked lock")
+    def do_release(self):
         stmt = UNLOCK.params(str=self.key)
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
         if ret_val == 1:

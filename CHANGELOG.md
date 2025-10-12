@@ -1,6 +1,17 @@
 # CHANGELOG
 
-## 0.7.0
+## v0.7.1.dev0
+
+> 📅 **Date** TBD
+
+- 🏗️ **Refactor:**
+  - Refactored lock base classes to reduce code duplication between synchronous and asynchronous implementations
+  - Extracted common lock state validation logic into base class methods
+  - Introduced `do_acquire` and `do_release` abstract methods for concrete implementations
+  - Added `@final` decorator to `acquire`, `release`, and `close` methods in base classes to prevent override while ensuring consistent behavior
+  - Improved consistency between MySQL and PostgreSQL lock implementations
+
+## v0.7.0
 
 > 📅 **Date** 2025-10-12
 
