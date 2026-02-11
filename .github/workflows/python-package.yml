@@ -143,17 +143,9 @@ jobs:
       - name: Setup Oracle Database
         uses: gvenzl/setup-oracle-free@v1
         with:
+          tag: full
           app-user: test
           app-user-password: test
-
-      - name: Grant DBMS_LOCK permission to test user
-        run: |
-          podman exec oracledb sqlplus -s / as sysdba <<'EOF'
-          ALTER SESSION SET "_ORACLE_SCRIPT"=TRUE;
-          ALTER SESSION SET CONTAINER=FREEPDB1;
-          GRANT EXECUTE ON SYS.DBMS_LOCK TO test;
-          exit;
-          EOF
 
       - name: Install the project
         env:
@@ -162,29 +154,13 @@ jobs:
           uv sync --no-dev --group test
           uv pip install mysqlclient aiomysql psycopg2 asyncpg pyodbc aioodbc oracledb
 
-      - name: Check and Grant DBMS_LOCK permission
+      - name: Grant DBMS_LOCK permission to test user
         run: |
-          echo "=== Checking if DBMS_LOCK exists ==="
           podman exec oracledb sqlplus -s / as sysdba <<'EOF'
-          SET PAGESIZE 100
-          SET LINESIZE 200
-          SET FEEDBACK ON
-          ALTER SESSION SET "_ORACLE_SCRIPT"=TRUE;
           ALTER SESSION SET CONTAINER=FREEPDB1;
-          PROMPT === Objects named DBMS_LOCK ===
-          SELECT object_name, object_type, status FROM all_objects WHERE object_name LIKE '%DBMS_LOCK%' AND owner = 'SYS' ORDER BY object_name;
-          PROMPT === Testing DBMS_LOCK.REQUEST directly as SYS ===
-          SELECT DBMS_LOCK.REQUEST(id => 123, lockmode => 6, timeout => 1) AS test_result FROM DUAL;
-          PROMPT === Granting permission ===
           GRANT EXECUTE ON SYS.DBMS_LOCK TO test;
-          PROMPT === Checking granted permissions ===
-          SELECT grantee, owner, table_name, privilege FROM dba_tab_privs WHERE table_name = 'DBMS_LOCK' AND grantee = 'TEST';
-          PROMPT === Testing as test user ===
-          CONNECT test/test@FREEPDB1;
-          SELECT DBMS_LOCK.REQUEST(id => 123, lockmode => 6, timeout => 1) AS test_result FROM DUAL;
           exit;
           EOF
-          echo "=== Grant completed ==="
 
       - name: Run tests
         shell: bash
