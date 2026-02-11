@@ -85,6 +85,9 @@ class BasicTestCase(IsolatedAsyncioTestCase):
                         key = token_hex().encode()
                     elif engine.name == "postgresql":
                         key = token_bytes()
+                    elif engine.name == "mssql":
+                        # MSSQL sp_getapplock uses string lock names
+                        key = token_hex().encode()
                     else:
                         raise NotImplementedError()
                     async with create_async_sadlock(conn, key) as lock:
