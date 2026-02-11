@@ -12,10 +12,13 @@ A distributed lock library based on databases and [SQLAlchemy][].
 
 sqlalchemy-dlock provides distributed locking capabilities using your existing database infrastructure—no additional services like Redis or ZooKeeper required. It currently supports:
 
-| Database   | Lock Mechanism                                                                                         |
-| ---------- | ------------------------------------------------------------------------------------------------------ |
-| MySQL      | [Named Lock](https://dev.mysql.com/doc/refman/en/locking-functions.html) (`GET_LOCK` / `RELEASE_LOCK`) |
-| PostgreSQL | [Advisory Lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)          |
+| Database   | Lock Mechanism                                                                                                                                 |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| MySQL      | [Named Lock](https://dev.mysql.com/doc/refman/en/locking-functions.html) (`GET_LOCK` / `RELEASE_LOCK`)                                         |
+| MariaDB    | [Named Lock](https://mariadb.com/kb/en/get_lock/) (compatible with MySQL)                                                                      |
+| MSSQL      | [Application Lock](https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-getapplock-transact-sql) (`sp_getapplock`) |
+| Oracle     | [User Lock](https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_LOCK.html) (`DBMS_LOCK`)                                     |
+| PostgreSQL | [Advisory Lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)                                                  |
 
 ---
 
@@ -30,7 +33,7 @@ sqlalchemy-dlock provides distributed locking capabilities using your existing d
 | **Database Lock** | Zero additional dependencies, ACID guarantees | Lower performance than in-memory solutions          | Applications with existing databases |
 
 **sqlalchemy-dlock is ideal for:**
-- Projects already using MySQL or PostgreSQL
+- Projects already using MySQL, MariaDB, MSSQL, Oracle, or PostgreSQL
 - Teams wanting zero additional infrastructure
 - Low to medium concurrency distributed synchronization
 - Applications requiring strong consistency guarantees
@@ -53,6 +56,9 @@ pip install sqlalchemy-dlock
 pip install sqlalchemy-dlock[mysqlclient]  # MySQL
 pip install sqlalchemy-dlock[psycopg2]     # PostgreSQL
 pip install sqlalchemy-dlock[asyncpg]      # PostgreSQL async
+pip install sqlalchemy-dlock[pyodbc]      # MSSQL
+pip install sqlalchemy-dlock[aioodbc]     # MSSQL async
+pip install sqlalchemy-dlock[oracledb]    # Oracle
 ```
 
 **Requirements:** Python 3.9+, SQLAlchemy 1.4.3+ or 2.x
@@ -322,7 +328,139 @@ def write_resource(resource_id: str, data: dict):
 
 ---
 
-## Important Notes
+## MSSQL Lock Types
+
+SQL Server's `sp_getapplock` supports multiple lock modes:
+
+| Lock Mode             | Parameters    | Description                                                  | Use Case                            |
+| --------------------- | ------------- | ------------------------------------------------------------ | ----------------------------------- |
+| `Exclusive` (default) | (default)     | Full exclusive access                                        | Write operations, critical sections |
+| `Shared`              | `shared=True` | Multiple readers can hold lock concurrently                  | Read-heavy workloads                |
+| `Update`              | `update=True` | Intended for update operations; compatible with Shared locks | Read-then-write patterns            |
+
+### Example: Exclusive Lock for Writing (Default)
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine('mssql+pyodbc://user:pass@localhost/db')
+
+with engine.connect() as conn:
+    # Exclusive lock for writing (default)
+    with create_sadlock(conn, 'my-resource') as lock:
+        conn.execute(text("UPDATE resources SET ..."))
+```
+
+### Example: Shared Lock for Reading
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine('mssql+pyodbc://user:pass@localhost/db')
+
+# Multiple readers can hold shared locks simultaneously
+def read_resource(resource_id: str):
+    with engine.connect() as conn:
+        with create_sadlock(conn, f'resource:{resource_id}', shared=True):
+            return conn.execute(text("SELECT * FROM resources WHERE id = :id"), {"id": resource_id})
+```
+
+### Example: Update Lock for Read-Then-Write Patterns
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine('mssql+pyodbc://user:pass@localhost/db')
+
+with engine.connect() as conn:
+    # Update lock - compatible with shared locks, used for read-then-write patterns
+    with create_sadlock(conn, 'my-resource', update=True) as lock:
+        data = conn.execute(text("SELECT * FROM resources WHERE id = :id"), {"id": resource_id})
+        # Perform read operations
+        # Then upgrade to exclusive lock for writing
+        conn.execute(text("UPDATE resources SET ..."))
+```
+
+---
+
+## Oracle Lock Types
+
+Oracle's `DBMS_LOCK.REQUEST` supports 6 lock modes with different compatibility:
+
+| Lock Mode | Constant | Description | Use Case |
+|-----------|----------|-------------|----------|
+| `X` (default) | X_MODE | Exclusive - full exclusive access | Write operations, critical sections |
+| `S` | S_MODE | Shared - multiple readers | Read-heavy workloads |
+| `SS` | SS_MODE | Sub-Shared - share locks on subparts | Aggregate object read |
+| `SX` | SX_MODE | Sub-Exclusive (Row Exclusive) | Row-level updates |
+| `SSX` | SSX_MODE | Shared Sub-Exclusive | Read with pending write |
+| `NL` | NL_MODE | Null - no actual lock | Testing/coordination only |
+
+### Example: Exclusive Lock for Writing (Default)
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine('oracle+oracledb://user:pass@localhost/db')
+
+with engine.connect() as conn:
+    # Exclusive lock for writing (default)
+    with create_sadlock(conn, 'my-resource') as lock:
+        conn.execute(text("UPDATE resources SET ..."))
+```
+
+### Example: Shared Lock for Reading
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine('oracle+oracledb://user:pass@localhost/db')
+
+# Multiple readers can hold shared locks simultaneously
+def read_resource(resource_id: str):
+    with engine.connect() as conn:
+        with create_sadlock(conn, f'resource:{resource_id}', lock_mode="S"):
+            return conn.execute(text("SELECT * FROM resources WHERE id = :id"), {"id": resource_id})
+```
+
+### Example: Transaction-Level Lock
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine('oracle+oracledb://user:pass@localhost/db')
+
+with engine.connect() as conn:
+    # Transaction-level lock - automatically released on commit/rollback
+    with create_sadlock(conn, 'my-resource', release_on_commit=True) as lock:
+        conn.execute(text("INSERT INTO ..."))
+        conn.commit()  # Lock is released here
+```
+
+### Example: Using Integer Lock ID Directly
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine('oracle+oracledb://user:pass@localhost/db')
+
+with engine.connect() as conn:
+    # Direct integer lock ID (no hashing needed)
+    with create_sadlock(conn, 12345, lock_mode="X") as lock:
+        # Direct lock ID usage
+        pass
+```
+
+**Note:** String keys are converted to integer IDs using blake2b hash (similar to PostgreSQL).
+
+---
 
 ### Performance Considerations
 
@@ -386,7 +524,9 @@ A:
 
 A:
 - **MySQL:** 64 characters
+- **MSSQL:** 255 characters
 - **PostgreSQL:** Keys are converted to 64-bit integers via BLAKE2b hash
+- **Oracle:** Keys are converted to integers (0-1073741823) via BLAKE2b hash
 
 **Q: Can I use this with SQLite?**
 
@@ -407,6 +547,15 @@ The following database drivers are tested:
 - [psycopg2](https://pypi.org/project/psycopg2/) (synchronous)
 - [psycopg](https://pypi.org/project/psycopg/) (v3, synchronous and asynchronous)
 - [asyncpg](https://pypi.org/project/asyncpg/) (asynchronous)
+
+**MSSQL:**
+- [pyodbc](https://pypi.org/project/pyodbc/) (synchronous)
+- [pymssql](https://pypi.org/project/pymssql/) (synchronous)
+- [aioodbc](https://pypi.org/project/aioodbc/) (asynchronous)
+
+**Oracle:**
+- [oracledb](https://pypi.org/project/oracledb/) (synchronous & asynchronous)
+- [cx_Oracle](https://pypi.org/project/cx-Oracle/) (synchronous, legacy)
 
 ### Running Tests Locally
 

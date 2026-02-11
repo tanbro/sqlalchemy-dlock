@@ -42,6 +42,14 @@ mysqlclient = ["mysqlclient"]
 pymysql = ["pymysql"]
 # MySQL asyncio
 aiomysql = ["aiomysql"]
+# MSSQL
+pyodbc = ["pyodbc"]
+pymssql = ["pymssql"]
+# MSSQL asyncio
+aioodbc = ["aioodbc"]
+# Oracle
+oracledb = ["oracledb>=2.0"]  # Official driver, recommended
+cx_oracle = ["cx_Oracle>=8.3"]  # Legacy driver
 # Postgres
 # psycopg2: sync
 psycopg2 = ["psycopg2>=2.8"] # psycopg2 compiling needed when install
