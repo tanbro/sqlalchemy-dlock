@@ -1,7 +1,7 @@
 exclude .*
-exclude *.docker-compose.yml
-exclude *.requirements.txt
-exclude codecov.yml
+exclude CLAUDE.md
+exclude *.docker-compose.*
+exclude codecov.*
 exclude coverage.*
 
 prune .*
