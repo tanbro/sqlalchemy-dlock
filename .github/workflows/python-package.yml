@@ -43,6 +43,37 @@ jobs:
         env:
           GITHUB_REF: ${{ github.ref }}
 
+  lint:
+    name: Code style check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Lint check with ruff
+        uses: astral-sh/ruff-action@v3
+
+  type-check:
+    name: Type Check (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10"]
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "pyproject.toml"
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --group typecheck
+
+      - name: Static check with mypy
+        run: uv run --no-dev mypy
+
   test:
     runs-on: ubuntu-latest
     strategy:
@@ -50,6 +81,22 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     services:
+      # MSSQL is slowest (start-period 60s), put first
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
+          MSSQL_PID: "Developer"
+          ACCEPT_EULA: "Y"
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P YourStrong@Passw0rd -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 30s
+          --health-retries 5
+          --health-start-period 60s
+        ports:
+          - 1433:1433
+
       mysql:
         image: mysql
         env:
@@ -62,6 +109,7 @@ jobs:
         ports:
           - 3306:3306
 
+      # PostgreSQL alpine is fastest, put last
       postgres:
         image: postgres:alpine
         env:
@@ -71,35 +119,22 @@ jobs:
         ports:
           - 5432:5432
 
-      mssql:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        env:
-          MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
-          MSSQL_PID: "Developer"
-          ACCEPT_EULA: "Y"
-        options: >-
-          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q 'SELECT 1'"
-          --health-interval 10s
-          --health-timeout 60s
-          --health-retries 10
-          --health-start-period 40s
-        ports:
-          - 1433:1433
-
-      oracle:
-        # Use community Oracle XE image optimized for CI/CD
-        # See: https://github.com/gvenzl/oracle-xe
-        image: gvenzl/oracle-xe:21-slim-faststart
-        env:
-          ORACLE_PASSWORD: "YourStrong@Passw0rd"
-        options: >-
-          --health-cmd /healthcheck.sh
-          --health-interval 10s
-          --health-timeout 120s
-          --health-retries 10
-          --health-start-period 60s
-        ports:
-          - 1521:1521
+      # TODO: Oracle healthcheck is not working in GitHub Actions
+      # Requires investigation of sqlplus availability
+      # oracle:
+      #   # Use community Oracle XE image optimized for CI/CD
+      #   # See: https://github.com/gvenzl/oracle-xe
+      #   image: gvenzl/oracle-xe:21-slim-faststart
+      #   env:
+      #     ORACLE_PASSWORD: "YourStrong@Passw0rd"
+      #   options: >-
+      #     --health-cmd /healthcheck.sh
+      #     --health-interval 10s
+      #     --health-timeout 120s
+      #     --health-retries 10
+      #     --health-start-period 60s
+      #   ports:
+      #     - 1521:1521
 
     steps:
       - uses: actions/checkout@v6
@@ -110,31 +145,18 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
-      - name: Cache of Ruff and MyPY
-        uses: actions/cache@v4
-        with:
-          path: |
-            .mypy_cache
-            .ruff_cache
-          key: cache-mypy-ruff
-
       - name: Install the project
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: "0"
         run: |
-          uv sync --no-dev --group test --group mypy --extra mysqlclient --extra aiomysql --extra psycopg2 --extra asyncpg --extra pyodbc --extra aioodbc --extra oracledb
-
-      - name: Lint check with ruff
-        uses: astral-sh/ruff-action@v3
-
-      - name: Static check with mypy
-        run: uv run --no-dev mypy
+          uv sync --no-dev --group test --extra mysqlclient --extra aiomysql --extra psycopg2 --extra asyncpg --extra pyodbc --extra aioodbc --extra oracledb
 
       - name: Run tests
         shell: bash
         env:
-          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/ mssql+pyodbc://sa:YourStrong@Passw0rd@127.0.0.1:1433/ oracle+oracledb://sys:YourStrong@Passw0rd@127.0.0.1:1521/?service_name=XEPDB1
+          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/ mssql+pyodbc://sa:YourStrong@Passw0rd@127.0.0.1:1433/
           TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/ mssql+aioodbc://sa:YourStrong@Passw0rd@127.0.0.1:1433/
+          # Oracle: oracle+oracledb://sys:YourStrong@Passw0rd@127.0.0.1:1521/?service_name=XEPDB1
         run: |
           uv run --no-dev coverage run -m unittest -cfv
           uv run --no-dev coverage report -m
@@ -148,7 +170,7 @@ jobs:
   build:
     name: Build Distribution
     runs-on: ubuntu-latest
-    needs: [test, validate-tag]
+    needs: [lint, type-check, test, validate-tag]
     if: needs.validate-tag.outputs.version != ''
 
     steps:

@@ -77,7 +77,7 @@ write_to = "src/sqlalchemy_dlock/_version.py"
 
 [dependency-groups]
 dev = [
-  { include-group = "typed" },
+  { include-group = "typecheck" },
   { include-group = "test" },
   { include-group = "docs" },
 ]
@@ -93,7 +93,7 @@ docs = [
   "sphinx-version-warning",
   "sphinx-autodoc-typehints",
 ]
-typed = ["mypy"]
+typecheck = ["mypy"]
 test = ["coverage", "python-dotenv"]
 ipy = ["ipykernel"]
 
