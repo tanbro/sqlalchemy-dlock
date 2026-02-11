@@ -35,33 +35,6 @@ dependencies = [
   "SQLAlchemy[asyncio]>=1.4.3,<3.0",
   "typing-extensions; python_version<'3.12'",
 ]
-# extra requires
-[project.optional-dependencies]
-# MySQL
-mysqlclient = ["mysqlclient"]
-pymysql = ["pymysql"]
-# MySQL asyncio
-aiomysql = ["aiomysql"]
-# MSSQL
-pyodbc = ["pyodbc"]
-pymssql = ["pymssql"]
-# MSSQL asyncio
-aioodbc = ["aioodbc"]
-# Oracle
-oracledb = ["oracledb>=2.0"]  # Official driver, recommended
-cx_oracle = ["cx_Oracle>=8.3"]  # Legacy driver
-# Postgres
-# psycopg2: sync
-psycopg2 = ["psycopg2>=2.8"] # psycopg2 compiling needed when install
-psycopg2-binary = [
-  "psycopg2-binary>=2.8",
-] # psycopg2 with pre-compiled C library
-# psycopg3: both sync and asyncio
-psycopg3 = ["psycopg"] # psycopg3 dynamik link to libpq
-psycopg3-binary = ["psycopg[binary]"] # psycopg3 with pre-compiled C library
-psycopg3-c = ["psycopg[c]",] # psycopg3 compiling needed when install
-# Postgres asyncio
-asyncpg = ["asyncpg"]
 
 # Project links
 [project.urls]

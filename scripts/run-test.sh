@@ -29,7 +29,8 @@ do
         (
             set -e
             cd /workspace
-            $TMPDIR/bin/python -m pip install -e . --group tests cryptography $REQUIRES
+            $TMPDIR/bin/python -m pip install -e . cryptography $REQUIRES
+            $TMPDIR/bin/python -m pip install mysqlclient aiomysql psycopg2 asyncpg
             $TMPDIR/bin/python -m coverage run -m unittest -cfv
             $TMPDIR/bin/python -m coverage report
         ) || {

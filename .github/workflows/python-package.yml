@@ -158,7 +158,8 @@ jobs:
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: "0"
         run: |
-          uv sync --no-dev --group test --extra mysqlclient --extra aiomysql --extra psycopg2 --extra asyncpg --extra pyodbc --extra aioodbc --extra oracledb
+          uv sync --no-dev --group test
+          uv pip install mysqlclient aiomysql psycopg2 asyncpg pyodbc aioodbc oracledb
 
       - name: Run tests
         shell: bash

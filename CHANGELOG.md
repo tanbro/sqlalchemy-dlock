@@ -4,6 +4,13 @@
 
 > 📅 **Date** TBD
 
+- 💔 **Breaking Changes:**
+  - **Removed database driver extras from `pyproject.toml`**
+    - Database drivers (mysqlclient, psycopg2, pyodbc, oracledb, etc.) are no longer provided as optional dependencies
+    - Users must install database drivers separately according to their needs
+    - Rationale: SQLAlchemy users typically already have the appropriate drivers installed
+    - Migration guide: Install drivers directly with pip, e.g., `pip install sqlalchemy-dlock mysqlclient psycopg2 pyodbc oracledb`
+
 - 🆕 **New Features:**
   - **Oracle Database Support:**
     - Added support for Oracle Database using `DBMS_LOCK` package
@@ -25,12 +32,6 @@
   - Introduced `do_acquire` and `do_release` abstract methods for concrete implementations
   - Added `@final` decorator to `acquire`, `release`, and `close` methods in base classes to prevent override while ensuring consistent behavior
   - Improved consistency between MySQL, PostgreSQL, MSSQL, and Oracle lock implementations
-
-- 📦 **Dependencies:**
-  - Added `oracledb>=2.0` as optional dependency for Oracle (recommended)
-  - Added `cx_Oracle>=8.3` as optional dependency for Oracle (legacy)
-  - Added `pyodbc` and `pymssql` as optional dependencies for MSSQL
-  - Added `aioodbc` as optional dependency for MSSQL async
 
 - 📚 **Documentation:**
   - Added comprehensive Oracle lock types documentation with examples

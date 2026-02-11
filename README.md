@@ -49,19 +49,41 @@ sqlalchemy-dlock provides distributed locking capabilities using your existing d
 ### Installation
 
 ```bash
-# Basic installation
 pip install sqlalchemy-dlock
-
-# With database drivers
-pip install sqlalchemy-dlock[mysqlclient]  # MySQL
-pip install sqlalchemy-dlock[psycopg2]     # PostgreSQL
-pip install sqlalchemy-dlock[asyncpg]      # PostgreSQL async
-pip install sqlalchemy-dlock[pyodbc]      # MSSQL
-pip install sqlalchemy-dlock[aioodbc]     # MSSQL async
-pip install sqlalchemy-dlock[oracledb]    # Oracle
 ```
 
-**Requirements:** Python 3.9+, SQLAlchemy 1.4.3+ or 2.x
+**Requirements:**
+- Python 3.9+
+- SQLAlchemy 1.4.3+ or 2.x
+- Appropriate database driver for your database (see below)
+
+### Database Drivers
+
+This library requires a database driver to be installed separately. Since you're already using SQLAlchemy, you likely have the appropriate driver installed.
+
+**MySQL / MariaDB:**
+- `mysqlclient` - Recommended C extension (synchronous)
+- `pymysql` - Pure Python (synchronous)
+- `aiomysql` - Async I/O
+
+**PostgreSQL:**
+- `psycopg2` or `psycopg2-binary` - v2 (synchronous)
+- `psycopg` - v3 (synchronous and asynchronous)
+- `asyncpg` - Async I/O
+
+**MSSQL:**
+- `pyodbc` - ODBC driver (synchronous, recommended)
+- `pymssql` - FreeTDS driver (synchronous)
+- `aioodbc` - Async wrapper for pyodbc
+
+**Oracle:**
+- `oracledb` - Official driver (synchronous & asynchronous, recommended)
+- `cx_Oracle` - Legacy driver (synchronous)
+
+Example installation:
+```bash
+pip install sqlalchemy-dlock mysqlclient psycopg2-binary pyodbc oracledb
+```
 
 ### Basic Usage
 
@@ -562,7 +584,8 @@ The following database drivers are tested:
 1. Install the project with development dependencies:
 
 ```bash
-uv sync --group test --extra mysqlclient --extra aiomysql --extra psycopg2-binary --extra asyncpg
+uv sync --group test
+uv pip install mysqlclient aiomysql psycopg2 asyncpg
 ```
 
 2. Start MySQL and PostgreSQL services using Docker:
