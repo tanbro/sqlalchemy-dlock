@@ -14,6 +14,13 @@ REGISTRY = {
         "package": "${package}",  # module name relative to the package
         "class": "MysqlSadLock",
     },
+    "mariadb": {
+        # MariaDB is compatible with MySQL's GET_LOCK / RELEASE_LOCK functions
+        # Alias to mysql implementation
+        "module": ".lock.mysql",
+        "package": "${package}",
+        "class": "MysqlSadLock",
+    },
     "postgresql": {
         "module": ".lock.postgresql",
         "package": "${package}",  # module name relative to the package
@@ -25,6 +32,13 @@ ASYNCIO_REGISTRY = {
     "mysql": {
         "module": ".lock.mysql",
         "package": "${package}",  # module name relative to the package
+        "class": "MysqlAsyncSadLock",
+    },
+    "mariadb": {
+        # MariaDB is compatible with MySQL's GET_LOCK / RELEASE_LOCK functions
+        # Alias to mysql implementation
+        "module": ".lock.mysql",
+        "package": "${package}",
         "class": "MysqlAsyncSadLock",
     },
     "postgresql": {

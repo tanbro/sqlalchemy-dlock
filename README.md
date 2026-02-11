@@ -15,6 +15,7 @@ sqlalchemy-dlock provides distributed locking capabilities using your existing d
 | Database   | Lock Mechanism                                                                                         |
 | ---------- | ------------------------------------------------------------------------------------------------------ |
 | MySQL      | [Named Lock](https://dev.mysql.com/doc/refman/en/locking-functions.html) (`GET_LOCK` / `RELEASE_LOCK`) |
+| MariaDB    | [Named Lock](https://mariadb.com/kb/en/get_lock/) (compatible with MySQL)                              |
 | PostgreSQL | [Advisory Lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)          |
 
 ---
@@ -30,7 +31,7 @@ sqlalchemy-dlock provides distributed locking capabilities using your existing d
 | **Database Lock** | Zero additional dependencies, ACID guarantees | Lower performance than in-memory solutions          | Applications with existing databases |
 
 **sqlalchemy-dlock is ideal for:**
-- Projects already using MySQL or PostgreSQL
+- Projects already using MySQL, MariaDB, or PostgreSQL
 - Teams wanting zero additional infrastructure
 - Low to medium concurrency distributed synchronization
 - Applications requiring strong consistency guarantees
