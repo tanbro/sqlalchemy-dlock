@@ -119,22 +119,8 @@ jobs:
         ports:
           - 5432:5432
 
-      # TODO: Oracle healthcheck is not working in GitHub Actions
-      # Requires investigation of sqlplus availability
-      # oracle:
-      #   # Use community Oracle XE image optimized for CI/CD
-      #   # See: https://github.com/gvenzl/oracle-xe
-      #   image: gvenzl/oracle-xe:21-slim-faststart
-      #   env:
-      #     ORACLE_PASSWORD: "YourStrong@Passw0rd"
-      #   options: >-
-      #     --health-cmd /healthcheck.sh
-      #     --health-interval 10s
-      #     --health-timeout 120s
-      #     --health-retries 10
-      #     --health-start-period 60s
-      #   ports:
-      #     - 1521:1521
+      # NOTE: Oracle is set up via gvenzl/setup-oracle-free@v1 action
+      # instead of service container, for better reliability
 
     steps:
       - uses: actions/checkout@v6
@@ -154,6 +140,12 @@ jobs:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
 
+      - name: Setup Oracle Database
+        uses: gvenzl/setup-oracle-free@v1
+        with:
+          app-user: test
+          app-user-password: test
+
       - name: Install the project
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: "0"
@@ -164,9 +156,8 @@ jobs:
       - name: Run tests
         shell: bash
         env:
-          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/ mssql+pyodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
-          TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/ mssql+aioodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
-          # Oracle: oracle+oracledb://sys:YourStrong@Passw0rd@127.0.0.1:1521/?service_name=XEPDB1
+          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/ mssql+pyodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes oracle+oracledb://test:test@127.0.0.1:1521/?service_name=FREEPDB1
+          TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/ mssql+aioodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes oracle+oracledb://test:test@127.0.0.1:1521/?service_name=FREEPDB1
         run: |
           uv run --no-dev coverage run -m unittest -cfv
           uv run --no-dev coverage report -m
