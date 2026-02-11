@@ -46,7 +46,7 @@ def create_sadlock(
 
         Type of the lock object is a sub-class of :class:`.BaseSadLock`, which depends on the passed-in SQLAlchemy `connection` or `session`.
 
-        MySQL, MariaDB, MSSQL, and PostgreSQL connection/session are supported til now.
+        MySQL, MariaDB, MSSQL, Oracle, and PostgreSQL connection/session are supported til now.
     """
     if isinstance(connection_or_session, Connection):
         engine_name = connection_or_session.engine.name

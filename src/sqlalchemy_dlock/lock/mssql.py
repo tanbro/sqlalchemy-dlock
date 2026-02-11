@@ -49,8 +49,7 @@ class MssqlSadLockMixin(AbstractLockMixin[KTV, str]):
             raise TypeError("SQL Server application lock requires the key to be a string")
         if len(self._actual_key) > MSSQL_LOCK_RESOURCE_MAX_LENGTH:
             raise ValueError(
-                f"SQL Server enforces a maximum length of {MSSQL_LOCK_RESOURCE_MAX_LENGTH} "
-                f"characters for lock resource names"
+                f"SQL Server enforces a maximum length of {MSSQL_LOCK_RESOURCE_MAX_LENGTH} characters for lock resource names"
             )
 
         # Determine lock mode: update takes precedence over shared
@@ -148,13 +147,9 @@ class MssqlSadLock(MssqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
         elif ret_val == -1:
             return False  # Timeout
         elif ret_val == -3:
-            raise SqlAlchemyDLockDatabaseError(
-                f"Parameter validation failed for lock resource {self.key!r}"
-            )
+            raise SqlAlchemyDLockDatabaseError(f"Parameter validation failed for lock resource {self.key!r}")
         else:  # -2, -999, or other errors
-            raise SqlAlchemyDLockDatabaseError(
-                f"sp_getapplock({self.key!r}, {timeout_ms}ms) returned {ret_val}"
-            )
+            raise SqlAlchemyDLockDatabaseError(f"sp_getapplock({self.key!r}, {timeout_ms}ms) returned {ret_val}")
 
     @override
     def do_release(self):
@@ -169,9 +164,7 @@ class MssqlSadLock(MssqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
 
         if ret_val < 0:
-            raise SqlAlchemyDLockDatabaseError(
-                f"sp_releaseapplock({self.key!r}) returned {ret_val}"
-            )
+            raise SqlAlchemyDLockDatabaseError(f"sp_releaseapplock({self.key!r}) returned {ret_val}")
 
 
 class MssqlAsyncSadLock(MssqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnectionOrSessionT]):
@@ -203,13 +196,9 @@ class MssqlAsyncSadLock(MssqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnection
         elif ret_val == -1:
             return False
         elif ret_val == -3:
-            raise SqlAlchemyDLockDatabaseError(
-                f"Parameter validation failed for lock resource {self.key!r}"
-            )
+            raise SqlAlchemyDLockDatabaseError(f"Parameter validation failed for lock resource {self.key!r}")
         else:
-            raise SqlAlchemyDLockDatabaseError(
-                f"sp_getapplock({self.key!r}, {timeout_ms}ms) returned {ret_val}"
-            )
+            raise SqlAlchemyDLockDatabaseError(f"sp_getapplock({self.key!r}, {timeout_ms}ms) returned {ret_val}")
 
     @override
     async def do_release(self):
@@ -217,6 +206,4 @@ class MssqlAsyncSadLock(MssqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnection
         ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
 
         if ret_val < 0:
-            raise SqlAlchemyDLockDatabaseError(
-                f"sp_releaseapplock({self.key!r}) returned {ret_val}"
-            )
+            raise SqlAlchemyDLockDatabaseError(f"sp_releaseapplock({self.key!r}) returned {ret_val}")
