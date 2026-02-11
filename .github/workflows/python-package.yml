@@ -159,6 +159,7 @@ jobs:
           podman exec oracledb sqlplus -s / as sysdba <<'EOF'
           ALTER SESSION SET "_ORACLE_SCRIPT"=TRUE;
           ALTER SESSION SET CONTAINER=FREEPDB1;
+          SELECT * FROM all_objects WHERE object_name = 'DBMS_LOCK' AND owner = 'SYS';
           GRANT EXECUTE ON SYS.DBMS_LOCK TO test;
           SELECT * FROM dba_tab_privs WHERE table_name = 'DBMS_LOCK' AND grantee = 'TEST';
           exit;
