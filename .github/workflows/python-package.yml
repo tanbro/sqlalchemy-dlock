@@ -85,11 +85,11 @@ jobs:
       mssql:
         image: mcr.microsoft.com/mssql/server:2022-latest
         env:
-          MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
+          MSSQL_SA_PASSWORD: "YourStrongPassword123"
           MSSQL_PID: "Developer"
           ACCEPT_EULA: "Y"
         options: >-
-          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P YourStrong@Passw0rd -Q 'SELECT 1'"
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P YourStrongPassword123 -Q 'SELECT 1'"
           --health-interval 10s
           --health-timeout 30s
           --health-retries 5
@@ -163,8 +163,8 @@ jobs:
       - name: Run tests
         shell: bash
         env:
-          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/ mssql+pyodbc://sa:YourStrong@Passw0rd@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server
-          TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/ mssql+aioodbc://sa:YourStrong@Passw0rd@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server
+          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/ mssql+pyodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server
+          TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/ mssql+aioodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server
           # Oracle: oracle+oracledb://sys:YourStrong@Passw0rd@127.0.0.1:1521/?service_name=XEPDB1
         run: |
           uv run --no-dev coverage run -m unittest -cfv
