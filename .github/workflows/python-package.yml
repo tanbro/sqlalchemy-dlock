@@ -154,6 +154,14 @@ jobs:
           uv sync --no-dev --group test
           uv pip install mysqlclient aiomysql psycopg2 asyncpg pyodbc aioodbc oracledb
 
+      - name: Grant DBMS_LOCK permission to test user
+        run: |
+          podman exec oracledb sqlplus -s / as sysdba <<'EOF'
+          ALTER SESSION SET "_ORACLE_SCRIPT"=TRUE;
+          GRANT EXECUTE ON SYS.DBMS_LOCK TO test;
+          exit;
+          EOF
+
       - name: Run tests
         shell: bash
         env:
