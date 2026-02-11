@@ -21,6 +21,11 @@ REGISTRY = {
         "package": "${package}",
         "class": "MysqlSadLock",
     },
+    "mssql": {
+        "module": ".lock.mssql",
+        "package": "${package}",
+        "class": "MssqlSadLock",
+    },
     "postgresql": {
         "module": ".lock.postgresql",
         "package": "${package}",  # module name relative to the package
@@ -40,6 +45,11 @@ ASYNCIO_REGISTRY = {
         "module": ".lock.mysql",
         "package": "${package}",
         "class": "MysqlAsyncSadLock",
+    },
+    "mssql": {
+        "module": ".lock.mssql",
+        "package": "${package}",
+        "class": "MssqlAsyncSadLock",
     },
     "postgresql": {
         "module": ".lock.postgresql",

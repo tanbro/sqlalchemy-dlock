@@ -42,6 +42,11 @@ mysqlclient = ["mysqlclient"]
 pymysql = ["pymysql"]
 # MySQL asyncio
 aiomysql = ["aiomysql"]
+# MSSQL
+pyodbc = ["pyodbc"]
+pymssql = ["pymssql"]
+# MSSQL asyncio
+aioodbc = ["aioodbc"]
 # Postgres
 # psycopg2: sync
 psycopg2 = ["psycopg2>=2.8"] # psycopg2 compiling needed when install

@@ -1,4 +1,4 @@
-# run mysql and posgres database service on local docker, for develop/test
+# run mysql, postgres, and mssql database service on local docker, for develop/test
 
 name: sqlalchemy-dlock-db
 
@@ -19,3 +19,14 @@ services:
       - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_PASSWORD: test
+
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    ports:
+      - "127.0.0.1:1433:1433"
+    environment:
+      MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
+      MSSQL_PID: "Developer"
+      MSSQL_TCP_PORT: "1433"
+      ACCEPT_EULA: "Y"
+    # Note: MSSQL container requires at least 2GB RAM to run properly
