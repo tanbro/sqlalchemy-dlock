@@ -145,7 +145,15 @@ jobs:
         with:
           app-user: test
           app-user-password: test
-          setup-scripts: ${{ github.workspace }}/.github/scripts
+
+      - name: Grant DBMS_LOCK permission to test user
+        run: |
+          podman exec oracledb sqlplus -s / as sysdba <<'EOF'
+          ALTER SESSION SET "_ORACLE_SCRIPT"=TRUE;
+          ALTER SESSION SET CONTAINER=FREEPDB1;
+          GRANT EXECUTE ON SYS.DBMS_LOCK TO test;
+          exit;
+          EOF
 
       - name: Install the project
         env:
@@ -181,12 +189,8 @@ jobs:
       - name: Run tests
         shell: bash
         env:
-          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/ mssql+pyodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
-          TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/ mssql+aioodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
-          # TODO: Oracle Database Free does not support DBMS_LOCK.REQUEST
-          # Need to investigate alternative locking mechanism (e.g., DBMS_LOCK_ALLOCATE_UNIQUE or table-based locks)
-          # TEST_URLS_ORACLE: oracle+oracledb://test:test@127.0.0.1:1521/?service_name=FREEPDB1
-          # TEST_ASYNC_URLS_ORACLE: oracle+oracledb://test:test@127.0.0.1:1521/?service_name=FREEPDB1
+          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/ mssql+pyodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes oracle+oracledb://test:test@127.0.0.1:1521/?service_name=FREEPDB1
+          TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/ mssql+aioodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes oracle+oracledb://test:test@127.0.0.1:1521/?service_name=FREEPDB1
         run: |
           uv run --no-dev coverage run -m unittest -cfv
           uv run --no-dev coverage report -m
