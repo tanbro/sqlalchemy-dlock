@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## v0.8.0 (WIP)
+## v0.8 (WIP)
 
 > 📅 **Date** TBD
 

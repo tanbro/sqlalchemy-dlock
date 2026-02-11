@@ -20,33 +20,34 @@ on:
       - tests/**
       - pyproject.toml
 
+permissions:
+  contents: write # Required for GitHub Release creation
+  id-token: write # Required for Trusted Publishing (only used in publish job)
+
 jobs:
-  get-version:
+  validate-tag:
+    name: Validate Tag
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.get-version.outputs.version }}
+      version: ${{ steps.check.outputs.version }}
     steps:
-      - name: Check PEP-440 style version
-        id: get-version
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check tag format (PEP 440)
+        id: check
         run: |
-          PEP440_VERSION=""
-          VERSION_PREFIX="v"
-          BRANCH_OR_TAG="$(echo ${{ github.event.ref }} | cut -d / -f 3)"
-          if [[ "${BRANCH_OR_TAG}" =~ ^v?(([1-9][0-9]*!)?(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*))*(\.?(a|b|rc)(0|[1-9][0-9]*))?(\.post(0|[1-9][0-9]*))?(\.dev(0|[1-9][0-9]*))?)$ ]]
-          then
-            PEP440_VERSION="${BRANCH_OR_TAG#$VERSION_PREFIX}"
-          fi
-          echo "PEP440_VERSION: ${PEP440_VERSION}"
-          echo "version=${PEP440_VERSION}" >> $GITHUB_OUTPUT
+          python3 -m pip install --disable-pip-version-check packaging
+          python3 .github/scripts/validate_version.py
+        env:
+          GITHUB_REF: ${{ github.ref }}
 
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
-        sqlalchemy-requires:
-          - SQLAlchemy[asyncio]>=1.4.3,<2.0
-          - SQLAlchemy[asyncio]>=2.0,<3.0
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
 
     services:
       mysql:
@@ -70,8 +71,36 @@ jobs:
         ports:
           - 5432:5432
 
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          MSSQL_SA_PASSWORD: "YourStrong@Passw0rd"
+          MSSQL_PID: "Developer"
+          ACCEPT_EULA: "Y"
+        options: >-
+          --health-cmd "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 30s
+          --health-retries 5
+        ports:
+          - 1433:1433
+
+      oracle:
+        # Use community Oracle XE image optimized for CI/CD
+        # See: https://github.com/gvenzl/oracle-xe
+        image: gvenzl/oracle-xe:21-slim-faststart
+        env:
+          ORACLE_PASSWORD: "YourStrong@Passw0rd"
+        options: >-
+          --health-cmd "sqlplus -s sys/YourStrong@Passw0rd@localhost/XEPDB1 <<< 'SELECT 1 FROM DUAL;'"
+          --health-interval 10s
+          --health-timeout 120s
+          --health-retries 10
+        ports:
+          - 1521:1521
+
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -91,8 +120,7 @@ jobs:
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: "0"
         run: |
-          uv sync --no-dev --group test --group mypy --extra mysqlclient --extra aiomysql --extra psycopg2 --extra asyncpg
-          uv pip install cryptography "${{ matrix.sqlalchemy-requires }}"
+          uv sync --no-dev --group test --group mypy --extra mysqlclient --extra aiomysql --extra psycopg2 --extra asyncpg --extra pyodbc --extra aioodbc --extra oracledb
 
       - name: Lint check with ruff
         uses: astral-sh/ruff-action@v3
@@ -103,8 +131,8 @@ jobs:
       - name: Run tests
         shell: bash
         env:
-          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/
-          TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/
+          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/ mssql+pyodbc://sa:YourStrong@Passw0rd@127.0.0.1:1433/ oracle+oracledb://sys:YourStrong@Passw0rd@127.0.0.1:1521/?service_name=XEPDB1
+          TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/ mssql+aioodbc://sa:YourStrong@Passw0rd@127.0.0.1:1433/
         run: |
           uv run --no-dev coverage run -m unittest -cfv
           uv run --no-dev coverage report -m
@@ -115,20 +143,93 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  Publish:
+  build:
+    name: Build Distribution
     runs-on: ubuntu-latest
-    needs: [get-version, test]
-    if: needs.get-version.outputs.version != ''
+    needs: [test, validate-tag]
+    if: needs.validate-tag.outputs.version != ''
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v6
+
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-      - name: Build
+          cache-dependency-glob: "pyproject.toml"
+
+      - name: Build package
         run: uv build
-      - name: Publish
-        run: uv publish --token ${{ secrets.PYPI_API_TOKEN }}
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.validate-tag.outputs.version }}
+
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v6
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: [validate-tag, build]
+    if: needs.validate-tag.outputs.version != ''
+    environment:
+      name: pypi
+      url: https://pypi.org/p/sqlalchemy-dlock
+
+    steps:
+      - name: Download distribution packages
+        uses: actions/download-artifact@v7
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+          verbose: true
+
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [validate-tag, build]
+    if: needs.validate-tag.outputs.version != ''
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Download distribution packages
+        uses: actions/download-artifact@v7
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Generate release notes from CHANGELOG
+        id: release_notes
+        run: |
+          VERSION="${{ needs.validate-tag.outputs.version }}"
+          awk -v version="$VERSION" '
+            /^##[[:space:]]*$version/ { in_release=1; next }
+            in_release && /^##[[:space:]]/ { exit }
+            in_release { print }
+          ' CHANGELOG.md > release_notes.md
+          {
+            echo "notes<<EOF"
+            cat release_notes.md
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref }}
+          name: v${{ needs.validate-tag.outputs.version }}
+          body: ${{ steps.release_notes.outputs.notes }}
+          files: dist/*
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

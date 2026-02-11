@@ -1,12 +1,13 @@
 """SQL statements for Oracle DBMS_LOCK"""
+
 from typing import Final
 
 from sqlalchemy import text
 
 # Lock modes constants
-X_MODE = 6   # Exclusive
-SSX_MODE = 5 # Shared Sub-Exclusive
-S_MODE = 4   # Shared
+X_MODE = 6  # Exclusive
+SSX_MODE = 5  # Shared Sub-Exclusive
+S_MODE = 4  # Shared
 SX_MODE = 3  # Sub-Exclusive
 SS_MODE = 2  # Sub-Shared
 NL_MODE = 1  # Null
