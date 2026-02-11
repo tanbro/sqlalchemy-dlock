@@ -2,196 +2,462 @@
 
 [![Python package](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml/badge.svg)](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml)
 [![PyPI](https://img.shields.io/pypi/v/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
 [![Documentation Status](https://readthedocs.org/projects/sqlalchemy-dlock/badge/?version=latest)](https://sqlalchemy-dlock.readthedocs.io/en/latest/)
 [![codecov](https://codecov.io/gh/tanbro/sqlalchemy-dlock/branch/main/graph/badge.svg)](https://codecov.io/gh/tanbro/sqlalchemy-dlock)
+[![License](https://img.shields.io/pypi/l/sqlalchemy-dlock)](LICENSE)
+[![Code style: ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
-`sqlalchemy-dlock` is a distributed-lock library based on Database and [SQLAlchemy][].
+A distributed lock library based on databases and [SQLAlchemy][].
 
-It currently supports below locks:
+sqlalchemy-dlock provides distributed locking capabilities using your existing database infrastructure—no additional services like Redis or ZooKeeper required. It currently supports:
 
-| Database   | Lock                                                                                          |
-|------------|-----------------------------------------------------------------------------------------------|
-| MySQL      | [named lock](https://dev.mysql.com/doc/refman/en/locking-functions.html)                      |
-| PostgreSQL | [advisory lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS) |
+| Database   | Lock Mechanism                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------ |
+| MySQL      | [Named Lock](https://dev.mysql.com/doc/refman/en/locking-functions.html) (`GET_LOCK` / `RELEASE_LOCK`) |
+| PostgreSQL | [Advisory Lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)          |
 
-## Install
+---
+
+## Why sqlalchemy-dlock?
+
+**Distributed locks** coordinate access to shared resources across multiple processes or servers. Here's how database-based locking compares to other approaches:
+
+| Solution          | Pros                                          | Cons                                                | Best For                             |
+| ----------------- | --------------------------------------------- | --------------------------------------------------- | ------------------------------------ |
+| **Redis**         | High performance                              | Additional infrastructure, consistency complexities | High-throughput scenarios            |
+| **ZooKeeper**     | Strong consistency                            | Complex deployment, high operational cost           | Financial/mission-critical systems   |
+| **Database Lock** | Zero additional dependencies, ACID guarantees | Lower performance than in-memory solutions          | Applications with existing databases |
+
+**sqlalchemy-dlock is ideal for:**
+- Projects already using MySQL or PostgreSQL
+- Teams wanting zero additional infrastructure
+- Low to medium concurrency distributed synchronization
+- Applications requiring strong consistency guarantees
+
+**Not recommended for:**
+- High-concurrency scenarios (consider Redis instead)
+- Situations sensitive to database load
+
+---
+
+## Quick Start
+
+### Installation
 
 ```bash
+# Basic installation
 pip install sqlalchemy-dlock
+
+# With database drivers
+pip install sqlalchemy-dlock[mysqlclient]  # MySQL
+pip install sqlalchemy-dlock[psycopg2]     # PostgreSQL
+pip install sqlalchemy-dlock[asyncpg]      # PostgreSQL async
 ```
 
-## Usage
+**Requirements:** Python 3.9+, SQLAlchemy 1.4.3+ or 2.x
 
-- Work with [SQLAlchemy][] [`Connection`](https://docs.sqlalchemy.org/20/core/connections.html):
+### Basic Usage
 
-  ```python
-  from sqlalchemy import create_engine
-  from sqlalchemy_dlock import create_sadlock
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
 
-  key = 'user/001'
+engine = create_engine('postgresql://user:pass@localhost/db')
 
-  engine = create_engine('postgresql://scott:tiger@127.0.0.1/')
-  conn = engine.connect()
+with engine.connect() as conn:
+    # Create a lock
+    lock = create_sadlock(conn, 'my-resource-key')
 
-  # Create the D-Lock on the connection
-  lock = create_sadlock(conn, key)
+    # Acquire the lock
+    lock.acquire()
+    assert lock.locked
 
-  # it's not lock when constructed
-  assert not lock.locked
-
-  # lock
-  lock.acquire()
-  assert lock.locked
-
-  # un-lock
-  lock.release()
-  assert not lock.locked
-  ```
-
-- `with` statement
-
-  ```python
-  from contextlib import closing
-
-  from sqlalchemy import create_engine
-  from sqlalchemy_dlock import create_sadlock
-
-  key = 'user/001'
-
-  engine = create_engine('postgresql://scott:tiger@127.0.0.1/')
-  with engine.connect() as conn:
-
-      # Create the D-Lock on the connection
-      with create_sadlock(conn, key) as lock:
-          # It's locked
-          assert lock.locked
-
-      # Auto un-locked
-      assert not lock.locked
-
-      # If do not want to be locked in `with`, a `closing` wrapper may help
-      with closing(create_sadlock(conn, key)) as lock2:
-          # It's NOT locked here !!!
-          assert not lock2.locked
-          # lock it now:
-          lock2.acquire()
-          assert lock2.locked
-
-      # Auto un-locked
-      assert not lock2.locked
-  ```
-
-- Work with [SQLAlchemy][] [`ORM` `Session`](https://docs.sqlalchemy.org/en/20/orm/session.html):
-
-  ```python
-  from sqlalchemy import create_engine
-  from sqlalchemy.orm import sessionmaker
-  from sqlalchemy_dlock import create_sadlock
-
-  key = 'user/001'
-
-  engine = create_engine('postgresql://scott:tiger@127.0.0.1/')
-  Session = sessionmaker(bind=engine)
-
-  with Session() as session:
-    with create_sadlock(session, key) as lock:
-        assert lock.locked
+    # Release the lock
+    lock.release()
     assert not lock.locked
-  ```
+```
 
-- Asynchronous I/O Support
+### Using Context Managers
 
-  > 💡 **TIP**
-  >
-  > - [SQLAlchemy][] `1.x`'s asynchronous I/O: <https://docs.sqlalchemy.org/14/orm/extensions/asyncio.html>
-  > - [SQLAlchemy][] `2.x`'s asynchronous I/O: <https://docs.sqlalchemy.org/20/orm/extensions/asyncio.html>
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
 
-  ```python
-  from sqlalchemy.ext.asyncio import create_async_engine
-  from sqlalchemy_dlock import create_async_sadlock
+engine = create_engine('postgresql://user:pass@localhost/db')
 
-  key = 'user/001'
+with engine.connect() as conn:
+    # Automatically acquires and releases the lock
+    with create_sadlock(conn, 'my-resource-key') as lock:
+        assert lock.locked
+        # Your critical section here
 
-  engine = create_async_engine('postgresql+asyncpg://scott:tiger@127.0.0.1/')
+    # Lock is automatically released
+    assert not lock.locked
+```
 
-  async with engine.connect() as conn:
-      async with create_async_sadlock(conn, key) as lock:
-          assert lock.locked
-          await lock.release()
-          assert not lock.locked
-          await lock.acquire()
-      assert not lock.locked
-  ```
+### With Timeout
 
-  > ℹ️ **NOTE** \
-  > [aiomysql][], [asyncpg][] and [psycopg][] are tested asynchronous drivers.
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
 
-## Test
+engine = create_engine('postgresql://user:pass@localhost/db')
 
-Following drivers are tested:
+with engine.connect() as conn:
+    try:
+        # Raises TimeoutError if lock cannot be acquired within 5 seconds
+        with create_sadlock(conn, 'my-resource-key', contextual_timeout=5) as lock:
+            pass
+    except TimeoutError:
+        print("Could not acquire lock - resource is busy")
+```
 
-- MySQL:
-  - [mysqlclient][] (synchronous)
-  - [pymysql][] (synchronous)
-  - [aiomysql][] (asynchronous)
-- Postgres:
-  - [psycopg2][] (synchronous)
-  - [asyncpg][] (asynchronous)
-  - [psycopg][] (synchronous and asynchronous)
+---
 
-You can run unit-tests
+## Common Use Cases
 
-- on local environment:
+### Use Case 1: Preventing Duplicate Task Execution
 
-  1. Install the project in editable mode with `asyncio` optional dependencies, and libraries/drivers needed in test. A virtual environment ([venv][]) is strongly advised:
+Prevent multiple workers from processing the same task simultaneously:
 
-     ```bash
-     pip install -e . --group dev
-     ```
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
 
-  2. start up mysql and postgresql service
+def process_monthly_billing(user_id: int):
+    engine = create_engine('postgresql://user:pass@localhost/db')
+    with engine.connect() as conn:
+        # Ensure billing for a user is only processed once at a time
+        lock_key = f'billing:user:{user_id}'
+        with create_sadlock(conn, lock_key, contextual_timeout=0):
+            # If another worker is already processing this user's billing,
+            # this will fail immediately (timeout=0)
+            perform_billing_calculation(user_id)
+            send_bill(user_id)
+```
 
-     There is a docker [compose][] file `db.docker-compose.yml` in project's top directory,
-     which can be used to run mysql and postgresql develop environment conveniently:
+### Use Case 2: API Rate Limiting & Debouncing
 
-     ```bash
-     docker compose -f db.docker-compose.yml up
-     ```
+Prevent simultaneous expensive operations on the same resource:
 
-  3. set environment variables `TEST_URLS` and `TEST_ASYNC_URLS` for sync and async database connection url.
-     Multiple connections separated by space.
+```python
+from fastapi import FastAPI, HTTPException
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy_dlock import create_sadlock
 
-     eg: (following values are also the defaults, and can be omitted)
+app = FastAPI()
+engine = create_engine('postgresql://user:pass@localhost/db')
+SessionLocal = sessionmaker(bind=engine)
 
-     ```ini
-     TEST_URLS=mysql://test:test@127.0.0.1/test postgresql://postgres:test@127.0.0.1/
-     TEST_ASYNC_URLS=mysql+aiomysql://test:test@127.0.0.1/test postgresql+asyncpg://postgres:test@127.0.0.1/
-     ```
+@app.post("/api/resources/{resource_id}/export")
+async def export_resource(resource_id: str):
+    session = SessionLocal()
+    try:
+        # Try to acquire lock without blocking
+        lock = create_sadlock(session, f'export:{resource_id}')
+        if not lock.acquire(block=False):
+            raise HTTPException(status_code=409, detail="Export already in progress")
 
-     > ℹ️ **NOTE** \
-     > The test cases would load environment variables from dot-env file `tests/.env`.
+        try:
+            return perform_export(resource_id)
+        finally:
+            lock.release()
+    finally:
+        session.close()
+```
 
-  4. run unit-test
+### Use Case 3: Scheduled Job Coordination
 
-     ```bash
-     python -m unittest
-     ```
+Ensure scheduled jobs don't overlap across multiple servers:
 
-- or on docker [compose][]:
+```python
+from apscheduler.schedulers.background import BackgroundScheduler
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
 
-  `tests/docker-compose.yml` defines a Python and [SQLAlchemy][] version matrix -- it combines multiple Python versions and [SQLAlchemy][] `v1`/`v2` for test cases. We can run it by:
+def data_sync_job():
+    engine = create_engine('mysql://user:pass@localhost/db')
+    with engine.connect() as conn:
+        lock_key = 'scheduled-job:data-sync'
 
-  ```bash
-  cd tests
-  docker compose up --abort-on-container-exit
-  ```
+        # Only proceed if no other server is running this job
+        lock = create_sadlock(conn, lock_key, contextual_timeout=60)
+        with lock:
+            perform_data_sync()
 
-[SQLAlchemy]: https://www.sqlalchemy.org/ "The Python SQL Toolkit and Object Relational Mapper"
-[venv]: https://docs.python.org/library/venv.html "The venv module supports creating lightweight “virtual environments”, each with their own independent set of Python packages installed in their site directories. "
-[mysqlclient]: https://pypi.org/project/mysqlclient/ "Python interface to MySQL"
-[psycopg2]: https://pypi.org/project/psycopg2/ "PostgreSQL database adapter for Python"
-[psycopg]: https://pypi.org/project/psycopg/ "Psycopg 3 is a modern implementation of a PostgreSQL adapter for Python."
-[aiomysql]: https://pypi.org/project/aiomysql/ "aiomysql is a “driver” for accessing a MySQL database from the asyncio (PEP-3156/tulip) framework."
-[asyncpg]: https://pypi.org/project/asyncpg/ "asyncpg is a database interface library designed specifically for PostgreSQL and Python/asyncio. "
-[pymysql]: https://pypi.org/project/pymysql/ "Pure Python MySQL Driver"
-[compose]: https://docs.docker.com/compose/ "Compose is a tool for defining and running multi-container Docker applications."
+scheduler = BackgroundScheduler()
+scheduler.add_job(data_sync_job, 'interval', minutes=30)
+scheduler.start()
+```
+
+### Use Case 4: Decorator Pattern for Clean Code
+
+Create a reusable decorator for locking functions:
+
+```python
+from functools import wraps
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+def with_db_lock(key_func, timeout=None):
+    """Decorator that acquires a database lock before executing the function."""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            engine = create_engine('postgresql://user:pass@localhost/db')
+            lock_key = key_func(*args, **kwargs)
+
+            with engine.connect() as conn:
+                with create_sadlock(conn, lock_key, contextual_timeout=timeout):
+                    return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+# Usage
+@with_db_lock(lambda user_id: f'user:update:{user_id}', timeout=10)
+def update_user_profile(user_id: int, profile_data: dict):
+    # This function is protected from concurrent execution
+    # for the same user_id
+    ...
+```
+
+---
+
+## Working with SQLAlchemy ORM
+
+Using locks with SQLAlchemy ORM sessions:
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine('postgresql://user:pass@localhost/db')
+Session = sessionmaker(bind=engine)
+
+with Session() as session:
+    with create_sadlock(session, 'my-resource-key') as lock:
+        # Use the session within the locked context
+        user = session.query(User).get(user_id)
+        user.balance += 100
+        session.commit()
+```
+
+---
+
+## Asynchronous I/O Support
+
+Full async/await support for asynchronous applications:
+
+```python
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy_dlock import create_async_sadlock
+
+engine = create_async_engine('postgresql+asyncpg://user:pass@localhost/db')
+
+async def main():
+    async with engine.connect() as conn:
+        async with create_async_sadlock(conn, 'my-resource-key') as lock:
+            assert lock.locked
+            # Your async critical section here
+        assert not lock.locked
+```
+
+**Supported async drivers:**
+- MySQL: [aiomysql](https://pypi.org/project/aiomysql/)
+- PostgreSQL: [asyncpg](https://pypi.org/project/asyncpg/), [psycopg](https://pypi.org/project/psycopg/) (v3+)
+
+---
+
+## PostgreSQL Lock Types
+
+PostgreSQL provides multiple advisory lock types. Choose based on your scenario:
+
+| Lock Type             | Parameters               | Description                                  | Use Case                           |
+| --------------------- | ------------------------ | -------------------------------------------- | ---------------------------------- |
+| Session-exclusive     | (default)                | Held until manually released or session ends | Long-running tasks                 |
+| Session-shared        | `shared=True`            | Multiple shared locks can coexist            | Multi-reader scenarios             |
+| Transaction-exclusive | `xact=True`              | Automatically released when transaction ends | Transaction-scoped operations      |
+| Transaction-shared    | `shared=True, xact=True` | Shared locks within transaction              | Transactional read-heavy workloads |
+
+### Example: Transaction-Level Lock
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine('postgresql://user:pass@localhost/db')
+
+with engine.connect() as conn:
+    # Transaction-level lock - automatically released on commit/rollback
+    with create_sadlock(conn, 'my-key', xact=True) as lock:
+        conn.execute(text("INSERT INTO ..."))
+        conn.commit()  # Lock is released here
+```
+
+### Example: Shared Lock for Read-Heavy Workloads
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine('postgresql://user:pass@localhost/db')
+
+# Multiple readers can hold shared locks simultaneously
+def read_resource(resource_id: str):
+    with engine.connect() as conn:
+        with create_sadlock(conn, f'resource:{resource_id}', shared=True):
+            return conn.execute(text("SELECT * FROM resources WHERE id = :id"), {"id": resource_id})
+
+# Writers need exclusive locks
+def write_resource(resource_id: str, data: dict):
+    with engine.connect() as conn:
+        # This will wait for all shared locks to be released
+        with create_sadlock(conn, f'resource:{resource_id}') as lock:
+            conn.execute(text("UPDATE resources SET ..."))
+            conn.commit()
+```
+
+---
+
+## Important Notes
+
+### Performance Considerations
+
+- Database lock operations require network round-trips and are slower than in-memory solutions like Redis
+- PostgreSQL timeout is implemented through polling and may have ~1 second variance
+- Consider your concurrency requirements before choosing database-based locks
+
+### Thread Safety
+
+- Lock objects are **thread-local** and cannot be safely passed between threads
+- Each thread must create its own lock instance
+- Cross-process/cross-server locking works normally
+
+### MySQL-Specific Behavior
+
+⚠️ **Warning:** MySQL allows acquiring the same named lock multiple times on the same connection. This can lead to unexpected cascading locks:
+
+```python
+# DANGER: On MySQL, the second acquisition succeeds immediately
+with create_sadlock(conn, 'my-key') as lock1:
+    # This immediately returns without waiting - no real mutual exclusion!
+    with create_sadlock(conn, 'my-key') as lock2:
+        pass
+```
+
+To avoid this, use separate connections or implement additional checking logic.
+
+### Lock Lifetime
+
+- Locks are tied to your database connection
+- Closing a connection releases all associated locks
+- Properly manage Connection/Session lifecycle to avoid accidental lock releases
+
+---
+
+## FAQ
+
+**Q: What happens if the database goes down?**
+
+A: Locks are automatically released when the database connection is lost. This is intentional behavior to prevent deadlocks.
+
+**Q: Can I pass a lock object between threads?**
+
+A: No. Lock objects are thread-local for safety reasons. Each thread should create its own lock instance pointing to the same lock key.
+
+**Q: How do I choose between MySQL and PostgreSQL?**
+
+A: Both are fully supported. PostgreSQL offers more lock types (shared/transaction-level), while MySQL's implementation is simpler.
+
+**Q: Are locks inherited by child processes?**
+
+A: No. Child processes must establish their own database connections and create new lock objects.
+
+**Q: How can I debug lock status?**
+
+A:
+- **MySQL:** `SELECT * FROM performance_schema.metadata_locks;`
+- **PostgreSQL:** `SELECT * FROM pg_locks WHERE locktype = 'advisory';`
+
+**Q: What's the maximum lock key size?**
+
+A:
+- **MySQL:** 64 characters
+- **PostgreSQL:** Keys are converted to 64-bit integers via BLAKE2b hash
+
+**Q: Can I use this with SQLite?**
+
+A: No. SQLite does not support the same named/advisory lock mechanisms as MySQL or PostgreSQL.
+
+---
+
+## Testing
+
+The following database drivers are tested:
+
+**MySQL:**
+- [mysqlclient](https://pypi.org/project/mysqlclient/) (synchronous)
+- [pymysql](https://pypi.org/project/pymysql/) (synchronous)
+- [aiomysql](https://pypi.org/project/aiomysql/) (asynchronous)
+
+**PostgreSQL:**
+- [psycopg2](https://pypi.org/project/psycopg2/) (synchronous)
+- [psycopg](https://pypi.org/project/psycopg/) (v3, synchronous and asynchronous)
+- [asyncpg](https://pypi.org/project/asyncpg/) (asynchronous)
+
+### Running Tests Locally
+
+1. Install the project with development dependencies:
+
+```bash
+uv sync --group test --extra mysqlclient --extra aiomysql --extra psycopg2-binary --extra asyncpg
+```
+
+2. Start MySQL and PostgreSQL services using Docker:
+
+```bash
+docker compose -f db.docker-compose.yml up
+```
+
+3. Set environment variables for database connections (or use defaults):
+
+```bash
+export TEST_URLS="mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/"
+export TEST_ASYNC_URLS="mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/"
+```
+
+> ℹ️ **Note:** Test cases also load environment variables from `tests/.env`.
+
+4. Run tests:
+
+```bash
+python -m unittest
+```
+
+### Running Tests with Docker Compose
+
+The project includes a comprehensive test matrix across Python and SQLAlchemy versions:
+
+```bash
+cd tests
+docker compose up --abort-on-container-exit
+```
+
+---
+
+## Documentation
+
+Full API documentation is available at [https://sqlalchemy-dlock.readthedocs.io/](https://sqlalchemy-dlock.readthedocs.io/en/latest/)
+
+---
+
+## Links
+
+- **Source Code:** [https://github.com/tanbro/sqlalchemy-dlock](https://github.com/tanbro/sqlalchemy-dlock)
+- **Issue Tracker:** [https://github.com/tanbro/sqlalchemy-dlock/issues](https://github.com/tanbro/sqlalchemy-dlock/issues)
+- **PyPI:** [https://pypi.org/project/sqlalchemy-dlock/](https://pypi.org/project/sqlalchemy-dlock/)
+
+[SQLAlchemy]: https://www.sqlalchemy.org/
