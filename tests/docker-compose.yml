@@ -6,6 +6,7 @@ x-common-environment: &common-environment
   MYSQL_USER: test
   MYSQL_PASSWORD: test
   POSTGRES_PASSWORD: test
+  MSSQL_SA_PASSWORD: "YourStrongPassword123"
 
 services:
   mysql:
@@ -26,6 +27,17 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -h 127.0.0.1"]
 
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      <<: *common-environment
+      MSSQL_PID: "Developer"
+      MSSQL_TCP_PORT: "1433"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    # Note: MSSQL container requires at least 2GB RAM to run properly
+
   python:
     build: .
     volumes:
@@ -33,7 +45,7 @@ services:
         source: ..
         target: /workspace
     working_dir: /workspace
-    depends_on: [mysql, postgres]
+    depends_on: [mysql, postgres, mssql]
     environment:
       <<: *common-environment
     env_file: .env
