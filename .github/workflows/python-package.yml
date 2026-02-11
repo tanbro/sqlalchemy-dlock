@@ -145,6 +145,7 @@ jobs:
         with:
           app-user: test
           app-user-password: test
+          startup-scripts: ${{ github.workspace }}/.github/scripts
 
       - name: Install the project
         env:
