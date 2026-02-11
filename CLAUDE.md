@@ -82,6 +82,7 @@ pre-commit run --all-files
 - **Key hashing:** PostgreSQL and Oracle convert string keys to 64-bit integers via BLAKE2b hash.
 - **PostgreSQL timeout:** Implemented through polling, may have ~1 second variance.
 - **Oracle lock ID range:** 0-1073741823 (uses `DBMS_LOCK.REQUEST`)
+- **Oracle Free limitation:** Oracle Database Free (23c/23ai) does NOT support `DBMS_LOCK.REQUEST`. This is a fundamental limitation of the Free/Express edition. CI skips Oracle tests; test locally with `docker compose -f db.docker-compose.yml up` which uses the official Oracle image.
 - **MSSQL driver:** Requires ODBC driver installation (`msodbcsql18` on Ubuntu)
 
 ### Resource Requirements
