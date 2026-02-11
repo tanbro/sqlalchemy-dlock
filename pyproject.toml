@@ -6,25 +6,47 @@ requires = ["setuptools>=80", "setuptools-scm>=8"]
 name = "sqlalchemy-dlock"
 readme = { file = 'README.md', content-type = 'text/markdown' }
 authors = [{ name = "liu xue yan", email = "liu_xue_yan@foxmail.com" }]
-description = "A distributed lock implementation based on SQLAlchemy"
+description = "Distributed lock implementation based on SQLAlchemy with support for MySQL, PostgreSQL, MSSQL, and Oracle"
 keywords = [
-  "SQLAlchemy",
-  "lock",
-  "distributed",
+  "sqlalchemy",
   "distributed lock",
-  "SQL",
-  "database",
-  "DBMS",
-  "RDBMS",
+  "database lock",
+  "advisory lock",
+  "named lock",
+  "application lock",
+  "mysql",
+  "postgresql",
+  "mssql",
+  "sqlserver",
+  "oracle",
+  "mariadb",
+  "async",
+  "concurrency",
+  "mutex",
+  "synchronization",
+  "threading",
 ]
 license = "BSD-3-Clause"
 license-files = ["LICENSE"]
 
 classifiers = [
   "Development Status :: 5 - Production/Stable",
-  "Topic :: Database :: Front-Ends",
   "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
   "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Database",
+  "Topic :: Database :: Front-Ends",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: System :: Distributed Computing",
+  "Typing :: Typed",
 ]
 dynamic = ["version"]
 
@@ -46,13 +68,13 @@ documentation = "https://sqlalchemy-dlock.readthedocs.io/"
 where = ["src"]
 
 [tool.setuptools_scm]
-write_to = "src/sqlalchemy_dlock/_version.py"
+write_to = "src/sqlalchemy_dlock/version.py"
 
 [dependency-groups]
 dev = [
-  { include-group = "typecheck" },
-  { include-group = "test" },
   { include-group = "docs" },
+  { include-group = "test" },
+  { include-group = "typecheck" },
 ]
 docs = [
   "sphinx>=7",
@@ -66,10 +88,8 @@ docs = [
   "sphinx-version-warning",
   "sphinx-autodoc-typehints",
 ]
-typecheck = ["mypy"]
 test = ["coverage", "python-dotenv"]
-ipy = ["ipykernel"]
-
+typecheck = ["mypy"]
 
 [tool.setuptools.package-data]
 sqlalchemy_dlock = ["sqlalchemy_dlock/py.typed"]
