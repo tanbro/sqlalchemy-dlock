@@ -1,15 +1,47 @@
 # CHANGELOG
 
-## v0.7.1.dev0
+## v0.8.0 (WIP)
 
 > 📅 **Date** TBD
+
+- 🆕 **New Features:**
+  - **Oracle Database Support:**
+    - Added support for Oracle Database using `DBMS_LOCK` package
+    - Supports all 6 Oracle lock modes: `NL` (Null), `SS` (Sub-Shared), `SX` (Sub-Exclusive), `S` (Shared), `SSX` (Shared Sub-Exclusive), `X` (Exclusive)
+    - Lock mode compatibility matrix for fine-grained concurrency control
+    - Transaction-level locks via `release_on_commit` parameter
+    - Integer lock IDs (0-1073741823) with automatic hash-based conversion for string keys (using blake2b)
+    - Both synchronous and asynchronous lock implementations
+  - **MSSQL (Microsoft SQL Server) Support:**
+    - Added support for SQL Server application locks using `sp_getapplock`
+    - Multiple lock modes: Exclusive, Shared, and Update
+    - Both synchronous and asynchronous lock implementations
+  - **MariaDB Support:**
+    - Added explicit MariaDB registry entry (compatible with MySQL named locks)
 
 - 🏗️ **Refactor:**
   - Refactored lock base classes to reduce code duplication between synchronous and asynchronous implementations
   - Extracted common lock state validation logic into base class methods
   - Introduced `do_acquire` and `do_release` abstract methods for concrete implementations
   - Added `@final` decorator to `acquire`, `release`, and `close` methods in base classes to prevent override while ensuring consistent behavior
-  - Improved consistency between MySQL and PostgreSQL lock implementations
+  - Improved consistency between MySQL, PostgreSQL, MSSQL, and Oracle lock implementations
+
+- 📦 **Dependencies:**
+  - Added `oracledb>=2.0` as optional dependency for Oracle (recommended)
+  - Added `cx_Oracle>=8.3` as optional dependency for Oracle (legacy)
+  - Added `pyodbc` and `pymssql` as optional dependencies for MSSQL
+  - Added `aioodbc` as optional dependency for MSSQL async
+
+- 📚 **Documentation:**
+  - Added comprehensive Oracle lock types documentation with examples
+  - Added MSSQL lock types documentation with examples
+  - Updated README with all supported databases and their lock mechanisms
+  - Added connection string examples for Oracle and MSSQL
+  - Added Oracle Free service to `db.docker-compose.yml` for testing
+
+- ⚠️ **TODO (Before Release):**
+  - Integration testing with Oracle Database (Docker)
+  - Integration testing with MSSQL (Docker)
 
 ## v0.7.0
 
