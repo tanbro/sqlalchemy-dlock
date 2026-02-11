@@ -1,10 +1,9 @@
 set -eu
 
-export TEST_URLS="mysql://$MYSQL_USER:$MYSQL_PASSWORD@mysql/$MYSQL_DATABASE postgresql://postgres:$POSTGRES_PASSWORD@postgres/"
-export TEST_ASYNC_URLS="mysql+aiomysql://$MYSQL_USER:$MYSQL_PASSWORD@mysql/$MYSQL_DATABASE postgresql+asyncpg://postgres:$POSTGRES_PASSWORD@postgres/"
+export TEST_URLS="mysql://$MYSQL_USER:$MYSQL_PASSWORD@mysql/$MYSQL_DATABASE postgresql://postgres:$POSTGRES_PASSWORD@postgres/ mssql+pyodbc://sa:$MSSQL_SA_PASSWORD@mssql:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+export TEST_ASYNC_URLS="mysql+aiomysql://$MYSQL_USER:$MYSQL_PASSWORD@mysql/$MYSQL_DATABASE postgresql+asyncpg://postgres:$POSTGRES_PASSWORD@postgres/ mssql+aioodbc://sa:$MSSQL_SA_PASSWORD@mssql:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
 
-/bin/bash scripts/wait-for-postgres.sh postgres $POSTGRES_PASSWORD
-/bin/bash scripts/wait-for-mysql.sh mysql $MYSQL_DATABASE $MYSQL_USER $MYSQL_PASSWORD
+# Note: Database health is ensured by docker-compose healthcheck + depends_on condition
 
 export SETUPTOOLS_SCM_PRETEND_VERSION=0
 export PIP_DISABLE_PIP_VERSION_CHECK=1

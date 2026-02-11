@@ -36,6 +36,12 @@ services:
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P $$MSSQL_SA_PASSWORD -Q 'SELECT 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
     # Note: MSSQL container requires at least 2GB RAM to run properly
 
   python:
@@ -45,7 +51,13 @@ services:
         source: ..
         target: /workspace
     working_dir: /workspace
-    depends_on: [mysql, postgres, mssql]
+    depends_on:
+      mysql:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      mssql:
+        condition: service_healthy
     environment:
       <<: *common-environment
     env_file: .env

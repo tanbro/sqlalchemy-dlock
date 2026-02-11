@@ -78,6 +78,9 @@ class BasicTestCase(TestCase):
                     elif engine.name == "mssql":
                         # MSSQL sp_getapplock uses string lock names
                         key = token_hex().encode()
+                    elif engine.name == "oracle":
+                        # Oracle DBMS_LOCK uses integer IDs, bytes are hashed
+                        key = token_bytes()
                     else:
                         raise NotImplementedError()
                     with create_sadlock(conn, key) as lock:

@@ -1,8 +1,8 @@
 # sqlalchemy-dlock
 
-[![Python package](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml/badge.svg)](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml)
-[![PyPI](https://img.shields.io/pypi/v/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
+[![CI](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml/badge.svg)](https://github.com/tanbro/sqlalchemy-dlock/actions/workflows/python-package.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/tanbro/sqlalchemy-dlock)](https://github.com/tanbro/sqlalchemy-dlock/releases)
+[![PyPI version](https://img.shields.io/pypi/v/sqlalchemy-dlock)](https://pypi.org/project/sqlalchemy-dlock/)
 [![Documentation Status](https://readthedocs.org/projects/sqlalchemy-dlock/badge/?version=latest)](https://sqlalchemy-dlock.readthedocs.io/en/latest/)
 [![codecov](https://codecov.io/gh/tanbro/sqlalchemy-dlock/branch/main/graph/badge.svg)](https://codecov.io/gh/tanbro/sqlalchemy-dlock)
 [![License](https://img.shields.io/pypi/l/sqlalchemy-dlock)](LICENSE)
