@@ -80,6 +80,9 @@ This library requires a database driver to be installed separately. Since you're
 - `oracledb` - Official driver (synchronous & asynchronous, recommended)
 - `cx_Oracle` - Legacy driver (synchronous)
 
+> ℹ️ **Note:** \
+> The drivers listed above are commonly used options. In general, any driver supported by SQLAlchemy for your target database should work with sqlalchemy-dlock. For a complete list of SQLAlchemy-supported drivers, see the [SQLAlchemy Dialects documentation](https://docs.sqlalchemy.org/en/latest/dialects/).
+
 Example installation:
 ```bash
 pip install sqlalchemy-dlock mysqlclient psycopg2-binary pyodbc oracledb
@@ -171,29 +174,27 @@ Prevent simultaneous expensive operations on the same resource:
 
 ```python
 from fastapi import FastAPI, HTTPException
-from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy_dlock import create_sadlock
+from sqlalchemy_dlock import create_async_sadlock
 
 app = FastAPI()
-engine = create_engine('postgresql://user:pass@localhost/db')
-SessionLocal = sessionmaker(bind=engine)
+engine = create_async_engine('postgresql+asyncpg://user:pass@localhost/db')
+AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 @app.post("/api/resources/{resource_id}/export")
 async def export_resource(resource_id: str):
-    session = SessionLocal()
-    try:
+    async with AsyncSessionLocal() as session:
         # Try to acquire lock without blocking
-        lock = create_sadlock(session, f'export:{resource_id}')
-        if not lock.acquire(block=False):
+        lock = create_async_sadlock(session, f'export:{resource_id}')
+        acquired = await lock.acquire(block=False)
+        if not acquired:
             raise HTTPException(status_code=409, detail="Export already in progress")
 
         try:
-            return perform_export(resource_id)
+            return await perform_export(resource_id)
         finally:
-            lock.release()
-    finally:
-        session.close()
+            await lock.release()
 ```
 
 ### Use Case 3: Scheduled Job Coordination
