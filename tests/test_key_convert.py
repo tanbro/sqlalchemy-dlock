@@ -31,6 +31,11 @@ class KeyConvertTestCase(TestCase):
                 def _convert(k):  # type: ignore
                     return crc32(str(k).encode())
 
+            elif engine.name == "mssql":
+
+                def _convert(k):  # type: ignore
+                    return f"custom_{k}"
+
             else:
                 raise NotImplementedError()
 
