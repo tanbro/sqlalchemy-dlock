@@ -38,6 +38,13 @@ cd tests
 docker compose up --abort-on-container-exit
 ```
 
+> **Note:** Oracle testing requires **Oracle Database Enterprise/Standard Edition**. Oracle Database Free (23c/23ai) does NOT support `DBMS_LOCK.REQUEST` which is required for distributed lock functionality. This is a fundamental limitation of the Free/Express edition, not related to the container image flavor.
+
+For local Oracle testing, ensure you have a full Oracle Database installation or use the official Oracle image:
+```bash
+docker compose -f db.docker-compose.yml up
+```
+
 ### Pre-commit Hooks
 ```bash
 # Install pre-commit hooks

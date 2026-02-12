@@ -17,8 +17,11 @@ sqlalchemy-dlock provides distributed locking capabilities using your existing d
 | MySQL      | [Named Lock](https://dev.mysql.com/doc/refman/en/locking-functions.html) (`GET_LOCK` / `RELEASE_LOCK`)                                         |
 | MariaDB    | [Named Lock](https://mariadb.com/kb/en/get_lock/) (compatible with MySQL)                                                                      |
 | MSSQL      | [Application Lock](https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-getapplock-transact-sql) (`sp_getapplock`) |
-| Oracle     | [User Lock](https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_LOCK.html) (`DBMS_LOCK`)                                     |
-| PostgreSQL | [Advisory Lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)                                                  |
+| Oracle     | [User Lock](https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_LOCK.html) (`DBMS_LOCK`) |
+| PostgreSQL | [Advisory Lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS) |
+
+> ⚠️ **Oracle Not Tested:**
+> Oracle Database Free (23c/23ai) does NOT support `DBMS_LOCK.REQUEST`. We do NOT test Oracle in CI or integration tests. Use with Oracle Enterprise/Standard Edition at your own risk.
 
 ---
 
@@ -59,34 +62,15 @@ pip install sqlalchemy-dlock
 
 ### Database Drivers
 
-This library requires a database driver to be installed separately. Since you're already using SQLAlchemy, you likely have the appropriate driver installed.
+This library requires a database driver to be installed separately. Since you're already using SQLAlchemy, you likely have the appropriate driver installed. For a complete list of SQLAlchemy-supported drivers, see the [SQLAlchemy Dialects documentation](https://docs.sqlalchemy.org/en/latest/dialects/).
 
-**MySQL / MariaDB:**
-- `mysqlclient` - Recommended C extension (synchronous)
-- `pymysql` - Pure Python (synchronous)
-- `aiomysql` - Async I/O
-
-**PostgreSQL:**
-- `psycopg2` or `psycopg2-binary` - v2 (synchronous)
-- `psycopg` - v3 (synchronous and asynchronous)
-- `asyncpg` - Async I/O
-
-**MSSQL:**
-- `pyodbc` - ODBC driver (synchronous, recommended)
-- `pymssql` - FreeTDS driver (synchronous)
-- `aioodbc` - Async wrapper for pyodbc
-
-**Oracle:**
-- `oracledb` - Official driver (synchronous & asynchronous, recommended)
-- `cx_Oracle` - Legacy driver (synchronous)
-
-> ℹ️ **Note:** \
-> The drivers listed above are commonly used options. In general, any driver supported by SQLAlchemy for your target database should work with sqlalchemy-dlock. For a complete list of SQLAlchemy-supported drivers, see the [SQLAlchemy Dialects documentation](https://docs.sqlalchemy.org/en/latest/dialects/).
-
-Example installation:
-```bash
-pip install sqlalchemy-dlock mysqlclient psycopg2-binary pyodbc oracledb
-```
+> ℹ️ **Notes**:
+> - **MSSQL**: The `pyodbc` driver requires the Microsoft ODBC driver to be installed on your system. On Ubuntu/Debian:
+>   ```bash
+>   sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+>   ```
+> - **Oracle**:
+>   Oracle Database Free (23c/23ai) does NOT support `DBMS_LOCK.REQUEST` which is required for distributed lock functionality. For production use with Oracle, a full Oracle Database (Enterprise/Standard Edition) installation is required.
 
 ### Basic Usage
 

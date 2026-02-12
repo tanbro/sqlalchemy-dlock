@@ -1,16 +1,19 @@
 set -eu
 
 export TEST_URLS="mysql://$MYSQL_USER:$MYSQL_PASSWORD@mysql/$MYSQL_DATABASE postgresql://postgres:$POSTGRES_PASSWORD@postgres/ mssql+pyodbc://sa:$MSSQL_SA_PASSWORD@mssql:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+
 export TEST_ASYNC_URLS="mysql+aiomysql://$MYSQL_USER:$MYSQL_PASSWORD@mysql/$MYSQL_DATABASE postgresql+asyncpg://postgres:$POSTGRES_PASSWORD@postgres/ mssql+aioodbc://sa:$MSSQL_SA_PASSWORD@mssql:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
 
 # Note: Database health is ensured by docker-compose healthcheck + depends_on condition
+# Note: Oracle testing skipped - Oracle Database Free does NOT support DBMS_LOCK.REQUEST
 
 export SETUPTOOLS_SCM_PRETEND_VERSION=0
 export PIP_DISABLE_PIP_VERSION_CHECK=1
 export PIP_ROOT_USER_ACTION=ignore
 export PIP_NO_WARN_SCRIPT_LOCATION=1
 
-PYTHON_LIST=(python3.9 python3.10 python3.11 python3.12 python3.13 python3.14)
+export PYTHON_LIST=(python3.9 python3.10 python3.11 python3.12 python3.13 python3.14)
+
 REQUIRES_LIST=("SQLAlchemy[asyncio]>=1.4.3,<2" "SQLAlchemy[asyncio]>=2,<3")
 
 trap 'rm -rf /tmp/sqlalchemy-dlock-test-*' EXIT
@@ -23,7 +26,6 @@ do
         echo "---------------------------------------------------------------"
         echo "Begin of ${PYTHON} ${REQUIRES}"
         echo "---------------------------------------------------------------"
-        echo
         TMPDIR=$(mktemp -d -t sqlalchemy-dlock-test-${PYTHON}-${REQUIRES//[^a-zA-Z0-9]/-})
         (
             set -e
