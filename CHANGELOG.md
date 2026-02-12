@@ -1,8 +1,8 @@
 # CHANGELOG
 
-## v0.8 (WIP)
+## v0.8.0
 
-> 📅 **Date** TBD
+> 📅 **Date** 2026-02-12
 
 - 💔 **Breaking Changes:**
   - **Removed database driver extras from `pyproject.toml`**
@@ -38,11 +38,8 @@
   - Added MSSQL lock types documentation with examples
   - Updated README with all supported databases and their lock mechanisms
   - Added connection string examples for Oracle and MSSQL
-  - Added Oracle Free service to `db.docker-compose.yml` for testing
-
-- ⚠️ **TODO (Before Release):**
-  - Integration testing with Oracle Database (Docker)
-  - Integration testing with MSSQL (Docker)
+  - Documented Oracle testing limitation due to Oracle Free edition not supporting `DBMS_LOCK.REQUEST`
+  - Simplified Database Drivers section, linking to SQLAlchemy documentation
 
 ## v0.7.0
 
