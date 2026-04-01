@@ -1,6 +1,8 @@
 # CHANGELOG
 
-## v0.8.1 (in development)
+## v0.8.1
+
+> 📅 **Date** 2026-04-01
 
 - 🆕 **New Features:**
   - **Added `BaseAsyncSadLock.aclose()` method**: Async close method for compatibility with `contextlib.aclosing` (Python 3.10+)
