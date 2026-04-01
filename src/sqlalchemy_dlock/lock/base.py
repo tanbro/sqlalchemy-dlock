@@ -1,4 +1,5 @@
 import sys
+import warnings
 from abc import ABC, abstractmethod
 from threading import local
 from typing import Callable, Generic, Optional, TypeVar, Union, final
@@ -270,7 +271,7 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
 
     @final
     async def __aexit__(self, exc_type, exc_value, exc_tb):
-        await self.close()
+        await self.aclose()
 
     @final
     def __str__(self):
@@ -319,6 +320,38 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
         raise NotImplementedError()
 
     @final
-    async def close(self, *args, **kwargs):
+    async def aclose(self, *args, **kwargs):
+        """Async close method for compatibility with :func:`contextlib.aclosing` (Python 3.10+).
+
+        Example::
+
+            from contextlib import aclosing
+
+            async with aclosing(create_async_sadlock(some_connection, some_key)) as lock:
+                # will **NOT** acquire at the begin of with-block
+                assert not lock.locked
+                # ...
+                # lock when need
+                await lock.acquire()
+                assert lock.locked
+                # ...
+
+            # `aclose` will be called at the end with-block
+            assert not lock.locked
+
+        .. versionadded:: 0.8.1
+        """
         if self._acquired:
             await self.release(*args, **kwargs)
+
+    @final
+    async def close(self, *args, **kwargs):
+        """.. deprecated:: 0.8.1
+        Use :meth:`aclose` instead. Will be removed in 0.9.0.
+        """
+        warnings.warn(
+            "The 'close' method is deprecated and will be removed in 0.9.0. Use 'aclose' instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return await self.aclose(*args, **kwargs)

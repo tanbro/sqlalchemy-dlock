@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.8.1 (in development)
+
+- 🆕 **New Features:**
+  - **Added `BaseAsyncSadLock.aclose()` method**: Async close method for compatibility with `contextlib.aclosing` (Python 3.10+)
+
+- ⚠️ **Deprecations:**
+  - **`BaseAsyncSadLock.close()` is deprecated**: It will be removed in v0.9.0, use `aclose()` instead
+
 ## v0.8.0
 
 > 📅 **Date** 2026-02-12
@@ -59,12 +67,12 @@
 
 - 🐛 Bug-fix:
   - Issue #4: PostgreSQL xact lock in context manager produces warning #4
-- ✅ Changes:
-  - `typing-extensions` required for Python earlier than 3.12
-- 🖊️ Modifications:
-  - Add some `override` decorators
-- 🎯 CI:
-  - update pre-commit hooks
+  - ✅ Changes:
+    - `typing-extensions` required for Python earlier than 3.12
+  - 🖊️ Modifications:
+    - Add some `override` decorators
+  - 🎯 CI:
+    - update pre-commit hooks
 
 ## v0.6.1
 
@@ -98,7 +106,7 @@
 Date: 2023-12-06
 
 - New:
-  - `contextual_timeout` parameter for “with” statement
+  - `contextual_timeout` parameter for "with" statement
   - Support Python 3.12
 
 ## v0.4
@@ -109,15 +117,15 @@ Date: 2023-06-17
   - remove `acquired` property, it's alias of `locked`
   - remove setter of `locked` property
 
-- Optimize:
-  - re-arrange package's structure
-  - Many optimizations
+  - Optimize:
+    - re-arrange package's structure
+    - Many optimizations
 
-- CI/Test:
-  - GitHub action: Python 3.8~3.11 x SQLAlchemy 1.x/2.x matrix testing
-  - Local compose: Python 3.7~3.11 x SQLAlchemy 1.x/2.x matrix testing
+  - CI/Test:
+    - GitHub action: Python 3.8~3.11 x SQLAlchemy 1.x/2.x matrix testing
+    - Local compose: Python 3.7~3.11 x SQLAlchemy 1.x/2.x matrix testing
 
-- Doc: Update to Sphinx 7.x, and Furo theme
+  - Doc: Update to Sphinx 7.x, and Furo theme
 
 ## v0.3.1
 
@@ -132,14 +140,14 @@ Date: 2023-06-13
 - Remove:
   - Python 3.6 support
 
-- Tests:
-  - New docker compose based tests, from python 3.7 to 3.11, both SQLAlchemy 1.x and 2.x
+  - Tests:
+    - New docker compose based tests, from python 3.7 to 3.11, both SQLAlchemy 1.x and 2.x
 
-- Docs:
-  - Update to newer Sphinx docs
+  - Docs:
+    - Update to newer Sphinx docs
 
-- Build:
-  - Move all project meta to pyproject.toml, remove setup.cfg and setup.py
+  - Build:
+    - Move all project meta to pyproject.toml, remove setup.cfg and setup.py
 
 ## v0.2.1
 
@@ -181,10 +189,10 @@ Date: 2021-03-14
   - Remove SQLAlchemy version requires earlier than 1.4 in setup, it's not supported, actually.
   - Adjust PostgreSQL lock's constructor arguments order
 
-- Add:
+  - Add:
 
-  - More test cases, and add test/deploy workflow in GitHub actions.
-  - Add docker-compose test scripts
+    - More test cases, and add test/deploy workflow in GitHub actions.
+    - Add docker-compose test scripts
 
 ## v0.2a2
 
