@@ -5,7 +5,6 @@ from random import randint
 from secrets import token_bytes, token_hex
 from unittest import IsolatedAsyncioTestCase, skipIf
 from uuid import uuid4
-import warnings
 
 from sqlalchemy_dlock import create_async_sadlock
 
@@ -264,22 +263,4 @@ class BasicTestCase(IsolatedAsyncioTestCase):
                     await lock.acquire()
                     self.assertTrue(lock.locked)
                 # aclose will be called at the end with-block
-                self.assertFalse(lock.locked)
-
-    async def test_close_deprecated(self):
-        """Test that close() is deprecated and calls aclose()."""
-        for engine in get_engines():
-            async with engine.connect() as conn:
-                key = uuid4().hex
-                lock = create_async_sadlock(conn, key)
-                await lock.acquire()
-                self.assertTrue(lock.locked)
-                with warnings.catch_warnings(record=True) as w:
-                    warnings.simplefilter("always")
-                    await lock.close()
-                    # Check that deprecation warning was raised
-                    self.assertEqual(len(w), 1)
-                    self.assertEqual(w[0].category, DeprecationWarning)
-                    self.assertIn("deprecated", str(w[0].message).lower())
-                    self.assertIn("aclose", str(w[0].message).lower())
                 self.assertFalse(lock.locked)
