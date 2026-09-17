@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from importlib import import_module
 from string import Template
-from typing import TYPE_CHECKING, Type, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .lock.base import BaseAsyncSadLock, BaseSadLock
@@ -69,7 +69,7 @@ ASYNCIO_REGISTRY = {
 }
 
 
-def find_lock_class(engine_name, is_asyncio=False) -> Type[Union[BaseSadLock, BaseAsyncSadLock]]:
+def find_lock_class(engine_name, is_asyncio=False) -> type[BaseSadLock | BaseAsyncSadLock]:
     reg = ASYNCIO_REGISTRY if is_asyncio else REGISTRY
     conf = reg[engine_name]
     package = conf.get("package")

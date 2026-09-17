@@ -1,8 +1,9 @@
 """Oracle database lock implementation using DBMS_LOCK"""
 
 import sys
+from collections.abc import Callable
 from hashlib import blake2b
-from typing import Any, Callable, Literal, Optional, TypeVar, Union
+from typing import Literal
 
 if sys.version_info < (3, 12):  # pragma: no cover
     from typing_extensions import override
@@ -18,12 +19,10 @@ from .base import AbstractLockMixin, BaseAsyncSadLock, BaseSadLock
 ORACLE_LOCK_ID_MIN = 0
 ORACLE_LOCK_ID_MAX = 1073741823
 
-ConvertibleKT = Union[bytes, bytearray, memoryview, str, int, float]
-KT = Any
-KTV = TypeVar("KTV", bound=KT)
+ConvertibleKT = bytes | bytearray | memoryview | str | int | float
 
 
-class OracleSadLockMixin(AbstractLockMixin[KTV, int]):
+class OracleSadLockMixin(AbstractLockMixin[ConvertibleKT, int]):
     """Mixin class for Oracle DBMS_LOCK"""
 
     # Lock mode constants (matching DBMS_LOCK)
@@ -38,8 +37,8 @@ class OracleSadLockMixin(AbstractLockMixin[KTV, int]):
     def __init__(
         self,
         *,
-        key: KTV,
-        convert: Optional[Callable[[KTV], int]] = None,
+        key: ConvertibleKT,
+        convert: Callable[[ConvertibleKT], int] | None = None,
         lock_mode: Literal["NL", "SS", "SX", "S", "SSX", "X"] = "X",
         release_on_commit: bool = False,
         **kwargs,
@@ -112,8 +111,10 @@ class OracleSadLockMixin(AbstractLockMixin[KTV, int]):
             return k
         if isinstance(k, str):
             d = k.encode()
-        elif isinstance(k, (bytes, bytearray)):
+        elif isinstance(k, bytes):
             d = k
+        elif isinstance(k, bytearray):
+            d = bytes(k)
         elif isinstance(k, memoryview):
             d = k.tobytes()
         elif isinstance(k, float):
@@ -169,7 +170,7 @@ class OracleSadLockMixin(AbstractLockMixin[KTV, int]):
         return self._release_on_commit
 
 
-class OracleSadLock(OracleSadLockMixin, BaseSadLock[int, ConnectionOrSessionT]):
+class OracleSadLock(OracleSadLockMixin, BaseSadLock[ConvertibleKT, ConnectionOrSessionT, int]):
     """Distributed lock implemented by Oracle DBMS_LOCK
 
     See Also:
@@ -186,7 +187,7 @@ class OracleSadLock(OracleSadLockMixin, BaseSadLock[int, ConnectionOrSessionT]):
     """
 
     @override
-    def __init__(self, connection_or_session: ConnectionOrSessionT, key: KT, **kwargs):
+    def __init__(self, connection_or_session: ConnectionOrSessionT, key: ConvertibleKT, **kwargs):
         """
         Args:
             connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
@@ -197,10 +198,10 @@ class OracleSadLock(OracleSadLockMixin, BaseSadLock[int, ConnectionOrSessionT]):
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.OracleSadLockMixin`
         """
         OracleSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self.get_actual_key(), **kwargs)
 
     @override
-    def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    def do_acquire(self, block: bool = True, timeout: float | None = None, *args, **kwargs) -> bool:
         """
         Acquire the lock using DBMS_LOCK.REQUEST.
 
@@ -239,10 +240,10 @@ class OracleSadLock(OracleSadLockMixin, BaseSadLock[int, ConnectionOrSessionT]):
         elif ret_val == 1:
             return False  # Timeout
         elif ret_val == 2:
-            raise SqlAlchemyDLockDatabaseError(f"Deadlock detected while acquiring lock {self.key!r}")
+            raise SqlAlchemyDLockDatabaseError(f"Deadlock detected while acquiring lock {self.actual_key!r}")
         elif ret_val == 3:
             raise SqlAlchemyDLockDatabaseError(
-                f"Parameter error for lock {self.key!r} (mode={self._lock_mode}, timeout={timeout_sec})"
+                f"Parameter error for lock {self.actual_key!r} (mode={self._lock_mode}, timeout={timeout_sec})"
             )
         elif ret_val == 4:
             # Already own the lock - treat as success
@@ -252,7 +253,7 @@ class OracleSadLock(OracleSadLockMixin, BaseSadLock[int, ConnectionOrSessionT]):
                 f"Illegal lock ID {self._actual_key}. Oracle lock IDs must be in range [0, 1073741823]."
             )
         else:
-            raise SqlAlchemyDLockDatabaseError(f"DBMS_LOCK.REQUEST({self.key!r}) returned unexpected value: {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"DBMS_LOCK.REQUEST({self.actual_key!r}) returned unexpected value: {ret_val}")
 
     @override
     def do_release(self):
@@ -271,27 +272,27 @@ class OracleSadLock(OracleSadLockMixin, BaseSadLock[int, ConnectionOrSessionT]):
         if ret_val == 0:
             return  # Success
         elif ret_val == 3:
-            raise SqlAlchemyDLockDatabaseError(f"Parameter error while releasing lock {self.key!r}")
+            raise SqlAlchemyDLockDatabaseError(f"Parameter error while releasing lock {self.actual_key!r}")
         elif ret_val == 4:
-            raise SqlAlchemyDLockDatabaseError(f"The lock {self.key!r} was not held by this session")
+            raise SqlAlchemyDLockDatabaseError(f"The lock {self.actual_key!r} was not held by this session")
         elif ret_val == 5:
             raise SqlAlchemyDLockDatabaseError(
                 f"Illegal lock ID {self._actual_key}. Oracle lock IDs must be in range [0, 1073741823]."
             )
         else:
-            raise SqlAlchemyDLockDatabaseError(f"DBMS_LOCK.RELEASE({self.key!r}) returned unexpected value: {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"DBMS_LOCK.RELEASE({self.actual_key!r}) returned unexpected value: {ret_val}")
 
 
-class OracleAsyncSadLock(OracleSadLockMixin, BaseAsyncSadLock[int, AsyncConnectionOrSessionT]):
+class OracleAsyncSadLock(OracleSadLockMixin, BaseAsyncSadLock[ConvertibleKT, AsyncConnectionOrSessionT, int]):
     """Async IO version of OracleSadLock"""
 
     @override
-    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: KT, **kwargs):
+    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: ConvertibleKT, **kwargs):
         OracleSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
+        BaseAsyncSadLock.__init__(self, connection_or_session, self.get_actual_key(), **kwargs)
 
     @override
-    async def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    async def do_acquire(self, block: bool = True, timeout: float | None = None, *args, **kwargs) -> bool:
         if block:
             if timeout is None:
                 timeout_sec = MAXWAIT
@@ -318,10 +319,10 @@ class OracleAsyncSadLock(OracleSadLockMixin, BaseAsyncSadLock[int, AsyncConnecti
         elif ret_val == 1:
             return False
         elif ret_val == 2:
-            raise SqlAlchemyDLockDatabaseError(f"Deadlock detected while acquiring lock {self.key!r}")
+            raise SqlAlchemyDLockDatabaseError(f"Deadlock detected while acquiring lock {self.actual_key!r}")
         elif ret_val == 3:
             raise SqlAlchemyDLockDatabaseError(
-                f"Parameter error for lock {self.key!r} (mode={self._lock_mode}, timeout={timeout_sec})"
+                f"Parameter error for lock {self.actual_key!r} (mode={self._lock_mode}, timeout={timeout_sec})"
             )
         elif ret_val == 4:
             return True
@@ -330,7 +331,7 @@ class OracleAsyncSadLock(OracleSadLockMixin, BaseAsyncSadLock[int, AsyncConnecti
                 f"Illegal lock ID {self._actual_key}. Oracle lock IDs must be in range [0, 1073741823]."
             )
         else:
-            raise SqlAlchemyDLockDatabaseError(f"DBMS_LOCK.REQUEST({self.key!r}) returned unexpected value: {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"DBMS_LOCK.REQUEST({self.actual_key!r}) returned unexpected value: {ret_val}")
 
     @override
     async def do_release(self):
@@ -341,12 +342,12 @@ class OracleAsyncSadLock(OracleSadLockMixin, BaseAsyncSadLock[int, AsyncConnecti
         if ret_val == 0:
             return
         elif ret_val == 3:
-            raise SqlAlchemyDLockDatabaseError(f"Parameter error while releasing lock {self.key!r}")
+            raise SqlAlchemyDLockDatabaseError(f"Parameter error while releasing lock {self.actual_key!r}")
         elif ret_val == 4:
-            raise SqlAlchemyDLockDatabaseError(f"The lock {self.key!r} was not held by this session")
+            raise SqlAlchemyDLockDatabaseError(f"The lock {self.actual_key!r} was not held by this session")
         elif ret_val == 5:
             raise SqlAlchemyDLockDatabaseError(
                 f"Illegal lock ID {self._actual_key}. Oracle lock IDs must be in range [0, 1073741823]."
             )
         else:
-            raise SqlAlchemyDLockDatabaseError(f"DBMS_LOCK.RELEASE({self.key!r}) returned unexpected value: {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"DBMS_LOCK.RELEASE({self.actual_key!r}) returned unexpected value: {ret_val}")

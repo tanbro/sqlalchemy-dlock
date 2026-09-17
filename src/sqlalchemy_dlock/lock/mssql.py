@@ -1,5 +1,6 @@
 import sys
-from typing import Any, Callable, Literal, Optional, TypeVar, Union
+from collections.abc import Callable
+from typing import Literal
 
 if sys.version_info < (3, 12):
     from typing_extensions import override
@@ -18,19 +19,23 @@ from .base import AbstractLockMixin, BaseAsyncSadLock, BaseSadLock
 
 MSSQL_LOCK_RESOURCE_MAX_LENGTH = 255
 
-ConvertibleKT = Union[bytes, bytearray, memoryview, str, int, float]
-KT = Any
-KTV = TypeVar("KTV", bound=KT)
+ConvertibleKT = bytes | bytearray | memoryview | str | int | float
 
 
-class MssqlSadLockMixin(AbstractLockMixin[KTV, str]):
+class MssqlSadLockMixin(AbstractLockMixin[ConvertibleKT, str]):
     """Mixin class for SQL Server application lock"""
 
     MSSQL_LOCK_RESOURCE_MAX_LENGTH = 255
 
     @override
     def __init__(
-        self, *, key: KTV, convert: Optional[Callable[[KTV], str]] = None, shared: bool = False, update: bool = False, **kwargs
+        self,
+        *,
+        key: ConvertibleKT,
+        convert: Callable[[ConvertibleKT], str] | None = None,
+        shared: bool = False,
+        update: bool = False,
+        **kwargs,
     ):
         """
         Args:
@@ -103,7 +108,7 @@ class MssqlSadLockMixin(AbstractLockMixin[KTV, str]):
         raise TypeError(type(k).__name__)
 
 
-class MssqlSadLock(MssqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
+class MssqlSadLock(MssqlSadLockMixin, BaseSadLock[ConvertibleKT, ConnectionOrSessionT, str]):
     """Distributed lock implemented by SQL Server application lock (sp_getapplock)
 
     See Also:
@@ -111,12 +116,12 @@ class MssqlSadLock(MssqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
     """
 
     @override
-    def __init__(self, connection_or_session: ConnectionOrSessionT, key: KT, **kwargs):
+    def __init__(self, connection_or_session: ConnectionOrSessionT, key: ConvertibleKT, **kwargs):
         MssqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self.get_actual_key(), **kwargs)
 
     @override
-    def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    def do_acquire(self, block: bool = True, timeout: float | None = None, *args, **kwargs) -> bool:
         """
         Acquire the lock using sp_getapplock.
 
@@ -139,7 +144,7 @@ class MssqlSadLock(MssqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
             timeout_ms = 0  # No wait
 
         # Use the pre-selected statement based on lock mode
-        stmt = self._stmt_lock.params(resource=self.key, timeout=timeout_ms)
+        stmt = self._stmt_lock.params(resource=self.actual_key, timeout=timeout_ms)
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
 
         if ret_val >= 0:
@@ -147,9 +152,9 @@ class MssqlSadLock(MssqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
         elif ret_val == -1:
             return False  # Timeout
         elif ret_val == -3:
-            raise SqlAlchemyDLockDatabaseError(f"Parameter validation failed for lock resource {self.key!r}")
+            raise SqlAlchemyDLockDatabaseError(f"Parameter validation failed for lock resource {self.actual_key!r}")
         else:  # -2, -999, or other errors
-            raise SqlAlchemyDLockDatabaseError(f"sp_getapplock({self.key!r}, {timeout_ms}ms) returned {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"sp_getapplock({self.actual_key!r}, {timeout_ms}ms) returned {ret_val}")
 
     @override
     def do_release(self):
@@ -160,23 +165,23 @@ class MssqlSadLock(MssqlSadLockMixin, BaseSadLock[str, ConnectionOrSessionT]):
         - >= 0: Success
         - -999: Generic error
         """
-        stmt = UNLOCK.params(resource=self.key)
+        stmt = UNLOCK.params(resource=self.actual_key)
         ret_val = self.connection_or_session.execute(stmt).scalar_one()
 
         if ret_val < 0:
-            raise SqlAlchemyDLockDatabaseError(f"sp_releaseapplock({self.key!r}) returned {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"sp_releaseapplock({self.actual_key!r}) returned {ret_val}")
 
 
-class MssqlAsyncSadLock(MssqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnectionOrSessionT]):
+class MssqlAsyncSadLock(MssqlSadLockMixin, BaseAsyncSadLock[ConvertibleKT, AsyncConnectionOrSessionT, str]):
     """Async IO version of MssqlSadLock"""
 
     @override
-    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: KT, **kwargs):
+    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: ConvertibleKT, **kwargs):
         MssqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
+        BaseAsyncSadLock.__init__(self, connection_or_session, self.get_actual_key(), **kwargs)
 
     @override
-    async def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    async def do_acquire(self, block: bool = True, timeout: float | None = None, *args, **kwargs) -> bool:
         if block:
             if timeout is None:
                 timeout_ms = -1
@@ -188,7 +193,7 @@ class MssqlAsyncSadLock(MssqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnection
             timeout_ms = 0
 
         # Use the pre-selected statement based on lock mode
-        stmt = self._stmt_lock.params(resource=self.key, timeout=timeout_ms)
+        stmt = self._stmt_lock.params(resource=self.actual_key, timeout=timeout_ms)
         ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
 
         if ret_val >= 0:
@@ -196,14 +201,14 @@ class MssqlAsyncSadLock(MssqlSadLockMixin, BaseAsyncSadLock[str, AsyncConnection
         elif ret_val == -1:
             return False
         elif ret_val == -3:
-            raise SqlAlchemyDLockDatabaseError(f"Parameter validation failed for lock resource {self.key!r}")
+            raise SqlAlchemyDLockDatabaseError(f"Parameter validation failed for lock resource {self.actual_key!r}")
         else:
-            raise SqlAlchemyDLockDatabaseError(f"sp_getapplock({self.key!r}, {timeout_ms}ms) returned {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"sp_getapplock({self.actual_key!r}, {timeout_ms}ms) returned {ret_val}")
 
     @override
     async def do_release(self):
-        stmt = UNLOCK.params(resource=self.key)
+        stmt = UNLOCK.params(resource=self.actual_key)
         ret_val = (await self.connection_or_session.execute(stmt)).scalar_one()
 
         if ret_val < 0:
-            raise SqlAlchemyDLockDatabaseError(f"sp_releaseapplock({self.key!r}) returned {ret_val}")
+            raise SqlAlchemyDLockDatabaseError(f"sp_releaseapplock({self.actual_key!r}) returned {ret_val}")

@@ -1,8 +1,9 @@
 import sys
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from threading import local
-from typing import Callable, Generic, Optional, TypeVar, Union, final
+from typing import Generic, TypeVar, final
 
 if sys.version_info >= (3, 11):  # pragma: no cover
     from typing import Self
@@ -22,22 +23,17 @@ ConnectionTV = TypeVar("ConnectionTV", bound=ConnectionOrSessionT)
 AsyncConnectionTV = TypeVar("AsyncConnectionTV", bound=AsyncConnectionOrSessionT)
 
 
-class AbstractLockMixin(Generic[KeyTV, ActualKeyTV], ABC):
+class AbstractLockMixin(ABC, Generic[KeyTV, ActualKeyTV]):
     @abstractmethod
-    def __init__(self, *, key: KeyTV, convert: Optional[Callable[[KeyTV], ActualKeyTV]] = None, **kwargs):
+    def __init__(self, *, key: KeyTV, convert: Callable[[KeyTV], ActualKeyTV] | None = None, **kwargs):
         raise NotImplementedError()
 
     @abstractmethod
     def get_actual_key(self) -> ActualKeyTV:
         raise NotImplementedError()
 
-    @final
-    @property
-    def actual_key(self) -> ActualKeyTV:
-        return self.get_actual_key()
 
-
-class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
+class BaseSadLock(AbstractLockMixin[KeyTV, ActualKeyTV], local, Generic[KeyTV, ConnectionTV, ActualKeyTV]):
     """Base class of database lock implementation
 
     Note:
@@ -67,7 +63,7 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
 
     @override
     def __init__(
-        self, connection_or_session: ConnectionTV, key: KeyTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
+        self, connection_or_session: ConnectionTV, actual_key: ActualKeyTV, /, contextual_timeout: float | None = None, **kwargs
     ):
         """
         Args:
@@ -99,7 +95,7 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
         """
         self._acquired = False
         self._connection_or_session = connection_or_session
-        self._key = key
+        self._actual_key = actual_key
         self._contextual_timeout = contextual_timeout
 
     @final
@@ -116,10 +112,10 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
 
     @final
     def __str__(self) -> str:
-        return "<{} {} key={} at 0x{:x}>".format(
+        return "<{} {} actual_key={} at 0x{:x}>".format(
             "locked" if self._acquired else "unlocked",
             self.__class__.__name__,
-            self._key,
+            self._actual_key,
             id(self),
         )
 
@@ -134,11 +130,11 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
 
     @final
     @property
-    def key(self) -> KeyTV:
+    def actual_key(self) -> ActualKeyTV:
         """ID or name of the SQL locking function
 
         It returns ``key`` parameter of the class's constructor"""
-        return self._key
+        return self._actual_key
 
     @final
     @property
@@ -150,7 +146,7 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
         return self._acquired
 
     @final
-    def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    def acquire(self, block: bool = True, timeout: float | None = None, *args, **kwargs) -> bool:
         """Acquire the lock in blocking or non-blocking mode.
 
         The implementation (:meth:`do_acquire`) should provide the following behavior:
@@ -177,7 +173,7 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
         return self._acquired
 
     @abstractmethod
-    def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    def do_acquire(self, block: bool = True, timeout: float | None = None, *args, **kwargs) -> bool:
         raise NotImplementedError()
 
     @final
@@ -243,21 +239,21 @@ class BaseSadLock(AbstractLockMixin, Generic[KeyTV, ConnectionTV], local, ABC):
             self.release(*args, **kwargs)
 
 
-class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], local, ABC):
+class BaseAsyncSadLock(AbstractLockMixin[KeyTV, ActualKeyTV], local, Generic[KeyTV, AsyncConnectionTV, ActualKeyTV]):
     """Async version of :class:`.BaseSadLock`"""
 
     @override
     def __init__(
         self,
         connection_or_session: AsyncConnectionTV,
-        key: KeyTV,
+        actual_key: ActualKeyTV,
         /,
-        contextual_timeout: Union[float, int, None] = None,
+        contextual_timeout: float | None = None,
         **kwargs,
     ):
         self._acquired = False
         self._connection_or_session = connection_or_session
-        self._key = key
+        self._actual_key = actual_key
         self._contextual_timeout = contextual_timeout
 
     @final
@@ -275,10 +271,10 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
 
     @final
     def __str__(self):
-        return "<{} {} key={} at 0x{:x}>".format(
+        return "<{} {} actual_key={} at 0x{:x}>".format(
             "locked" if self._acquired else "unlocked",
             self.__class__.__name__,
-            self._key,
+            self._actual_key,
             id(self),
         )
 
@@ -289,8 +285,8 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
 
     @final
     @property
-    def key(self) -> KeyTV:
-        return self._key
+    def actual_key(self) -> ActualKeyTV:
+        return self._actual_key
 
     @final
     @property
@@ -298,14 +294,14 @@ class BaseAsyncSadLock(AbstractLockMixin, Generic[KeyTV, AsyncConnectionTV], loc
         return self._acquired
 
     @final
-    async def acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    async def acquire(self, block: bool = True, timeout: float | None = None, *args, **kwargs) -> bool:
         if self._acquired:
             raise ValueError("invoked on a locked lock")
         self._acquired = await self.do_acquire(block, timeout, *args, **kwargs)
         return self._acquired
 
     @abstractmethod
-    async def do_acquire(self, block: bool = True, timeout: Union[float, int, None] = None, *args, **kwargs) -> bool:
+    async def do_acquire(self, block: bool = True, timeout: float | None = None, *args, **kwargs) -> bool:
         raise NotImplementedError()
 
     @final

@@ -1,10 +1,5 @@
-import sys
-from typing import Type, TypeVar, Union
-
-if sys.version_info < (3, 10):  # pragma: no cover
-    from typing_extensions import TypeGuard
-else:  # pragma: no cover
-    from typing import TypeGuard
+from collections.abc import Callable
+from typing import TypeGuard, TypeVar, cast
 
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_scoped_session
@@ -13,15 +8,21 @@ from sqlalchemy.orm import Session, scoped_session
 from .lock.base import AsyncConnectionTV, BaseAsyncSadLock, BaseSadLock, ConnectionTV
 from .registry import find_lock_class
 
-__all__ = ("create_sadlock", "create_async_sadlock")
+__all__ = ("create_async_sadlock", "create_sadlock")
 
 
 KTV = TypeVar("KTV")
+AKTV = TypeVar("AKTV")
 
 
 def create_sadlock(
-    connection_or_session: ConnectionTV, key: KTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
-) -> BaseSadLock[KTV, ConnectionTV]:
+    connection_or_session: ConnectionTV,
+    key: KTV,
+    /,
+    convert: Callable[[KTV], AKTV] | None = None,
+    contextual_timeout: float | None = None,
+    **kwargs,
+) -> BaseSadLock[KTV, ConnectionTV, AKTV]:
     """Create a database distributed lock object
 
     All arguments will be passed to a sub-class of :class:`.BaseSadLock`, depend on the type of ``connection_session``'s SQLAlchemy engine.
@@ -59,15 +60,23 @@ def create_sadlock(
     else:
         raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
 
-    lock_class = find_lock_class(engine_name)
-    if not is_sadlock_type(lock_class):
+    class_ = find_lock_class(engine_name)
+    if not is_sadlock_type(class_):
         raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
-    return lock_class(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
+    if convert is not None:
+        kwargs["convert"] = convert
+    result = class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
+    return cast(BaseSadLock[KTV, ConnectionTV, AKTV], result)
 
 
 def create_async_sadlock(
-    connection_or_session: AsyncConnectionTV, key: KTV, /, contextual_timeout: Union[float, int, None] = None, **kwargs
-) -> BaseAsyncSadLock[KTV, AsyncConnectionTV]:
+    connection_or_session: AsyncConnectionTV,
+    key: KTV,
+    /,
+    convert: Callable[[KTV], AKTV] | None = None,
+    contextual_timeout: float | None = None,
+    **kwargs,
+) -> BaseAsyncSadLock[KTV, AsyncConnectionTV, AKTV]:
     """AsyncIO version of :func:`create_sadlock`"""
     if isinstance(connection_or_session, AsyncConnection):
         engine_name = connection_or_session.engine.name
@@ -80,17 +89,20 @@ def create_async_sadlock(
     else:
         raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
 
-    class_ = find_lock_class(engine_name, True)
+    class_ = find_lock_class(engine_name, is_asyncio=True)
     if not is_async_sadlock_type(class_):
         raise TypeError(f"Unsupported connection_or_session type: {type(connection_or_session)}")
-    return class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
+    if convert is not None:
+        kwargs["convert"] = convert
+    result = class_(connection_or_session, key, contextual_timeout=contextual_timeout, **kwargs)
+    return cast(BaseAsyncSadLock[KTV, AsyncConnectionTV, AKTV], result)
 
 
-def is_sadlock_type(cls: Type) -> TypeGuard[Type[BaseSadLock]]:
+def is_sadlock_type(cls: type) -> TypeGuard[type[BaseSadLock]]:
     """Check if the passed-in class type is :class:`.BaseSadLock` object"""
     return issubclass(cls, BaseSadLock)
 
 
-def is_async_sadlock_type(cls: Type) -> TypeGuard[Type[BaseAsyncSadLock]]:
+def is_async_sadlock_type(cls: type) -> TypeGuard[type[BaseAsyncSadLock]]:
     """Check if the passed-in class type is :class:`.BaseAsyncSadLock` object"""
     return issubclass(cls, BaseAsyncSadLock)

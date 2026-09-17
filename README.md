@@ -78,11 +78,11 @@ This library requires a database driver to be installed separately. Since you're
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('postgresql://user:pass@localhost/db')
+engine = create_engine("postgresql://user:pass@localhost/db")
 
 with engine.connect() as conn:
     # Create a lock
-    lock = create_sadlock(conn, 'my-resource-key')
+    lock = create_sadlock(conn, "my-resource-key")
 
     # Acquire the lock
     lock.acquire()
@@ -99,11 +99,11 @@ with engine.connect() as conn:
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('postgresql://user:pass@localhost/db')
+engine = create_engine("postgresql://user:pass@localhost/db")
 
 with engine.connect() as conn:
     # Automatically acquires and releases the lock
-    with create_sadlock(conn, 'my-resource-key') as lock:
+    with create_sadlock(conn, "my-resource-key") as lock:
         assert lock.locked
         # Your critical section here
 
@@ -117,12 +117,12 @@ with engine.connect() as conn:
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('postgresql://user:pass@localhost/db')
+engine = create_engine("postgresql://user:pass@localhost/db")
 
 with engine.connect() as conn:
     try:
         # Raises TimeoutError if lock cannot be acquired within 5 seconds
-        with create_sadlock(conn, 'my-resource-key', contextual_timeout=5) as lock:
+        with create_sadlock(conn, "my-resource-key", contextual_timeout=5) as lock:
             pass
     except TimeoutError:
         print("Could not acquire lock - resource is busy")
@@ -140,11 +140,12 @@ Prevent multiple workers from processing the same task simultaneously:
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
+
 def process_monthly_billing(user_id: int):
-    engine = create_engine('postgresql://user:pass@localhost/db')
+    engine = create_engine("postgresql://user:pass@localhost/db")
     with engine.connect() as conn:
         # Ensure billing for a user is only processed once at a time
-        lock_key = f'billing:user:{user_id}'
+        lock_key = f"billing:user:{user_id}"
         with create_sadlock(conn, lock_key, contextual_timeout=0):
             # If another worker is already processing this user's billing,
             # this will fail immediately (timeout=0)
@@ -163,14 +164,15 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy_dlock import create_async_sadlock
 
 app = FastAPI()
-engine = create_async_engine('postgresql+asyncpg://user:pass@localhost/db')
+engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")
 AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
 
 @app.post("/api/resources/{resource_id}/export")
 async def export_resource(resource_id: str):
     async with AsyncSessionLocal() as session:
         # Try to acquire lock without blocking
-        lock = create_async_sadlock(session, f'export:{resource_id}')
+        lock = create_async_sadlock(session, f"export:{resource_id}")
         acquired = await lock.acquire(block=False)
         if not acquired:
             raise HTTPException(status_code=409, detail="Export already in progress")
@@ -190,18 +192,20 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
+
 def data_sync_job():
-    engine = create_engine('mysql://user:pass@localhost/db')
+    engine = create_engine("mysql://user:pass@localhost/db")
     with engine.connect() as conn:
-        lock_key = 'scheduled-job:data-sync'
+        lock_key = "scheduled-job:data-sync"
 
         # Only proceed if no other server is running this job
         lock = create_sadlock(conn, lock_key, contextual_timeout=60)
         with lock:
             perform_data_sync()
 
+
 scheduler = BackgroundScheduler()
-scheduler.add_job(data_sync_job, 'interval', minutes=30)
+scheduler.add_job(data_sync_job, "interval", minutes=30)
 scheduler.start()
 ```
 
@@ -214,22 +218,27 @@ from functools import wraps
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
+
 def with_db_lock(key_func, timeout=None):
     """Decorator that acquires a database lock before executing the function."""
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            engine = create_engine('postgresql://user:pass@localhost/db')
+            engine = create_engine("postgresql://user:pass@localhost/db")
             lock_key = key_func(*args, **kwargs)
 
             with engine.connect() as conn:
                 with create_sadlock(conn, lock_key, contextual_timeout=timeout):
                     return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
+
 # Usage
-@with_db_lock(lambda user_id: f'user:update:{user_id}', timeout=10)
+@with_db_lock(lambda user_id: f"user:update:{user_id}", timeout=10)
 def update_user_profile(user_id: int, profile_data: dict):
     # This function is protected from concurrent execution
     # for the same user_id
@@ -247,11 +256,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('postgresql://user:pass@localhost/db')
+engine = create_engine("postgresql://user:pass@localhost/db")
 Session = sessionmaker(bind=engine)
 
 with Session() as session:
-    with create_sadlock(session, 'my-resource-key') as lock:
+    with create_sadlock(session, "my-resource-key") as lock:
         # Use the session within the locked context
         user = session.query(User).get(user_id)
         user.balance += 100
@@ -268,11 +277,12 @@ Full async/await support for asynchronous applications:
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy_dlock import create_async_sadlock
 
-engine = create_async_engine('postgresql+asyncpg://user:pass@localhost/db')
+engine = create_async_engine("postgresql+asyncpg://user:pass@localhost/db")
+
 
 async def main():
     async with engine.connect() as conn:
-        async with create_async_sadlock(conn, 'my-resource-key') as lock:
+        async with create_async_sadlock(conn, "my-resource-key") as lock:
             assert lock.locked
             # Your async critical section here
         assert not lock.locked
@@ -301,11 +311,11 @@ PostgreSQL provides multiple advisory lock types. Choose based on your scenario:
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('postgresql://user:pass@localhost/db')
+engine = create_engine("postgresql://user:pass@localhost/db")
 
 with engine.connect() as conn:
     # Transaction-level lock - automatically released on commit/rollback
-    with create_sadlock(conn, 'my-key', xact=True) as lock:
+    with create_sadlock(conn, "my-key", xact=True) as lock:
         conn.execute(text("INSERT INTO ..."))
         conn.commit()  # Lock is released here
 ```
@@ -316,19 +326,21 @@ with engine.connect() as conn:
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('postgresql://user:pass@localhost/db')
+engine = create_engine("postgresql://user:pass@localhost/db")
+
 
 # Multiple readers can hold shared locks simultaneously
 def read_resource(resource_id: str):
     with engine.connect() as conn:
-        with create_sadlock(conn, f'resource:{resource_id}', shared=True):
+        with create_sadlock(conn, f"resource:{resource_id}", shared=True):
             return conn.execute(text("SELECT * FROM resources WHERE id = :id"), {"id": resource_id})
+
 
 # Writers need exclusive locks
 def write_resource(resource_id: str, data: dict):
     with engine.connect() as conn:
         # This will wait for all shared locks to be released
-        with create_sadlock(conn, f'resource:{resource_id}') as lock:
+        with create_sadlock(conn, f"resource:{resource_id}") as lock:
             conn.execute(text("UPDATE resources SET ..."))
             conn.commit()
 ```
@@ -351,11 +363,11 @@ SQL Server's `sp_getapplock` supports multiple lock modes:
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('mssql+pyodbc://user:pass@localhost/db')
+engine = create_engine("mssql+pyodbc://user:pass@localhost/db")
 
 with engine.connect() as conn:
     # Exclusive lock for writing (default)
-    with create_sadlock(conn, 'my-resource') as lock:
+    with create_sadlock(conn, "my-resource") as lock:
         conn.execute(text("UPDATE resources SET ..."))
 ```
 
@@ -365,12 +377,13 @@ with engine.connect() as conn:
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('mssql+pyodbc://user:pass@localhost/db')
+engine = create_engine("mssql+pyodbc://user:pass@localhost/db")
+
 
 # Multiple readers can hold shared locks simultaneously
 def read_resource(resource_id: str):
     with engine.connect() as conn:
-        with create_sadlock(conn, f'resource:{resource_id}', shared=True):
+        with create_sadlock(conn, f"resource:{resource_id}", shared=True):
             return conn.execute(text("SELECT * FROM resources WHERE id = :id"), {"id": resource_id})
 ```
 
@@ -380,11 +393,11 @@ def read_resource(resource_id: str):
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('mssql+pyodbc://user:pass@localhost/db')
+engine = create_engine("mssql+pyodbc://user:pass@localhost/db")
 
 with engine.connect() as conn:
     # Update lock - compatible with shared locks, used for read-then-write patterns
-    with create_sadlock(conn, 'my-resource', update=True) as lock:
+    with create_sadlock(conn, "my-resource", update=True) as lock:
         data = conn.execute(text("SELECT * FROM resources WHERE id = :id"), {"id": resource_id})
         # Perform read operations
         # Then upgrade to exclusive lock for writing
@@ -412,11 +425,11 @@ Oracle's `DBMS_LOCK.REQUEST` supports 6 lock modes with different compatibility:
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('oracle+oracledb://user:pass@localhost/db')
+engine = create_engine("oracle+oracledb://user:pass@localhost/db")
 
 with engine.connect() as conn:
     # Exclusive lock for writing (default)
-    with create_sadlock(conn, 'my-resource') as lock:
+    with create_sadlock(conn, "my-resource") as lock:
         conn.execute(text("UPDATE resources SET ..."))
 ```
 
@@ -426,12 +439,13 @@ with engine.connect() as conn:
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('oracle+oracledb://user:pass@localhost/db')
+engine = create_engine("oracle+oracledb://user:pass@localhost/db")
+
 
 # Multiple readers can hold shared locks simultaneously
 def read_resource(resource_id: str):
     with engine.connect() as conn:
-        with create_sadlock(conn, f'resource:{resource_id}', lock_mode="S"):
+        with create_sadlock(conn, f"resource:{resource_id}", lock_mode="S"):
             return conn.execute(text("SELECT * FROM resources WHERE id = :id"), {"id": resource_id})
 ```
 
@@ -441,11 +455,11 @@ def read_resource(resource_id: str):
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('oracle+oracledb://user:pass@localhost/db')
+engine = create_engine("oracle+oracledb://user:pass@localhost/db")
 
 with engine.connect() as conn:
     # Transaction-level lock - automatically released on commit/rollback
-    with create_sadlock(conn, 'my-resource', release_on_commit=True) as lock:
+    with create_sadlock(conn, "my-resource", release_on_commit=True) as lock:
         conn.execute(text("INSERT INTO ..."))
         conn.commit()  # Lock is released here
 ```
@@ -456,7 +470,7 @@ with engine.connect() as conn:
 from sqlalchemy import create_engine
 from sqlalchemy_dlock import create_sadlock
 
-engine = create_engine('oracle+oracledb://user:pass@localhost/db')
+engine = create_engine("oracle+oracledb://user:pass@localhost/db")
 
 with engine.connect() as conn:
     # Direct integer lock ID (no hashing needed)
@@ -487,9 +501,9 @@ with engine.connect() as conn:
 
 ```python
 # DANGER: On MySQL, the second acquisition succeeds immediately
-with create_sadlock(conn, 'my-key') as lock1:
+with create_sadlock(conn, "my-key") as lock1:
     # This immediately returns without waiting - no real mutual exclusion!
-    with create_sadlock(conn, 'my-key') as lock2:
+    with create_sadlock(conn, "my-key") as lock2:
         pass
 ```
 

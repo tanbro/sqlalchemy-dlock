@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [UnReleased]
+- 💔 **Breaking Changes:**
+  - **Dropped** Python3.9 support
+
 ## v0.8.1
 
 > 📅 **Date** 2026-04-01

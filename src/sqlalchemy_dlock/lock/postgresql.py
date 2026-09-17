@@ -1,8 +1,8 @@
 import asyncio
 import sys
+from collections.abc import Callable
 from hashlib import blake2b
 from time import sleep, time
-from typing import Any, Callable, Optional, TypeVar, Union
 from warnings import catch_warnings, warn
 
 if sys.version_info < (3, 12):  # pragma: no cover
@@ -28,17 +28,21 @@ from ..statement.postgresql import (
 from ..typing import AsyncConnectionOrSessionT, ConnectionOrSessionT
 from .base import AbstractLockMixin, BaseAsyncSadLock, BaseSadLock
 
-ConvertibleKT = Union[bytes, bytearray, memoryview, str, int, float]
-KT = Any
-KTV = TypeVar("KTV", bound=KT)
+ConvertibleKT = bytes | bytearray | memoryview | str | int | float
 
 
-class PostgresqlSadLockMixin(AbstractLockMixin[KTV, int]):
+class PostgresqlSadLockMixin(AbstractLockMixin[ConvertibleKT, int]):
     """A Mix-in class for PostgreSQL advisory lock"""
 
     @override
     def __init__(
-        self, *, key: KTV, convert: Optional[Callable[[KTV], int]] = None, shared: bool = False, xact: bool = False, **kwargs
+        self,
+        *,
+        key: ConvertibleKT,
+        convert: Callable[[ConvertibleKT], int] | None = None,
+        shared: bool = False,
+        xact: bool = False,
+        **kwargs,
     ):
         """
         Args:
@@ -64,10 +68,8 @@ class PostgresqlSadLockMixin(AbstractLockMixin[KTV, int]):
         else:
             self._actual_key = self.convert(key)
         self._actual_key = self.ensure_int64(self._actual_key)
-        #
         self._shared = bool(shared)
         self._xact = bool(xact)
-        #
         self._stmt_unlock = None
         if not shared and not xact:
             self._stmt_lock = LOCK.params(key=self._actual_key)
@@ -96,8 +98,10 @@ class PostgresqlSadLockMixin(AbstractLockMixin[KTV, int]):
             return k
         if isinstance(k, str):
             d = k.encode()
-        elif isinstance(k, (bytes, bytearray)):
+        elif isinstance(k, bytes):
             d = k
+        elif isinstance(k, bytearray):
+            d = bytes(k)
         elif isinstance(k, memoryview):
             d = k.tobytes()
         else:
@@ -136,7 +140,7 @@ class PostgresqlSadLockMixin(AbstractLockMixin[KTV, int]):
         return self._xact
 
 
-class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSessionT]):
+class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[ConvertibleKT, ConnectionOrSessionT, int]):
     """A distributed lock implemented by PostgreSQL advisory lock
 
     See also:
@@ -149,7 +153,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
     """
 
     @override
-    def __init__(self, connection_or_session: ConnectionOrSessionT, key: KT, **kwargs):
+    def __init__(self, connection_or_session: ConnectionOrSessionT, key: ConvertibleKT, **kwargs):
         """
         Args:
             connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
@@ -160,14 +164,14 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.PostgresqlSadLockMixin`
         """
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
+        BaseSadLock.__init__(self, connection_or_session, self.get_actual_key(), **kwargs)
 
     @override
     def do_acquire(
         self,
         block: bool = True,
-        timeout: Union[float, int, None] = None,
-        interval: Union[float, int, None] = None,
+        timeout: float | None = None,
+        interval: float | None = None,
         *args,
         **kwargs,
     ) -> bool:
@@ -192,8 +196,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
                 return True
             else:
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
-                if timeout < 0:
-                    timeout = 0
+                timeout = max(timeout, 0)
                 interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
                 if interval < SLEEP_INTERVAL_MIN:  # pragma: no cover
                     raise ValueError("interval too small")
@@ -222,7 +225,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
             return
         ret_val = self.connection_or_session.execute(self._stmt_unlock).scalar_one()
         if not ret_val:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")
+            raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.actual_key!r} was not held.")
 
     # Force override close, and disable transaction level advisory locks warning it the method
     def close(self):  # type: ignore
@@ -235,20 +238,20 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[KT, ConnectionOrSess
                     return self.release()
 
 
-class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, AsyncConnectionOrSessionT]):
+class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[ConvertibleKT, AsyncConnectionOrSessionT, int]):
     """Async IO version of :class:`PostgresqlSadLock`"""
 
     @override
-    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: KT, **kwargs):
+    def __init__(self, connection_or_session: AsyncConnectionOrSessionT, key: ConvertibleKT, **kwargs):
         PostgresqlSadLockMixin.__init__(self, key=key, **kwargs)
-        BaseAsyncSadLock.__init__(self, connection_or_session, self.actual_key, **kwargs)
+        BaseAsyncSadLock.__init__(self, connection_or_session, self.get_actual_key(), **kwargs)
 
     @override
     async def do_acquire(
         self,
         block: bool = True,
-        timeout: Union[float, int, None] = None,
-        interval: Union[float, int, None] = None,
+        timeout: float | None = None,
+        interval: float | None = None,
         *args,
         **kwargs,
     ) -> bool:
@@ -259,8 +262,7 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, Async
                 return True
             else:
                 # negative value for `timeout` are equivalent to a `timeout` of zero.
-                if timeout < 0:
-                    timeout = 0
+                timeout = max(timeout, 0)
                 interval = SLEEP_INTERVAL_DEFAULT if interval is None else interval
                 if interval < SLEEP_INTERVAL_MIN:  # pragma: no cover
                     raise ValueError("interval too small")
@@ -289,7 +291,7 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[int, Async
             return
         ret_val = (await self.connection_or_session.execute(self._stmt_unlock)).scalar_one()
         if not ret_val:  # pragma: no cover
-            raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.key!r} was not held.")
+            raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.actual_key!r} was not held.")
 
     # # Force override close, and disable transaction level advisory locks warning it the method
     async def close(self):  # type: ignore
