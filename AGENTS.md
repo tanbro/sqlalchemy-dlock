@@ -102,7 +102,7 @@ pre-commit run --all-files
 
 ## Environment
 
-**Python:** 3.9+ (CI tests 3.10-3.14)
+**Python:** 3.10+
 
 **Testing Databases:** Optional Docker services in [db.docker-compose.yml](db.docker-compose.yml)
 - MySQL: `mysql://test:test@127.0.0.1:3306/test`

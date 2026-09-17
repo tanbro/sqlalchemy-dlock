@@ -3,7 +3,7 @@
 import sys
 from collections.abc import Callable
 from hashlib import blake2b
-from typing import Literal
+from typing import Literal, cast
 
 if sys.version_info < (3, 12):  # pragma: no cover
     from typing_extensions import override
@@ -20,6 +20,7 @@ ORACLE_LOCK_ID_MIN = 0
 ORACLE_LOCK_ID_MAX = 1073741823
 
 ConvertibleKT = bytes | bytearray | memoryview | str | int | float
+LockModeT = Literal["NL", "SS", "SX", "S", "SSX", "X"]
 
 
 class OracleSadLockMixin(AbstractLockMixin[ConvertibleKT, int]):
@@ -39,7 +40,7 @@ class OracleSadLockMixin(AbstractLockMixin[ConvertibleKT, int]):
         *,
         key: ConvertibleKT,
         convert: Callable[[ConvertibleKT], int] | None = None,
-        lock_mode: Literal["NL", "SS", "SX", "S", "SSX", "X"] = "X",
+        lock_mode: LockModeT = "X",
         release_on_commit: bool = False,
         **kwargs,
     ):
@@ -85,10 +86,10 @@ class OracleSadLockMixin(AbstractLockMixin[ConvertibleKT, int]):
 
         # Validate and store lock mode
         valid_modes = {"NL", "SS", "SX", "S", "SSX", "X"}
-        lock_mode_upper = lock_mode.upper()
+        lock_mode_upper = lock_mode.upper().strip()
         if lock_mode_upper not in valid_modes:
             raise ValueError(f"Invalid lock_mode: {lock_mode!r}. Must be one of: {', '.join(sorted(valid_modes))}")
-        self._lock_mode = lock_mode_upper
+        self._lock_mode = cast(LockModeT, lock_mode_upper)
 
         # Store release_on_commit setting
         self._release_on_commit = bool(release_on_commit)
@@ -155,9 +156,9 @@ class OracleSadLockMixin(AbstractLockMixin[ConvertibleKT, int]):
         return i
 
     @property
-    def lock_mode(self) -> Literal["NL", "SS", "SX", "S", "SSX", "X"]:
+    def lock_mode(self) -> LockModeT:
         """The lock mode being used"""
-        return self._lock_mode  # type: ignore[return-value]
+        return self._lock_mode  # pyright: ignore[reportReturnType]
 
     @property
     def lock_mode_int(self) -> int:
@@ -191,7 +192,7 @@ class OracleSadLock(OracleSadLockMixin, BaseSadLock[ConvertibleKT, ConnectionOrS
         """
         Args:
             connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
-            key: :attr:`.BaseSadLock.key`
+            key: Value converted to :attr:`.BaseSadLock.actual_key`
             lock_mode: :attr:`.OracleSadLockMixin.lock_mode`
             release_on_commit: :attr:`.OracleSadLockMixin.release_on_commit`
             convert: :class:`.OracleSadLockMixin`

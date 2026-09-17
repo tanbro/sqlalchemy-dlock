@@ -56,7 +56,7 @@ pip install sqlalchemy-dlock
 ```
 
 **Requirements:**
-- Python 3.9+
+- Python 3.10+
 - SQLAlchemy 1.4.3+ or 2.x
 - Appropriate database driver for your database (see below)
 
@@ -127,6 +127,23 @@ with engine.connect() as conn:
     except TimeoutError:
         print("Could not acquire lock - resource is busy")
 ```
+
+### Key Conversion
+
+Each database backend converts the supplied key to the type required by its locking function. The converted value is available through `lock.actual_key`:
+
+```python
+from sqlalchemy import create_engine
+from sqlalchemy_dlock import create_sadlock
+
+engine = create_engine("postgresql://user:pass@localhost/db")
+
+with engine.connect() as conn:
+    lock = create_sadlock(conn, "42", convert=int)
+    assert lock.actual_key == 42
+```
+
+Use the `convert` argument when the backend's default conversion does not match your key scheme. The former `lock.key` alias was removed in v0.9.0; use `lock.actual_key` instead.
 
 ---
 

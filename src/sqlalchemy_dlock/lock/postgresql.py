@@ -88,7 +88,7 @@ class PostgresqlSadLockMixin(AbstractLockMixin[ConvertibleKT, int]):
 
     @override
     def get_actual_key(self) -> int:
-        """The actual key used in MySQL named lock"""
+        """The actual key used in PostgreSQL advisory locks"""
         return self._actual_key
 
     @classmethod
@@ -157,7 +157,7 @@ class PostgresqlSadLock(PostgresqlSadLockMixin, BaseSadLock[ConvertibleKT, Conne
         """
         Args:
             connection_or_session: see :attr:`.BaseSadLock.connection_or_session`
-            key: :attr:`.BaseSadLock.key`
+            key: Value converted to :attr:`.BaseSadLock.actual_key`
             shared: :attr:`.PostgresqlSadLockMixin.shared`
             xact: :attr:`.PostgresqlSadLockMixin.xact`
             convert: :class:`.PostgresqlSadLockMixin`
@@ -292,13 +292,3 @@ class PostgresqlAsyncSadLock(PostgresqlSadLockMixin, BaseAsyncSadLock[Convertibl
         ret_val = (await self.connection_or_session.execute(self._stmt_unlock)).scalar_one()
         if not ret_val:  # pragma: no cover
             raise SqlAlchemyDLockDatabaseError(f"The advisory lock {self.actual_key!r} was not held.")
-
-    # # Force override close, and disable transaction level advisory locks warning it the method
-    async def close(self):  # type: ignore
-        if self.locked:
-            if sys.version_info < (3, 11):
-                with catch_warnings():
-                    return await self.release()
-            else:
-                with catch_warnings(category=RuntimeWarning):
-                    return await self.release()

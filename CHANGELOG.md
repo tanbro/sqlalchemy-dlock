@@ -1,8 +1,19 @@
 # CHANGELOG
 
-## [UnReleased]
+## v0.9.0
+
+> 📅 **Date** 2026-09-17
+
 - 💔 **Breaking Changes:**
-  - **Dropped** Python3.9 support
+  - **Dropped Python 3.9 support:** Python 3.10 or later is now required
+  - **Removed the redundant `key` property:** Use `actual_key` to access the backend-specific converted key
+  - **Removed `BaseAsyncSadLock.close()`:** Use `aclose()` instead, as announced in v0.8.1
+  - **Updated base lock generics:** `BaseSadLock` and `BaseAsyncSadLock` now take the actual key type as their third generic parameter
+
+- 🏗️ **Improvements:**
+  - Distinguished user-supplied key types from backend-specific actual key types
+  - Added an explicit, typed `convert` parameter to `create_sadlock()` and `create_async_sadlock()`
+  - Modernized type annotations for Python 3.10+
 
 ## v0.8.1
 

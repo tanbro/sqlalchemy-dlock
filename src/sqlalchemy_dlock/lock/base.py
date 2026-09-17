@@ -1,5 +1,4 @@
 import sys
-import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from threading import local
@@ -131,9 +130,11 @@ class BaseSadLock(AbstractLockMixin[KeyTV, ActualKeyTV], local, Generic[KeyTV, C
     @final
     @property
     def actual_key(self) -> ActualKeyTV:
-        """ID or name of the SQL locking function
+        """The backend-specific key used by the database lock function.
 
-        It returns ``key`` parameter of the class's constructor"""
+        The value may differ from the key passed to the concrete lock constructor
+        after applying its default or custom converter.
+        """
         return self._actual_key
 
     @final
@@ -286,6 +287,7 @@ class BaseAsyncSadLock(AbstractLockMixin[KeyTV, ActualKeyTV], local, Generic[Key
     @final
     @property
     def actual_key(self) -> ActualKeyTV:
+        """The backend-specific key used by the database lock function."""
         return self._actual_key
 
     @final
@@ -339,15 +341,3 @@ class BaseAsyncSadLock(AbstractLockMixin[KeyTV, ActualKeyTV], local, Generic[Key
         """
         if self._acquired:
             await self.release(*args, **kwargs)
-
-    @final
-    async def close(self, *args, **kwargs):
-        """.. deprecated:: 0.8.1
-        Use :meth:`aclose` instead. Will be removed in 0.9.0.
-        """
-        warnings.warn(
-            "The 'close' method is deprecated and will be removed in 0.9.0. Use 'aclose' instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return await self.aclose(*args, **kwargs)

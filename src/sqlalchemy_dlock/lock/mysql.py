@@ -91,7 +91,7 @@ class MysqlSadLock(MysqlSadLockMixin, BaseSadLock[ConvertibleKT, ConnectionOrSes
         """
         Args:
             connection_or_session: :attr:`.BaseSadLock.connection_or_session`
-            key: :attr:`.BaseSadLock.key`
+            key: Value converted to :attr:`.BaseSadLock.actual_key`
             **kwargs: other named parameters pass to :class:`.BaseSadLock` and :class:`.MysqlSadLockMixin`
         """
         MysqlSadLockMixin.__init__(self, key=key, **kwargs)
