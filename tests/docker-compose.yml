@@ -60,5 +60,4 @@ services:
         condition: service_healthy
     environment:
       <<: *common-environment
-    env_file: .env
     command: [/bin/bash, /workspace/scripts/run-test.sh]

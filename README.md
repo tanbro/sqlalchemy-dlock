@@ -12,13 +12,15 @@ A distributed lock library based on databases and [SQLAlchemy][].
 
 sqlalchemy-dlock provides distributed locking capabilities using your existing database infrastructure—no additional services like Redis or ZooKeeper required. It currently supports:
 
-| Database   | Lock Mechanism                                                                                                                                 |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| MySQL      | [Named Lock](https://dev.mysql.com/doc/refman/en/locking-functions.html) (`GET_LOCK` / `RELEASE_LOCK`)                                         |
-| MariaDB    | [Named Lock](https://mariadb.com/kb/en/get_lock/) (compatible with MySQL)                                                                      |
-| MSSQL      | [Application Lock](https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-getapplock-transact-sql) (`sp_getapplock`) |
-| Oracle     | [User Lock](https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_LOCK.html) (`DBMS_LOCK`) |
-| PostgreSQL | [Advisory Lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS) |
+| Database             | Lock Mechanism                                                                                                                                 | Synchronous Drivers | Asynchronous Drivers | Integration CI |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | -------------------- | -------------- |
+| MySQL                | [Named Lock](https://dev.mysql.com/doc/refman/en/locking-functions.html) (`GET_LOCK` / `RELEASE_LOCK`)                                         | `mysqlclient`, `PyMySQL` | `aiomysql`, `asyncmy` | Yes            |
+| MariaDB              | [Named Lock](https://mariadb.com/kb/en/get_lock/) (compatible with MySQL)                                                                      | `mysqlclient`         | `aiomysql`, `asyncmy` | No             |
+| Microsoft SQL Server | [Application Lock](https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-getapplock-transact-sql) (`sp_getapplock`) | `pyodbc`              | `aioodbc`             | Yes            |
+| Oracle               | [User Lock](https://docs.oracle.com/en/database/oracle/oracle-database/19/arpls/DBMS_LOCK.html) (`DBMS_LOCK`)                                  | `oracledb`            | `oracledb`            | No             |
+| PostgreSQL           | [Advisory Lock](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)                                                   | `psycopg2`, `psycopg` | `asyncpg`, `psycopg`  | Yes            |
+
+`psycopg` refers to Psycopg 3. CI tests it in both synchronous and asynchronous modes. The integration matrix covers MySQL, PostgreSQL, and Microsoft SQL Server on Python 3.10 through 3.14.
 
 > ⚠️ **Oracle Not Tested:**
 > Oracle Database Free (23c/23ai) does NOT support `DBMS_LOCK.REQUEST`. We do NOT test Oracle in CI or integration tests. Use with Oracle Enterprise/Standard Edition at your own risk.
@@ -574,26 +576,24 @@ A: No. SQLite does not support the same named/advisory lock mechanisms as MySQL 
 
 ## Testing
 
-The following database drivers are tested:
+The following database drivers are tested in CI:
 
 **MySQL:**
 - [mysqlclient](https://pypi.org/project/mysqlclient/) (synchronous)
-- [pymysql](https://pypi.org/project/pymysql/) (synchronous)
+- [PyMySQL](https://pypi.org/project/PyMySQL/) (synchronous and used by aiomysql)
 - [aiomysql](https://pypi.org/project/aiomysql/) (asynchronous)
+- [asyncmy](https://pypi.org/project/asyncmy/) (asynchronous)
 
 **PostgreSQL:**
 - [psycopg2](https://pypi.org/project/psycopg2/) (synchronous)
 - [psycopg](https://pypi.org/project/psycopg/) (v3, synchronous and asynchronous)
 - [asyncpg](https://pypi.org/project/asyncpg/) (asynchronous)
 
-**MSSQL:**
+**Microsoft SQL Server:**
 - [pyodbc](https://pypi.org/project/pyodbc/) (synchronous)
-- [pymssql](https://pypi.org/project/pymssql/) (synchronous)
 - [aioodbc](https://pypi.org/project/aioodbc/) (asynchronous)
 
-**Oracle:**
-- [oracledb](https://pypi.org/project/oracledb/) (synchronous & asynchronous)
-- [cx_Oracle](https://pypi.org/project/cx-Oracle/) (synchronous, legacy)
+Oracle is not tested in CI because Oracle Database Free does not provide `DBMS_LOCK.REQUEST`.
 
 ### Running Tests Locally
 
@@ -601,7 +601,7 @@ The following database drivers are tested:
 
 ```bash
 uv sync --group test
-uv pip install mysqlclient aiomysql psycopg2 asyncpg
+uv pip install mysqlclient aiomysql asyncmy "PyMySQL~=1.1.0" psycopg2 "psycopg[binary]" asyncpg
 ```
 
 2. Start MySQL and PostgreSQL services using Docker:
@@ -613,8 +613,8 @@ docker compose -f db.docker-compose.yml up
 3. Set environment variables for database connections (or use defaults):
 
 ```bash
-export TEST_URLS="mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/"
-export TEST_ASYNC_URLS="mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/"
+export TEST_URLS="mysql+mysqldb://test:test@127.0.0.1:3306/test mysql+pymysql://test:test@127.0.0.1:3306/test postgresql+psycopg2://postgres:test@127.0.0.1:5432/ postgresql+psycopg://postgres:test@127.0.0.1:5432/"
+export TEST_ASYNC_URLS="mysql+aiomysql://test:test@127.0.0.1:3306/test mysql+asyncmy://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/ postgresql+psycopg://postgres:test@127.0.0.1:5432/"
 ```
 
 > ℹ️ **Note:** Test cases also load environment variables from `tests/.env`.

@@ -162,8 +162,10 @@ jobs:
           uv pip install \
             "mysqlclient~=2.3" \
             "aiomysql~=0.3.2" \
+            "asyncmy~=0.2.14" \
             "PyMySQL~=1.1.0" \
             "psycopg2~=2.9" \
+            "psycopg[binary]~=3.2" \
             "asyncpg~=0.31" \
             "pyodbc~=5.3" \
             "aioodbc~=0.5" \
@@ -172,8 +174,18 @@ jobs:
       - name: Run tests
         shell: bash
         env:
-          TEST_URLS: mysql://test:test@127.0.0.1:3306/test postgresql://postgres:test@127.0.0.1:5432/ mssql+pyodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
-          TEST_ASYNC_URLS: mysql+aiomysql://test:test@127.0.0.1:3306/test postgresql+asyncpg://postgres:test@127.0.0.1:5432/ mssql+aioodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
+          TEST_URLS: >-
+            mysql+mysqldb://test:test@127.0.0.1:3306/test
+            mysql+pymysql://test:test@127.0.0.1:3306/test
+            postgresql+psycopg2://postgres:test@127.0.0.1:5432/
+            postgresql+psycopg://postgres:test@127.0.0.1:5432/
+            mssql+pyodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
+          TEST_ASYNC_URLS: >-
+            mysql+aiomysql://test:test@127.0.0.1:3306/test
+            mysql+asyncmy://test:test@127.0.0.1:3306/test
+            postgresql+asyncpg://postgres:test@127.0.0.1:5432/
+            postgresql+psycopg://postgres:test@127.0.0.1:5432/
+            mssql+aioodbc://sa:YourStrongPassword123@127.0.0.1:1433/master?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes
         run: |
           uv run --no-dev coverage run -m unittest -cfv
           uv run --no-dev coverage report -m
