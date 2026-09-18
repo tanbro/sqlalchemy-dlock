@@ -1,5 +1,4 @@
 from os import getenv
-from typing import List
 
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -7,12 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 __all__ = ["create_engines", "dispose_engines", "get_engines"]
 
 
-_ENGINES: List[AsyncEngine] = []
+_ENGINES: list[AsyncEngine] = []
 
 
 def create_engines():
-    global _ENGINES
-
     load_dotenv()
 
     urls = (
@@ -27,7 +24,9 @@ def create_engines():
 
 
 async def dispose_engines():
-    for engine in _ENGINES:
+    engines = tuple(_ENGINES)
+    _ENGINES.clear()
+    for engine in engines:
         await engine.dispose()
 
 
