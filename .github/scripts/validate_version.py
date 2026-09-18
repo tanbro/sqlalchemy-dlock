@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """Validate a tag in GITHUB_REF against PEP 440 and write `version=...` to GITHUB_OUTPUT.
 
 This script is intentionally small and dependency-free except for `packaging`, which the

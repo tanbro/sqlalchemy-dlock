@@ -31,7 +31,7 @@ jobs:
     outputs:
       version: ${{ steps.check.outputs.version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -47,10 +47,10 @@ jobs:
     name: Code style check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Lint check with ruff
-        uses: astral-sh/ruff-action@v3
+        uses: astral-sh/ruff-action@v4.1.0
 
   type-check:
     name: Type Check (Python ${{ matrix.python-version }})
@@ -59,10 +59,10 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           enable-cache: true
           cache-dependency-glob: "pyproject.toml"
@@ -123,7 +123,7 @@ jobs:
       # instead of service container, for better reliability
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install MSSQL ODBC driver
         run: |
@@ -135,7 +135,7 @@ jobs:
           sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
@@ -159,7 +159,15 @@ jobs:
           SETUPTOOLS_SCM_PRETEND_VERSION: "0"
         run: |
           uv sync --no-dev --group test
-          uv pip install mysqlclient aiomysql psycopg2 asyncpg pyodbc aioodbc oracledb
+          uv pip install \
+            "mysqlclient~=2.3" \
+            "aiomysql~=0.3.2" \
+            "PyMySQL~=1.1.0" \
+            "psycopg2~=2.9" \
+            "asyncpg~=0.31" \
+            "pyodbc~=5.3" \
+            "aioodbc~=0.5" \
+            "oracledb~=26.0"
 
       - name: Run tests
         shell: bash
@@ -172,7 +180,7 @@ jobs:
           uv run --no-dev coverage xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -183,10 +191,10 @@ jobs:
     if: needs.validate-tag.outputs.version != ''
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           enable-cache: true
           cache-dependency-glob: "pyproject.toml"
@@ -233,7 +241,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download distribution packages
         uses: actions/download-artifact@v8
@@ -257,7 +265,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref }}
           name: v${{ needs.validate-tag.outputs.version }}
