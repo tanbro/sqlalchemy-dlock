@@ -42,6 +42,8 @@ class PgTestCase(IsolatedAsyncioTestCase):
             if engine.name != "postgresql":
                 continue
 
+            if sys.version_info < (3, 11):
+                raise RuntimeError()
             bar = asyncio.Barrier(2)
 
             async def coro():

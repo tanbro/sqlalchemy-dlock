@@ -25,11 +25,11 @@ AsyncConnectionTV = TypeVar("AsyncConnectionTV", bound=AsyncConnectionOrSessionT
 class AbstractLockMixin(ABC, Generic[KeyTV, ActualKeyTV]):
     @abstractmethod
     def __init__(self, *, key: KeyTV, convert: Callable[[KeyTV], ActualKeyTV] | None = None, **kwargs):
-        raise NotImplementedError()
+        pass
 
     @abstractmethod
     def get_actual_key(self) -> ActualKeyTV:
-        raise NotImplementedError()
+        pass
 
 
 class BaseSadLock(AbstractLockMixin[KeyTV, ActualKeyTV], local, Generic[KeyTV, ConnectionTV, ActualKeyTV]):
@@ -175,7 +175,7 @@ class BaseSadLock(AbstractLockMixin[KeyTV, ActualKeyTV], local, Generic[KeyTV, C
 
     @abstractmethod
     def do_acquire(self, block: bool = True, timeout: float | None = None, *args, **kwargs) -> bool:
-        raise NotImplementedError()
+        pass
 
     @final
     def release(self, *args, **kwargs):
@@ -199,7 +199,7 @@ class BaseSadLock(AbstractLockMixin[KeyTV, ActualKeyTV], local, Generic[KeyTV, C
 
     @abstractmethod
     def do_release(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
     @final
     def close(self, *args, **kwargs):
@@ -304,7 +304,7 @@ class BaseAsyncSadLock(AbstractLockMixin[KeyTV, ActualKeyTV], local, Generic[Key
 
     @abstractmethod
     async def do_acquire(self, block: bool = True, timeout: float | None = None, *args, **kwargs) -> bool:
-        raise NotImplementedError()
+        pass
 
     @final
     async def release(self, *args, **kwargs):
@@ -315,7 +315,7 @@ class BaseAsyncSadLock(AbstractLockMixin[KeyTV, ActualKeyTV], local, Generic[Key
 
     @abstractmethod
     async def do_release(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
     @final
     async def aclose(self, *args, **kwargs):
