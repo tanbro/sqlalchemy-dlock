@@ -69,4 +69,4 @@ class PgTestCase(TestCase):
             trd.join()
 
             if trd_exc is not None:
-                raise trd_exc  # type: ignore
+                raise trd_exc

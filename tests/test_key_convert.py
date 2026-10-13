@@ -23,17 +23,17 @@ class KeyConvertTestCase(TestCase):
 
             if engine.name == "mysql":
 
-                def _convert(k):  # type: ignore
+                def _convert(k): # pyright: ignore[reportRedeclaration]
                     return f"key is {k!r}"
 
             elif engine.name == "postgresql":
 
-                def _convert(k):  # type: ignore
+                def _convert(k): # pyright: ignore[reportRedeclaration]
                     return crc32(str(k).encode())
 
             elif engine.name == "mssql":
 
-                def _convert(k):  # type: ignore
+                def _convert(k): # pyright: ignore[reportRedeclaration]
                     return f"custom_{k}"
 
             else:

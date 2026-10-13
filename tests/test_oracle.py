@@ -10,6 +10,7 @@ Example:
 from unittest import TestCase
 
 from sqlalchemy import text
+from sqlalchemy.engine.base import Engine
 from sqlalchemy_dlock import create_sadlock
 
 from .engines import ENGINES
@@ -168,11 +169,15 @@ class OracleIntegerKeyTestCase(TestCase):
 
     def test_integer_key_at_max_boundary(self):
         """Test keys at Oracle's max boundary (1073741823)"""
+        engine: Engine | None = None
         for engine in ENGINES:
             if engine.name != "oracle":
                 continue
 
         ORACLE_LOCK_ID_MAX = 1073741823
+
+        if engine is None:
+            raise ValueError()
 
         with engine.connect() as conn:
             # Test at max boundary
